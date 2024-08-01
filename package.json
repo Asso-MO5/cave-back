@@ -1,0 +1,25 @@
+{
+  "name": "cave-back",
+  "version": "1.0.0",
+  "description": "",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "dev": "nodemon index.js",
+    "start": "node index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/Asso-MO5/cave-back.git"
+  },
+  "author": "kazerlelutin",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Asso-MO5/cave-back/issues"
+  },
+  "homepage": "https://github.com/Asso-MO5/cave-back#readme",
+  "dependencies": {
+    "@hapi/hapi": "^21.3.10",
+    "nodemon": "^3.1.4"
+  }
+}
