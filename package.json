@@ -2,7 +2,6 @@
   "name": "cave-back",
   "version": "1.0.0",
   "description": "",
-  "type": "module",
   "main": "index.js",
   "scripts": {
     "dev": "nodemon index.js",
@@ -20,6 +19,11 @@
   "homepage": "https://github.com/Asso-MO5/cave-back#readme",
   "dependencies": {
     "@hapi/hapi": "^21.3.10",
+    "@hapi/inert": "^7.1.0",
+    "@hapi/nes": "^13.0.1",
+    "dotenv": "^16.4.5",
+    "knex": "^3.1.0",
+    "mysql2": "^3.11.0",
     "nodemon": "^3.1.4"
   }
 }
