@@ -1,5 +1,5 @@
 'use strict'
-
+require('dotenv').config()
 const Hapi = require('@hapi/hapi')
 const Nes = require('@hapi/nes')
 const Inert = require('@hapi/inert')
@@ -28,6 +28,8 @@ const init = async () => {
   // === Subscribe to websocket ===
   server.subscription('/game/{id}')
   server.subscription('/machine/{id}')
+  server.subscription('/public')
+  server.subscription('/test')
 
   await server.start()
   console.log('Server running on %s', server.info.uri)

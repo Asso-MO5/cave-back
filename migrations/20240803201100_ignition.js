@@ -231,6 +231,7 @@ exports.up = async (knex) => {
     table.string(MEDIA.url).notNullable()
     table.string(MEDIA.type).notNullable()
     table.integer(MEDIA.size).notNullable()
+    table.string(MEDIA.name).notNullable()
     table.timestamps(true, true)
   })
 
