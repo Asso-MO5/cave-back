@@ -1,4 +1,4 @@
-export const routes = [
+const routes = [
   {
     method: 'GET',
     path: '/',
@@ -7,3 +7,5 @@ export const routes = [
     },
   },
 ]
+
+module.exports = { routes }
