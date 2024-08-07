@@ -1,6 +1,7 @@
 const TAG = {
   id: 'id',
   name: 'name',
+  slug: 'slug',
   author_id: 'author_id',
   created_at: 'created_at',
   updated_at: 'updated_at',

@@ -9,6 +9,8 @@ const MEDIA = {
   id: 'id',
   name: 'name',
   url: 'url',
+  alt: 'alt',
+  description: 'description',
   type: 'type',
   size: 'size',
   created_at: 'created_at',

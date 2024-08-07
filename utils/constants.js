@@ -1,29 +1,19 @@
 // constants.js
 const TABLES = {
-  companies: 'companies',
-  authors: 'authors',
-  medias: 'medias',
-
-  //GAMES
-  games: 'games',
-  games_history: 'games_history',
-  game_machines: 'game_machines',
-  game_machine_medias: 'game_medias',
-  machine_lists: 'machine_lists',
-  game_types: 'game_types',
-  game_types_history: 'game_types_history',
-  game_types_relations: 'game_types_relations',
-
-  //MACHINES
-  machines: 'machines',
-  machines_history: 'machines_history',
-  companies_history: 'companies_history',
-  machine_medias: 'machine_medias',
-  game_lists: 'game_lists',
-
-  //TAGS
   tags: 'tags',
-  tag_relations: 'tag_relations',
+  medias: 'medias',
+  authors: 'authors',
+  // === COMPANIES ===
+  companies: 'companies',
+  item_companies: 'item_companies',
+  // === ITEMS ===
+  items: 'items',
+  item_tags: 'item_tags',
+  item_medias: 'item_medias',
+  item_history: 'item_history',
+  item_text_attrs: 'item_text_attrs',
+  item_number_attrs: 'item_number_attrs',
+  item_long_text_attrs: 'item_long_text_attrs',
 }
 
 module.exports = {

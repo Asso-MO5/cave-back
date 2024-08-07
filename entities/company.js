@@ -3,7 +3,7 @@ const COMPANY = {
   name: 'name',
   slug: 'slug',
   description: 'description',
-  logo: 'logo',
+  logo_id: 'logo_id',
   country: 'country',
   activities: 'activities',
   author_id: 'author_id',

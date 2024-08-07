@@ -1,13 +1,12 @@
-const GAME_LIST = {
+const ITEM_MEDIAS = {
   id: 'id',
-  name: 'name',
-  slug: 'slug',
-  status: 'status',
+  item_id: 'item_id',
+  media_id: 'media_id',
   created_at: 'created_at',
   updated_at: 'updated_at',
   author_id: 'author_id',
 }
 
 module.exports = {
-  GAME_LIST,
+  ITEM_MEDIAS,
 }
