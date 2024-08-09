@@ -20,6 +20,7 @@ exports.up = async (knex) => {
     table.string(MEDIA.name).notNullable()
     table.string(MEDIA.url).notNullable()
     table.string(MEDIA.alt).notNullable()
+    table.integer(MEDIA.size).notNullable()
     table.text(MEDIA.description)
     table.string(MEDIA.type).notNullable()
 

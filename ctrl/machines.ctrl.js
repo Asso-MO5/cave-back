@@ -1,14 +1,14 @@
-const fs = require('fs')
 const Joi = require('joi')
-const path = require('path')
-const { v4: uuidv4 } = require('uuid')
 const { createMedia } = require('../entities/media')
-const { createMachine } = require('../entities/machine')
+const { createItems, ITEM_TYPE } = require('../entities/items')
+const { getAuthor } = require('../utils/get-author')
+const { ROLES } = require('../utils/constants')
+
 module.exports = [
   {
     method: 'GET',
     path: '/machines',
-    async handler(req, h) {
+    async handler(_req, h) {
       return h.response([]).type('json')
     },
   },
@@ -26,14 +26,14 @@ module.exports = [
     async handler(req, h) {
       const data = req.payload
 
+      const author = await getAuthor(req, h, [ROLES.member])
+
       const schema = Joi.object({
         name: Joi.string().required(),
         release_year: Joi.string().length(4),
-        author_id: Joi.string().required(),
         description: Joi.string(),
         cover_image: Joi.object().unknown(true),
         additionnal_information: Joi.string(),
-
         medias: Joi.array().items(
           Joi.object().keys({
             hapi: Joi.object()
@@ -57,26 +57,43 @@ module.exports = [
       })
 
       const files = Array.isArray(data.medias) ? data.medias : [data.medias]
+
       const { error, value: machine } = schema.validate({
         ...data,
-        medias: files,
+        release_year: data.release_year || undefined,
+        medias: files.filter((i) => i.hapi.filename),
       })
 
-      if (error) return h.response({ error }).code(400)
+      if (error) {
+        const details = error.details.map((i) => i.message).join(',')
+        return h.response({ error: details }).code(400)
+      }
 
       if (machine.cover_image) {
-        await createMedia([machine.cover_image])
-        machine.cover_image = '/uploads/' + machine.cover_image.hapi.filename
+        machine.cover_image.alt = machine.name + ' cover'
+        const coverIds = await createMedia([machine.cover_image])
+        machine.cover_id = coverIds[0]
       }
-      const mediasIds = await createMedia(files)
 
       try {
-        const id = await createMachine(machine)
+        const newItem = await createItems({
+          ...machine,
+          author_id: author.id,
+          type: ITEM_TYPE.machine,
+        })
+        return h
+          .response({
+            machine: newItem,
+          })
+          .type('json')
+          .code(201)
       } catch (error) {
         console.log('MACHINE CREATE :', error)
-      }
 
-      return h.response({ msg: 'OK' }).type('json').code(201)
+        return h
+          .response({ error: 'Internal server error', details: error })
+          .code(500)
+      }
     },
   },
 ]

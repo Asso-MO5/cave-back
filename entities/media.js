@@ -22,13 +22,21 @@ module.exports = {
     const dir = path.join(__dirname, '../uploads')
 
     if (!fs.existsSync(dir)) fs.mkdirSync(dir)
+    const date = new Date()
+    const dateStr = `${date.getFullYear()}-${
+      date.getMonth() + 1
+    }-${date.getDate()}`
+
+    const dateFolder = path.join(dir, dateStr)
+
+    if (!fs.existsSync(dateFolder)) fs.mkdirSync(dateFolder)
 
     const filesToSave = []
-    for (const file of medias) {
+    for (const file of medias.filter((media) => !!media._data.length)) {
       const extension = path.extname(file.hapi.filename)
       const id = uuidv4()
       const uuidName = id + extension
-      const destination = path.join(dir, uuidName)
+      const destination = path.join(dir, `${dateStr}/${uuidName}`)
       const fileStream = fs.createWriteStream(destination)
 
       await new Promise((resolve, reject) => {
@@ -41,10 +49,13 @@ module.exports = {
           name: file.hapi.filename.split('.')[0],
           size: file._data.length,
           type: file.hapi.headers['content-type'],
-          url: `/uploads/${uuidName}`,
+          url: `/uploads/${dateStr}/${uuidName}`,
+          alt: file.alt || file.hapi.filename,
+          description: file.description || '',
         })
       })
     }
+
     try {
       await knex(TABLES.medias).insert(filesToSave)
       return filesToSave.map((media) => media.id)

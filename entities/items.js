@@ -1,6 +1,7 @@
 const { knex } = require('../utils/db')
 const { v4: uuidv4 } = require('uuid')
 const { TABLES } = require('../utils/constants')
+const { getSlug } = require('../utils/get-slug')
 
 const ITEMS = {
   id: 'id',
@@ -23,19 +24,36 @@ const ITEMS_HISTORY = {
   modified_at: 'modified_at',
 }
 
+const ITEM_TYPE = {
+  obj: 'obj',
+  game: 'game',
+  machine: 'machine',
+}
+
 module.exports = {
   ITEMS,
   ITEMS_HISTORY,
+  ITEM_TYPE,
   async createItems(item) {
     try {
       const id = uuidv4()
-      await knex(TABLES.items).insert({
+      const newItem = {
         id,
-        ...item,
+        name: item.name,
+        type: item.type || 'item',
+        cover_id: item.cover_id || null,
+        author_id: item.author_id,
+        description: item.description ? JSON.stringify(item.description) : '',
+        slug: getSlug(item.name),
         created_at: new Date(),
         updated_at: new Date(),
-      })
-      return id
+      }
+      await knex(TABLES.items).insert(newItem)
+
+      return {
+        ...newItem,
+        description: item.description,
+      }
     } catch (error) {
       console.log('MEDIA CREATE :', error)
     }

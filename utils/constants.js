@@ -16,6 +16,12 @@ const TABLES = {
   item_long_text_attrs: 'item_long_text_attrs',
 }
 
+const ROLES = {
+  member: 'Membres MO5',
+  admin: 'Master Control Program',
+}
+
 module.exports = {
   TABLES,
+  ROLES,
 }

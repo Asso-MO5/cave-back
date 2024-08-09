@@ -1,5 +1,3 @@
-const machinesCtrl = require('./ctrl/machines.ctrl')
-
 const routes = [
   {
     method: 'GET',
@@ -11,7 +9,8 @@ const routes = [
       return 'Hello World!'
     },
   },
-  ...machinesCtrl,
+  ...require('./ctrl/auth.ctrl'),
+  ...require('./ctrl/machines.ctrl'),
 ]
 
 module.exports = { routes }
