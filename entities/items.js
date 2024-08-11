@@ -34,6 +34,7 @@ module.exports = {
   ITEMS,
   ITEMS_HISTORY,
   ITEM_TYPE,
+
   async createItems(item) {
     try {
       const id = uuidv4()
@@ -43,7 +44,7 @@ module.exports = {
         type: item.type || 'item',
         cover_id: item.cover_id || null,
         author_id: item.author_id,
-        description: item.description ? JSON.stringify(item.description) : '',
+        description: item.description || null,
         slug: getSlug(item.name),
         created_at: new Date(),
         updated_at: new Date(),

@@ -3,13 +3,21 @@ const { createMedia } = require('../entities/media')
 const { createItems, ITEM_TYPE } = require('../entities/items')
 const { getAuthor } = require('../utils/get-author')
 const { ROLES } = require('../utils/constants')
+const { paginateCursor } = require('../utils/db')
 
 module.exports = [
   {
     method: 'GET',
     path: '/machines',
-    async handler(_req, h) {
-      return h.response([]).type('json')
+    async handler(req, h) {
+      const query = await paginateCursor({
+        tableName: 'items',
+        pageSize: req.query.limit ? parseInt(req.query.limit) : 10,
+        conditions: { type: ITEM_TYPE.machine },
+        cursor: req.query.cursor,
+      })
+
+      return h.response(query).type('json')
     },
   },
   {
@@ -54,6 +62,7 @@ module.exports = [
             _encoding: Joi.string(),
           })
         ),
+        medias_url: Joi.string(),
       })
 
       const files = Array.isArray(data.medias) ? data.medias : [data.medias]
@@ -61,7 +70,7 @@ module.exports = [
       const { error, value: machine } = schema.validate({
         ...data,
         release_year: data.release_year || undefined,
-        medias: files.filter((i) => i.hapi.filename),
+        medias: files.filter((i) => i?.hapi?.filename),
       })
 
       if (error) {
@@ -69,7 +78,7 @@ module.exports = [
         return h.response({ error: details }).code(400)
       }
 
-      if (machine.cover_image) {
+      if (machine.cover_image && machine.cover_image?.hapi?.filename) {
         machine.cover_image.alt = machine.name + ' cover'
         const coverIds = await createMedia([machine.cover_image])
         machine.cover_id = coverIds[0]
@@ -81,12 +90,7 @@ module.exports = [
           author_id: author.id,
           type: ITEM_TYPE.machine,
         })
-        return h
-          .response({
-            machine: newItem,
-          })
-          .type('json')
-          .code(201)
+        return h.response(newItem).type('json').code(201)
       } catch (error) {
         console.log('MACHINE CREATE :', error)
 
