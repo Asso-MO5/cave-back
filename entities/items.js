@@ -59,4 +59,7 @@ module.exports = {
       console.log('MEDIA CREATE :', error)
     }
   },
+  async getItemBySlug(slug) {
+    return knex(TABLES.items).where({ slug }).first()
+  },
 }

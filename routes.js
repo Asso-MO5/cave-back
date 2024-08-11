@@ -11,6 +11,7 @@ const routes = [
   },
   ...require('./ctrl/auth.ctrl'),
   ...require('./ctrl/machines.ctrl'),
+  ...require('./ctrl/companies.ctrl'),
 ]
 
 module.exports = { routes }

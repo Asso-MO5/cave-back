@@ -1,18 +1,28 @@
-const fs = require('fs')
 const Joi = require('joi')
-const path = require('path')
-const { v4: uuidv4 } = require('uuid')
+const { getAuthor } = require('../utils/get-author')
+const { paginateCursor } = require('../utils/db')
+const { TABLES, ROLES } = require('../utils/constants')
+const { createCompanies } = require('../entities/company')
+
 module.exports = [
   {
     method: 'GET',
     path: '/companies',
     async handler(req, h) {
-      return h.response([]).type('json')
+      await getAuthor(req, h, [ROLES.member])
+      const query = await paginateCursor({
+        tableName: TABLES.companies,
+        pageSize: req.query.limit ? parseInt(req.query.limit) : 10,
+        conditions: { type: ITEM_TYPE.machine },
+        cursor: req.query.cursor,
+      })
+
+      return h.response(query).type('json')
     },
   },
   {
     method: 'POST',
-    path: '/machines',
+    path: '/companies',
     options: {
       payload: {
         parse: true,
@@ -24,11 +34,15 @@ module.exports = [
     async handler(req, h) {
       const data = req.payload
 
+      const author = await getAuthor(req, h, [ROLES.member])
+
       const schema = Joi.object({
         name: Joi.string().required(),
-        year: Joi.string().length(4),
+        borned_at: Joi.string(),
         description: Joi.string(),
-        additionnal_information: Joi.string(),
+        country: Joi.string(),
+        activities: Joi.string(),
+        logo_id: Joi.string(),
         medias: Joi.array().items(
           Joi.object().keys({
             hapi: Joi.object()
@@ -49,43 +63,40 @@ module.exports = [
             _encoding: Joi.string(),
           })
         ),
+        medias_url: Joi.string(),
       })
 
       const files = Array.isArray(data.medias) ? data.medias : [data.medias]
-      const { error, value } = schema.validate({
+
+      const { error, value: company } = schema.validate({
         ...data,
-        medias: files,
+        medias: files.filter((i) => i?.hapi?.filename),
       })
 
-      if (error) return h.response({ error }).code(400)
-
-      const dir = path.join(__dirname, '../uploads')
-
-      if (!fs.existsSync(dir)) fs.mkdirSync(dir)
-
-      const filesToSave = []
-      for (const file of files) {
-        const extension = path.extname(file.hapi.filename)
-        const id = uuidv4()
-        const uuidName = id + extension
-        const destination = path.join(dir, uuidName)
-        const fileStream = fs.createWriteStream(destination)
-
-        await new Promise((resolve, reject) => {
-          file.pipe(fileStream)
-
-          file.on('end', resolve)
-          file.on('error', reject)
-          filesToSave.push({
-            id,
-            name: file.hapi.filename.split('.')[0],
-            size: file._data.length,
-            type: file.hapi.headers['content-type'],
-            url: `/uploads/${uuidName}`,
-          })
-        })
+      if (error) {
+        const details = error.details.map((i) => i.message).join(',')
+        return h.response({ error: details }).code(400)
       }
-      return h.response({ msg: 'OK' }).type('json').code(201)
+
+      if (company.logo_id && company.logo_id?.hapi?.filename) {
+        company.logo_id.alt = company.name + ' cover'
+        const coverIds = await createMedia([company.logo_id])
+        company.cover_id = coverIds[0]
+      }
+
+      try {
+        const newItem = await createCompanies({
+          ...company,
+          author_id: author.id,
+        })
+        return h.response(newItem).type('json').code(201)
+      } catch (error) {
+        console.log('company CREATE :', error)
+
+        return h
+          .response({ error: 'Internal server error', details: error })
+          .code(500)
+      }
     },
   },
 ]

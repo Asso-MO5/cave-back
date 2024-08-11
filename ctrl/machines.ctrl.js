@@ -1,8 +1,8 @@
 const Joi = require('joi')
 const { createMedia } = require('../entities/media')
-const { createItems, ITEM_TYPE } = require('../entities/items')
+const { createItems, ITEM_TYPE, getItemBySlug } = require('../entities/items')
 const { getAuthor } = require('../utils/get-author')
-const { ROLES } = require('../utils/constants')
+const { ROLES, TABLES } = require('../utils/constants')
 const { paginateCursor } = require('../utils/db')
 
 module.exports = [
@@ -10,14 +10,28 @@ module.exports = [
     method: 'GET',
     path: '/machines',
     async handler(req, h) {
+      await getAuthor(req, h, [ROLES.member])
       const query = await paginateCursor({
-        tableName: 'items',
+        tableName: TABLES.items,
         pageSize: req.query.limit ? parseInt(req.query.limit) : 10,
         conditions: { type: ITEM_TYPE.machine },
         cursor: req.query.cursor,
       })
 
       return h.response(query).type('json')
+    },
+  },
+  {
+    method: 'GET',
+    path: '/machines/{id}',
+    async handler(req, h) {
+      await getAuthor(req, h, [ROLES.member])
+
+      const machine = await getItemBySlug(req.params.id)
+      if (!machine)
+        return h.response({ error: 'Machine non trouvée' }).code(404)
+
+      return h.response(machine).type('json')
     },
   },
   {
