@@ -1,9 +1,15 @@
 const Joi = require('joi')
 const { createMedia } = require('../entities/media')
-const { createItems, ITEM_TYPE, getItemBySlug } = require('../entities/items')
+const {
+  createItems,
+  ITEM_TYPE,
+  getItemBySlug,
+  getMachines,
+  ITEMS,
+} = require('../entities/items')
 const { getAuthor } = require('../utils/get-author')
-const { ROLES, TABLES } = require('../utils/constants')
-const { paginateCursor } = require('../utils/db')
+const { ROLES } = require('../utils/constants')
+const { createItemCompany } = require('../entities/item-company')
 
 module.exports = [
   {
@@ -11,14 +17,14 @@ module.exports = [
     path: '/machines',
     async handler(req, h) {
       await getAuthor(req, h, [ROLES.member])
-      const query = await paginateCursor({
-        tableName: TABLES.items,
-        pageSize: req.query.limit ? parseInt(req.query.limit) : 10,
-        conditions: { type: ITEM_TYPE.machine },
-        cursor: req.query.cursor,
-      })
-
-      return h.response(query).type('json')
+      try {
+        const query = await getMachines()
+        return h.response(query).type('json')
+      } catch (error) {
+        return h
+          .response({ error: 'Internal server error', details: error })
+          .code(500)
+      }
     },
   },
   {
@@ -27,11 +33,40 @@ module.exports = [
     async handler(req, h) {
       await getAuthor(req, h, [ROLES.member])
 
-      const machine = await getItemBySlug(req.params.id)
-      if (!machine)
-        return h.response({ error: 'Machine non trouvée' }).code(404)
+      console.log(req.server.info.uri)
+      try {
+        const machine = await getItemBySlug(req.params.id)
+        if (!machine)
+          return h.response({ error: 'Machine non trouvée' }).code(404)
+        const m = Object.keys(ITEMS).reduce((acc, key) => {
+          if (key === 'medias') {
+            acc[key] = machine[key].map((i) => ({
+              id: i.id,
+              url: i.url,
+              alt: i.alt,
+            }))
+          } else {
+            acc[key] = machine[key]
+          }
+          return acc
+        }, {})
 
-      return h.response(machine).type('json')
+        return h
+          .response({
+            ...m,
+            cover_url: `${req?.server?.info?.uri}${machine.cover_url}`,
+            manufacturer: {
+              id: machine.manufacturer_id,
+              name: machine.manufacturer_name,
+            },
+          })
+          .type('json')
+      } catch (error) {
+        console.log('MACHINE GET BY ID :', error)
+        return h
+          .response({ error: 'Internal server error', details: error })
+          .code(500)
+      }
     },
   },
   {
@@ -56,6 +91,7 @@ module.exports = [
         description: Joi.string(),
         cover_image: Joi.object().unknown(true),
         additionnal_information: Joi.string(),
+        manufacturer: Joi.string(),
         medias: Joi.array().items(
           Joi.object().keys({
             hapi: Joi.object()
@@ -83,7 +119,6 @@ module.exports = [
 
       const { error, value: machine } = schema.validate({
         ...data,
-        release_year: data.release_year || undefined,
         medias: files.filter((i) => i?.hapi?.filename),
       })
 
@@ -101,9 +136,17 @@ module.exports = [
       try {
         const newItem = await createItems({
           ...machine,
+          manufacturer: undefined,
           author_id: author.id,
           type: ITEM_TYPE.machine,
         })
+
+        await createItemCompany({
+          item_id: newItem.id,
+          company_id: machine.manufacturer,
+          relation_type: 'manufacturer',
+        })
+
         return h.response(newItem).type('json').code(201)
       } catch (error) {
         console.log('MACHINE CREATE :', error)

@@ -14,4 +14,23 @@ const ITEM_COMPANIES = {
 
 module.exports = {
   ITEM_COMPANIES,
+  async createItemCompany(itemCompany) {
+    const itemCompanyExists = await knex(TABLES.item_companies)
+      .where(ITEM_COMPANIES.item_id, itemCompany.item_id)
+      .andWhere(ITEM_COMPANIES.company_id, itemCompany.company_id)
+      .first()
+
+    if (itemCompanyExists) return itemCompanyExists
+    const newCompany = {
+      id: uuidv4(),
+      item_id: itemCompany.item_id,
+      company_id: itemCompany.company_id,
+      relation_type: itemCompany.relation_type,
+      author_id: itemCompany.author_id,
+      created_at: new Date(),
+      updated_at: new Date(),
+    }
+    await knex(TABLES.item_companies).insert(newCompany)
+    return newCompany
+  },
 }

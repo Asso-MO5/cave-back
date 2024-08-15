@@ -50,6 +50,7 @@ exports.up = async (knex) => {
     table.string(ITEMS.name).notNullable()
     table.string(ITEMS.slug).notNullable()
     table.text(ITEMS.description)
+    table.integer(ITEMS.release_year)
     table.string(ITEMS.type).notNullable()
     table.string(ITEMS.cover_id).references('id').inTable(TABLES.medias)
     table.uuid(ITEMS.author_id).references('id').inTable(TABLES.authors)

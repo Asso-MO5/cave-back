@@ -2,18 +2,44 @@ const Joi = require('joi')
 const { getAuthor } = require('../utils/get-author')
 const { paginateCursor } = require('../utils/db')
 const { TABLES, ROLES } = require('../utils/constants')
-const { createCompanies } = require('../entities/company')
+const { createCompanies, getCompaniesLight } = require('../entities/company')
 
 module.exports = [
   {
     method: 'GET',
+    path: '/companies/light',
+    async handler(req, h) {
+      const conditions = []
+      if (req.query.activities) {
+        conditions.push([
+          'activities',
+          'like',
+          '%' + req.query.activities + '%',
+        ])
+      }
+
+      const query = await getCompaniesLight(req.query.activities)
+      return h.response(query).type('json')
+    },
+  },
+  {
+    method: 'GET',
     path: '/companies',
     async handler(req, h) {
+      const conditions = []
+      if (req.query.activities) {
+        conditions.push([
+          'activities',
+          'like',
+          '%' + req.query.activities + '%',
+        ])
+      }
+
       await getAuthor(req, h, [ROLES.member])
       const query = await paginateCursor({
         tableName: TABLES.companies,
         pageSize: req.query.limit ? parseInt(req.query.limit) : 10,
-        conditions: { type: ITEM_TYPE.machine },
+        conditions,
         cursor: req.query.cursor,
       })
 

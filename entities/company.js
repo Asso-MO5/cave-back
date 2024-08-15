@@ -17,6 +17,16 @@ const COMPANY = {
   updated_at: 'updated_at',
 }
 
+const COMPANY_ACTIVITIES = {
+  manufacturer: 'manufacturer',
+  publisher: 'publisher',
+  developer: 'developer',
+  distributor: 'distributor',
+  retailer: 'retailer',
+  other: 'other',
+  association: 'association',
+}
+
 const COMPANY_HISTORY = {
   ...COMPANY,
   editor_id: 'editor_id',
@@ -27,6 +37,13 @@ const COMPANY_HISTORY = {
 module.exports = {
   COMPANY,
   COMPANY_HISTORY,
+  COMPANY_ACTIVITIES,
+  async getCompaniesLight(activities) {
+    return await knex(TABLES.companies)
+      .where(COMPANY.activities, 'like', '%' + activities + '%')
+      .orderBy(COMPANY.name)
+      .select(COMPANY.id, COMPANY.name, COMPANY.slug)
+  },
   async createCompanies(company) {
     try {
       const id = uuidv4()

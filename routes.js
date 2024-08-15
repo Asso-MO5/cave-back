@@ -3,10 +3,17 @@ const routes = [
     method: 'GET',
     path: '/',
     handler(req, h) {
-      req.server.publish('/test', {
-        test: 'test msg',
-      })
-      return 'Hello World!'
+      return 'API EN LIGNE'
+    },
+  },
+  {
+    method: 'GET',
+    path: '/uploads/{param*}',
+    handler: {
+      directory: {
+        path: 'uploads',
+        index: false,
+      },
     },
   },
   ...require('./ctrl/auth.ctrl'),

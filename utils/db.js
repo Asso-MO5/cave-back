@@ -34,13 +34,11 @@ async function paginateCursor({
     .orderBy(orderBy, order)
     .limit(pageSize + 1)
 
-  for (const whereClause of Object.entries(conditions))
-    query.where(...whereClause)
+  for (const whereClause of conditions) query.where(...whereClause)
 
   const countQuery = knex(tableName).count('id as count').first()
 
-  for (const whereClause of Object.entries(conditions))
-    countQuery.where(...whereClause)
+  for (const whereClause of conditions) countQuery.where(...whereClause)
 
   const countResult = await countQuery
   const totalRecords = parseInt(countResult.count, 10)
