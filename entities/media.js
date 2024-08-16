@@ -58,7 +58,7 @@ module.exports = {
 
     try {
       await knex(TABLES.medias).insert(filesToSave)
-      return filesToSave.map((media) => media.id)
+      return filesToSave
     } catch (error) {
       console.log('MEDIA CREATE :', error)
     }
@@ -66,6 +66,26 @@ module.exports = {
   async getMedia(mediaId) {
     try {
       return await knex(TABLES.medias).where({ id: mediaId }).first()
+    } catch (error) {
+      console.log('MEDIA GET :', error)
+    }
+  },
+  async getMediasByItemId(itemId) {
+    try {
+      return await knex(TABLES.medias)
+        .join(
+          TABLES.item_medias,
+          TABLES.medias + '.' + MEDIA.id,
+          '=',
+          TABLES.item_medias + '.media_id'
+        )
+        .where({ [TABLES.item_medias + '.item_id']: itemId })
+        .select(
+          TABLES.medias + '.' + MEDIA.id,
+          TABLES.medias + '.' + MEDIA.url,
+          TABLES.medias + '.' + MEDIA.alt,
+          TABLES.medias + '.' + MEDIA.type
+        )
     } catch (error) {
       console.log('MEDIA GET :', error)
     }

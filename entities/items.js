@@ -38,69 +38,98 @@ module.exports = {
   ITEMS_HISTORY,
   ITEM_TYPE,
 
-  async getMachines() {
-    return await knex(TABLES.items)
-      .where({ type: ITEM_TYPE.machine })
-      .leftJoin(
-        TABLES.item_companies,
-        TABLES.item_companies + '.' + ITEM_COMPANIES.item_id,
-        '=',
-        TABLES.items + '.' + ITEMS.id
-      )
-      .leftJoin(
-        TABLES.companies,
-        TABLES.companies + '.' + COMPANY.id,
-        '=',
-        TABLES.item_companies + '.' + ITEM_COMPANIES.company_id
-      )
-      .select(
-        TABLES.items + '.' + ITEMS.id,
-        TABLES.items + '.' + ITEMS.name,
-        TABLES.items + '.' + ITEMS.release_year,
-        TABLES.items + '.' + ITEMS.slug,
-        TABLES.companies + '.' + COMPANY.name + ' as manufacturer'
-      )
+  async getItems(type) {
+    const baseQuery = knex(TABLES.items)
+      .where({ [`${TABLES.items}.${ITEMS.type}`]: type })
       .orderBy(ITEMS.name)
+
+    if (type === 'machine') {
+      baseQuery
+        .leftJoin(
+          TABLES.item_companies,
+          TABLES.item_companies + '.' + ITEM_COMPANIES.item_id,
+          '=',
+          TABLES.items + '.' + ITEMS.id
+        )
+        .leftJoin(
+          TABLES.companies,
+          TABLES.companies + '.' + COMPANY.id,
+          '=',
+          TABLES.item_companies + '.' + ITEM_COMPANIES.company_id
+        )
+        .leftJoin(
+          TABLES.medias,
+          TABLES.medias + '.' + MEDIA.id,
+          '=',
+          TABLES.items + '.' + ITEMS.cover_id
+        )
+        .select([
+          TABLES.items + '.*',
+          TABLES.companies + '.' + COMPANY.id + ' as manufacturer_id',
+          TABLES.companies + '.' + COMPANY.name + ' as manufacturer_name',
+          TABLES.medias + '.' + MEDIA.url + ' as cover_url',
+        ])
+    } else if (type === 'game') {
+      // Effectuer des jointures spécifiques pour les jeux
+    }
+
+    try {
+      return await baseQuery
+    } catch (error) {
+      throw new Error(error)
+    }
   },
   async createItems(item) {
     try {
       const id = uuidv4()
+      let slug = getSlug(item.name)
+
+      const existslugs = await knex(TABLES.items)
+        .where({ slug })
+        .count()
+        .first()
+
+      if (existslugs.count > 0) slug = slug + '-' + existslugs.count
+
       const newItem = {
         id,
         name: item.name,
         type: item.type || 'item',
-        cover_id: item.cover_id || null,
+        cover_id: null,
         author_id: item.author_id,
-        release_year: item.release_year || null,
-        description: item.description || null,
-        slug: getSlug(item.name),
+        release_year: null,
+        description: null,
+        slug,
         created_at: new Date(),
         updated_at: new Date(),
       }
-      await knex(TABLES.items).insert(newItem)
 
-      return {
-        ...newItem,
-        description: item.description,
-      }
+      await knex(TABLES.items).insert(newItem)
+      return newItem
     } catch (error) {
       console.log('MEDIA CREATE :', error)
     }
   },
+  async getItemById(id) {
+    return await knex(TABLES.items).where({ id }).first()
+  },
+  async getItemByNameAndType(name, type) {
+    try {
+      const item = await knex(TABLES.items)
+        .where({ [ITEMS.name]: name, [ITEMS.type]: type })
+        .first()
+
+      return item
+    } catch (error) {
+      console.log('GET ITEM BY NAME AND TYPE :', error)
+    }
+  },
   async getItemBySlug(slug) {
-    return await knex(TABLES.items)
-      .leftJoin(
-        TABLES.item_companies,
-        TABLES.item_companies + '.' + ITEM_COMPANIES.item_id,
-        '=',
-        TABLES.items + '.' + ITEMS.id
-      )
-      .leftJoin(
-        TABLES.companies,
-        TABLES.companies + '.' + COMPANY.id,
-        '=',
-        TABLES.item_companies + '.' + ITEM_COMPANIES.company_id
-      )
+    const baseQuery = knex(TABLES.items).where({
+      [TABLES.items + '.' + ITEMS.slug]: slug,
+    })
+
+    baseQuery
       .leftJoin(
         TABLES.medias,
         TABLES.medias + '.' + MEDIA.id,
@@ -109,11 +138,54 @@ module.exports = {
       )
       .select(
         TABLES.items + '.*',
-        TABLES.companies + '.' + COMPANY.id + ' as manufacturer_id',
-        TABLES.companies + '.' + COMPANY.name + ' as manufacturer_name',
         TABLES.medias + '.' + MEDIA.url + ' as cover_url'
       )
-      .where({ [TABLES.items + '.' + ITEMS.slug]: slug })
+
+    return await baseQuery.first()
+  },
+  async updateItem(id, partial) {
+    const item = await knex(TABLES.items).where({ id }).first()
+
+    if (!item) throw new Error('Item not found')
+
+    const old = await knex(TABLES.item_history)
+      .where({ item_id: id })
+      .orderBy('modified_at', 'desc')
+      .select('version')
       .first()
+
+    const historyId = uuidv4()
+    try {
+      await knex(TABLES.item_history).insert({
+        version: (old?.version || 0) + 1,
+        item_id: item.id,
+        id: historyId,
+        author_id: item.author_id,
+        changes: JSON.stringify(item),
+        modified_at: new Date(),
+      })
+    } catch (error) {
+      console.log('ITEM HISTORY :', error)
+    }
+
+    const update = {
+      ...item,
+      ...Object.keys(partial).reduce((acc, key) => {
+        if (!partial[key]) {
+          acc[key] = knex.raw('NULL')
+        } else {
+          acc[key] = partial[key]
+        }
+
+        return acc
+      }, {}),
+      updated_at: new Date(),
+    }
+
+    try {
+      await knex(TABLES.items).where({ id }).update(update)
+    } catch (error) {
+      console.log('ITEM UPDATE :', error)
+    }
   },
 }

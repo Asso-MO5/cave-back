@@ -33,4 +33,9 @@ module.exports = {
     await knex(TABLES.item_companies).insert(newCompany)
     return newCompany
   },
+  async getItemCompanyByItemId(itemId) {
+    return await knex(TABLES.item_companies)
+      .where(ITEM_COMPANIES.item_id, itemId)
+      .select('*')
+  },
 }
