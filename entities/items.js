@@ -76,6 +76,7 @@ module.exports = {
     try {
       return await baseQuery
     } catch (error) {
+      console.log('GET ITEMS :', error)
       throw new Error(error)
     }
   },
