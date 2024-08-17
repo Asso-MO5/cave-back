@@ -63,6 +63,7 @@ module.exports = {
           '=',
           TABLES.items + '.' + ITEMS.cover_id
         )
+        .distinct()
         .select([
           TABLES.items + '.*',
           TABLES.companies + '.' + COMPANY.id + ' as manufacturer_id',

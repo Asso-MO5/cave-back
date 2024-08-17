@@ -32,7 +32,6 @@ const init = async () => {
   server.subscription('/test')
 
   await server.start()
-  console.log('_______', process.env.DB_USER, '_______')
   console.log('Server running on %s', server.info.uri)
 }
 
