@@ -39,43 +39,27 @@ module.exports = {
   ITEM_TYPE,
 
   async getItems(type) {
-    const baseQuery = knex(TABLES.items)
-      .where({ [`${TABLES.items}.${ITEMS.type}`]: type })
-      .orderBy(ITEMS.name)
-
-    if (type === 'machine') {
-      baseQuery
+    try {
+      return await knex(TABLES.items)
+        .where({ [`${TABLES.items}.${ITEMS.type}`]: type })
         .leftJoin(
           TABLES.item_companies,
-          TABLES.item_companies + '.' + ITEM_COMPANIES.item_id,
-          '=',
-          TABLES.items + '.' + ITEMS.id
+          `${TABLES.item_companies}.${ITEM_COMPANIES.item_id}`,
+          `${TABLES.items}.${ITEMS.id}`
         )
         .leftJoin(
           TABLES.companies,
-          TABLES.companies + '.' + COMPANY.id,
-          '=',
-          TABLES.item_companies + '.' + ITEM_COMPANIES.company_id
+          `${TABLES.companies}.${COMPANY.id}`,
+          `${TABLES.item_companies}.${ITEM_COMPANIES.company_id}`
         )
-        .leftJoin(
-          TABLES.medias,
-          TABLES.medias + '.' + MEDIA.id,
-          '=',
-          TABLES.items + '.' + ITEMS.cover_id
+        .select(
+          `${TABLES.items}.${ITEMS.name}`,
+          `${TABLES.items}.${ITEMS.slug}`,
+          `${TABLES.items}.${ITEMS.release_year}`,
+          `${TABLES.companies}.${COMPANY.name} as company_name`,
+          `${ITEM_COMPANIES.relation_type}`
         )
-        .distinct()
-        .select([
-          TABLES.items + '.*',
-          TABLES.companies + '.' + COMPANY.id + ' as manufacturer_id',
-          TABLES.companies + '.' + COMPANY.name + ' as manufacturer_name',
-          TABLES.medias + '.' + MEDIA.url + ' as cover_url',
-        ])
-    } else if (type === 'game') {
-      // Effectuer des jointures spécifiques pour les jeux
-    }
-
-    try {
-      return await baseQuery
+        .orderBy(ITEMS.name)
     } catch (error) {
       console.log('GET ITEMS :', error)
       throw new Error(error)

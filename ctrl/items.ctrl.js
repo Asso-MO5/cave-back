@@ -13,10 +13,7 @@ const { ROLES } = require('../utils/constants')
 const { getMediaUrl } = require('../utils/media-url')
 const { getCompaniesByItemId } = require('../entities/company')
 const { createItemHistory } = require('../entities/item-history')
-const {
-  replaceCompany,
-  replaceCompanyForItem,
-} = require('../entities/item-company')
+const { replaceCompanyForItem } = require('../entities/item-company')
 
 module.exports = [
   {
@@ -24,34 +21,32 @@ module.exports = [
     path: '/items',
     async handler(req, h) {
       await getAuthor(req, h, [ROLES.member])
-      const items = []
 
       try {
-        const query = await getItems(req.query.type)
-        items.push(...query)
+        const items = await getItems(req.query.type)
+
+        const res = items.reduce((acc, item) => {
+          const isExist = acc.findIndex((i) => i.slug === item.slug)
+          if (isExist === -1) {
+            acc.push({
+              name: item.name,
+              slug: item.slug,
+              release_year: item.release_year,
+              [item.relation_type]: item.company_name,
+            })
+          } else {
+            acc[isExist][item.relation_type] = item.company_name
+          }
+          return acc
+        }, [])
+
+        return h.response(res).type('json')
       } catch (error) {
         console.log('GET ITEMS :', error)
         return h
           .response({ error: 'Internal server error', details: error })
           .code(500)
       }
-
-      if (req.query.type === 'machine') {
-        return h
-          .response(
-            items.map((m) => {
-              return {
-                slug: m.slug,
-                name: m.name,
-                manufacturer: m.manufacturer_name,
-                release_year: m.release_year,
-              }
-            })
-          )
-          .type('json')
-      }
-
-      return h.response(items).type('json')
     },
   },
   {

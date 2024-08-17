@@ -39,7 +39,7 @@ module.exports = {
       .andWhere(ITEM_COMPANIES.company_id, newId)
       .first()
 
-    if (!isExist)
+    if (!isExist || isExist.relationType !== relationType) {
       await knex(TABLES.item_companies).insert({
         id: uuidv4(),
         item_id: itemId,
@@ -49,6 +49,7 @@ module.exports = {
         created_at: new Date(),
         updated_at: new Date(),
       })
+    }
 
     await knex(TABLES.item_companies)
       .where(ITEM_COMPANIES.item_id, itemId)
