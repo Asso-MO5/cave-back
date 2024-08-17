@@ -12,10 +12,10 @@ const {
 } = require('../entities/items')
 const { getAuthor } = require('../utils/get-author')
 const { ROLES } = require('../utils/constants')
-const {
-  createItemCompany,
-  getItemCompanyByItemId,
-} = require('../entities/item-company')
+const { getMediaUrl } = require('../utils/media-url')
+const { getCompaniesByItemId } = require('../entities/company')
+const { createItemHistory } = require('../entities/item-history')
+const { replaceCompany } = require('../entities/item-company')
 
 module.exports = [
   {
@@ -66,13 +66,31 @@ module.exports = [
         // ====== MEDIAS ========================
 
         if (item.cover_url) {
-          item.cover_url = item.cover_url.includes('http')
-            ? item.cover_url
-            : req.server.info.protocol + '://' + req.info.host + item.cover_url
+          item.cover_url = getMediaUrl(item.cover_url, req)
         }
 
-        const medias = await getMediasByItemId(item.id)
-        item.medias = medias || []
+        try {
+          item.medias = await getMediasByItemId(item.id)
+        } catch (error) {
+          console.log('ITEM MEDIAS GET BY ID :', error)
+          return h
+            .response({ error: 'Internal server error', details: error })
+            .code(500)
+        }
+
+        // ====== COMPANY ========================
+        try {
+          const companies = await getCompaniesByItemId(item.id)
+          companies.forEach((c) => {
+            item[c.relation_type] = c
+          })
+        } catch (error) {
+          console.log('ITEM COMPANY GET BY ID :', error)
+          return h
+            .response({ error: 'Internal server error', details: error })
+            .code(500)
+        }
+
         return h.response(item).type('json')
       } catch (error) {
         console.log('MACHINE GET BY ID :', error)
@@ -132,102 +150,7 @@ module.exports = [
       }
     },
   },
-  {
-    method: 'POST',
-    path: '/itemdcss',
-    options: {
-      payload: {
-        parse: true,
-        output: 'stream',
-        multipart: true,
-        maxBytes: 800 * 1024 * 1024, //800 mb
-      },
-    },
-    async handler(req, h) {
-      const data = req.payload
 
-      const author = await getAuthor(req, h, [ROLES.member])
-
-      const schema = Joi.object({
-        name: Joi.string().required(),
-        release_year: Joi.string().length(4),
-        description: Joi.string(),
-        cover_image: Joi.object().unknown(true),
-        additionnal_information: Joi.string(),
-        manufacturer: Joi.string(),
-        medias: Joi.array().items(
-          Joi.object().keys({
-            hapi: Joi.object()
-              .keys({
-                filename: Joi.string().required(),
-              })
-              .unknown(true),
-            _readableState: Joi.object().unknown(true),
-            _events: Joi.object().unknown(true),
-            _eventsCount: Joi.number(),
-            _maxListeners: Joi.number(),
-            _data: Joi.object().unknown(true),
-            _position: Joi.number(),
-            _writableState: Joi.object().unknown(true),
-            writable: Joi.boolean(),
-            readable: Joi.boolean(),
-            domain: Joi.object().unknown(true),
-            _encoding: Joi.string(),
-          })
-        ),
-        medias_url: Joi.string(),
-      })
-
-      const files = Array.isArray(data.medias) ? data.medias : [data.medias]
-
-      const { error, value: machine } = schema.validate({
-        ...data,
-        medias: files.filter((i) => i?.hapi?.filename),
-      })
-
-      if (error) {
-        const details = error.details.map((i) => i.message).join(',')
-        return h.response({ error: details }).code(400)
-      }
-
-      console.log('machine :', machine.name, req.query)
-      const ifMachineExist = await getItemByNameAndType(
-        machine.name,
-        req.query.type
-      )
-      if (ifMachineExist)
-        return h.response({ error: 'Machine déjà existante' }).code(400)
-
-      if (machine.cover_image && machine.cover_image?.hapi?.filename) {
-        machine.cover_image.alt = machine.name + ' cover'
-        const coverIds = await createMedia([machine.cover_image])
-        machine.cover_id = coverIds[0]
-      }
-
-      try {
-        const newItem = await createItems({
-          ...machine,
-          manufacturer: undefined,
-          author_id: author.id,
-          type: ITEM_TYPE.machine,
-        })
-
-        await createItemCompany({
-          item_id: newItem.id,
-          company_id: machine.manufacturer,
-          relation_type: 'manufacturer',
-        })
-
-        return h.response(newItem).type('json').code(201)
-      } catch (error) {
-        console.log('MACHINE CREATE :', error)
-
-        return h
-          .response({ error: 'Internal server error', details: error })
-          .code(500)
-      }
-    },
-  },
   {
     method: 'PUT',
     path: '/items/{id}',
@@ -248,6 +171,15 @@ module.exports = [
 
       // ====== COVER ==========================================================
 
+      try {
+        await createItemHistory(oldItem.id)
+      } catch (error) {
+        console.log('ITEM HISTORY :', error)
+        return h
+          .response({ error: 'Internal server error', details: error })
+          .code(500)
+      }
+
       if (data.cover && data.cover?.hapi?.filename) {
         const [cover] = await createMedia([data.cover])
 
@@ -263,9 +195,30 @@ module.exports = [
             .code(500)
         }
 
-        oldItem.cover_url = cover.url.includes('http')
-          ? cover.url.cover_url
-          : req.server.info.protocol + '://' + req.info.host + cover.url
+        oldItem.cover_url = getMediaUrl(cover.url, req)
+
+        return h.response(oldItem).code(201)
+      }
+
+      // ====== COMPANIES ==========================================================
+      if (data.company_id) {
+        // Replace the old company
+        if (data.company_old_id) {
+          try {
+            const newCompany = await replaceCompany(
+              oldItem.id,
+              data.company_id,
+              data.company_old_id
+            )
+            oldItem[newCompany.relation_type] = newCompany
+            return h.response(oldItem).code(201)
+          } catch (error) {
+            console.log('COMPANY REPLACE :', error)
+            return h
+              .response({ error: 'Internal server error', details: error })
+              .code(500)
+          }
+        }
 
         return h.response(oldItem).code(201)
       }
@@ -283,48 +236,6 @@ module.exports = [
       }
 
       return h.response(oldItem).code(201)
-      // ====== MEDIAS =========================================================
-
-      const files = Array.isArray(data.medias) ? data.medias : [data.medias]
-
-      const { error, value: machine } = schema.validate({
-        ...data,
-        medias: files.filter((i) => i?.hapi?.filename),
-      })
-
-      if (error) {
-        const details = error.details.map((i) => i.message).join(',')
-        return h.response({ error: details }).code(400)
-      }
-
-      if (machine.cover_image && machine.cover_image?.hapi?.filename) {
-        machine.cover_image.alt = machine.name + ' cover'
-        const coverIds = await createMedia([machine.cover_image])
-        machine.cover_id = coverIds[0]
-      }
-
-      try {
-        const newItem = await createItems({
-          ...machine,
-          manufacturer: undefined,
-          author_id: author.id,
-          type: ITEM_TYPE.machine,
-        })
-
-        await createItemCompany({
-          item_id: newItem.id,
-          company_id: machine.manufacturer,
-          relation_type: 'manufacturer',
-        })
-
-        return h.response(newItem).type('json').code(201)
-      } catch (error) {
-        console.log('MACHINE CREATE :', error)
-
-        return h
-          .response({ error: 'Internal server error', details: error })
-          .code(500)
-      }
     },
   },
 ]

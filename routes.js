@@ -2,7 +2,7 @@ const routes = [
   {
     method: 'GET',
     path: '/',
-    handler(req, h) {
+    handler() {
       return 'API EN LIGNE'
     },
   },

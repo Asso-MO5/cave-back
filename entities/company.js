@@ -2,6 +2,7 @@ const { knex } = require('../utils/db')
 const { v4: uuidv4 } = require('uuid')
 const { TABLES } = require('../utils/constants')
 const { getSlug } = require('../utils/get-slug')
+const { ITEM_COMPANIES } = require('./item-company')
 
 const COMPANY = {
   id: 'id',
@@ -59,12 +60,25 @@ module.exports = {
         created_at: new Date(),
         updated_at: new Date(),
       }
-      console.log('newCompany :', newCompany)
       await knex(TABLES.companies).insert(newCompany)
 
       return newCompany
     } catch (error) {
       console.log('MEDIA CREATE :', error)
     }
+  },
+  async getCompaniesByItemId(itemId) {
+    return await knex(TABLES.companies)
+      .leftJoin(
+        TABLES.item_companies,
+        `${TABLES.companies}.${COMPANY.id}`,
+        '=',
+        `${TABLES.item_companies}.${ITEM_COMPANIES.company_id}`
+      )
+      .where(`${TABLES.item_companies}.${ITEM_COMPANIES.item_id}`, itemId)
+      .select(
+        TABLES.companies + '.*',
+        TABLES.item_companies + '.' + ITEM_COMPANIES.relation_type
+      )
   },
 }

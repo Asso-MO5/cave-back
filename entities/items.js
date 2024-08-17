@@ -148,26 +148,6 @@ module.exports = {
 
     if (!item) throw new Error('Item not found')
 
-    const old = await knex(TABLES.item_history)
-      .where({ item_id: id })
-      .orderBy('modified_at', 'desc')
-      .select('version')
-      .first()
-
-    const historyId = uuidv4()
-    try {
-      await knex(TABLES.item_history).insert({
-        version: (old?.version || 0) + 1,
-        item_id: item.id,
-        id: historyId,
-        author_id: item.author_id,
-        changes: JSON.stringify(item),
-        modified_at: new Date(),
-      })
-    } catch (error) {
-      console.log('ITEM HISTORY :', error)
-    }
-
     const update = {
       ...item,
       ...Object.keys(partial).reduce((acc, key) => {
