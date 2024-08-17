@@ -81,4 +81,24 @@ module.exports = {
         TABLES.item_companies + '.' + ITEM_COMPANIES.relation_type
       )
   },
+  async getCompanyById(companyId) {
+    return await knex(TABLES.companies).where(COMPANY.id, companyId).first()
+  },
+  async getCompanyBySlug(slug) {
+    return await knex(TABLES.companies).where(COMPANY.slug, slug).first()
+  },
+  async getCompanyByName(name) {
+    try {
+      return await knex(TABLES.companies).where(COMPANY.name, name).first()
+    } catch (error) {
+      console.log('GET COMPANY BY NAME :', error)
+    }
+  },
+  async updateCompany(companyId, partial) {
+    try {
+      await knex(TABLES.companies).where(COMPANY.id, companyId).update(partial)
+    } catch (error) {
+      console.log('COMPANY UPDATE :', error)
+    }
+  },
 }

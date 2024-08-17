@@ -1,8 +1,12 @@
-const Joi = require('joi')
 const { getAuthor } = require('../utils/get-author')
 const { paginateCursor } = require('../utils/db')
 const { TABLES, ROLES } = require('../utils/constants')
-const { createCompanies, getCompaniesLight } = require('../entities/company')
+const {
+  createCompanies,
+  getCompaniesLight,
+  getCompanyByName,
+  updateCompany,
+} = require('../entities/company')
 
 module.exports = [
   {
@@ -62,63 +66,26 @@ module.exports = [
 
       const author = await getAuthor(req, h, [ROLES.member])
 
-      const schema = Joi.object({
-        name: Joi.string().required(),
-        borned_at: Joi.string(),
-        description: Joi.string(),
-        country: Joi.string(),
-        activities: Joi.string(),
-        logo_id: Joi.string(),
-        medias: Joi.array().items(
-          Joi.object().keys({
-            hapi: Joi.object()
-              .keys({
-                filename: Joi.string().required(),
-              })
-              .unknown(true),
-            _readableState: Joi.object().unknown(true),
-            _events: Joi.object().unknown(true),
-            _eventsCount: Joi.number(),
-            _maxListeners: Joi.number(),
-            _data: Joi.object().unknown(true),
-            _position: Joi.number(),
-            _writableState: Joi.object().unknown(true),
-            writable: Joi.boolean(),
-            readable: Joi.boolean(),
-            domain: Joi.object().unknown(true),
-            _encoding: Joi.string(),
-          })
-        ),
-        medias_url: Joi.string(),
-      })
+      const isExist = await getCompanyByName(data.name)
 
-      const files = Array.isArray(data.medias) ? data.medias : [data.medias]
+      if (isExist && !isExist.activities.includes(data.activities)) {
+        const activities = isExist.activities.split(',')
+        activities.push(data.activities)
+        isExist.activities = activities.join(',')
 
-      const { error, value: company } = schema.validate({
-        ...data,
-        medias: files.filter((i) => i?.hapi?.filename),
-      })
+        await updateCompany(isExist.id, { activities: isExist.activities })
 
-      if (error) {
-        const details = error.details.map((i) => i.message).join(',')
-        return h.response({ error: details }).code(400)
-      }
-
-      if (company.logo_id && company.logo_id?.hapi?.filename) {
-        company.logo_id.alt = company.name + ' cover'
-        const coverIds = await createMedia([company.logo_id])
-        company.cover_id = coverIds[0]
+        return h.response(isExist).type('json').code(200)
       }
 
       try {
         const newItem = await createCompanies({
-          ...company,
+          ...data,
           author_id: author.id,
         })
         return h.response(newItem).type('json').code(201)
       } catch (error) {
         console.log('company CREATE :', error)
-
         return h
           .response({ error: 'Internal server error', details: error })
           .code(500)

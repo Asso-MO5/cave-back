@@ -1,7 +1,6 @@
 const { knex } = require('../utils/db')
 const { v4: uuidv4 } = require('uuid')
 const { TABLES } = require('../utils/constants')
-const { getCompaniesByItemId } = require('./company')
 
 const ITEM_COMPANIES = {
   id: 'id',
@@ -34,7 +33,23 @@ module.exports = {
     await knex(TABLES.item_companies).insert(newCompany)
     return newCompany
   },
-  async replaceCompany(itemId, oldId, newId) {
+  async replaceCompanyForItem(itemId, oldId, newId, relationType, author_id) {
+    const isExist = await knex(TABLES.item_companies)
+      .where(ITEM_COMPANIES.item_id, itemId)
+      .andWhere(ITEM_COMPANIES.company_id, newId)
+      .first()
+
+    if (!isExist)
+      await knex(TABLES.item_companies).insert({
+        id: uuidv4(),
+        item_id: itemId,
+        company_id: newId,
+        relation_type: relationType,
+        author_id,
+        created_at: new Date(),
+        updated_at: new Date(),
+      })
+
     await knex(TABLES.item_companies)
       .where(ITEM_COMPANIES.item_id, itemId)
       .andWhere(ITEM_COMPANIES.company_id, oldId)

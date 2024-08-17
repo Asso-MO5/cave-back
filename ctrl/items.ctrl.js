@@ -2,9 +2,7 @@ const Joi = require('joi')
 const { createMedia, getMediasByItemId } = require('../entities/media')
 const {
   createItems,
-  ITEM_TYPE,
   getItemBySlug,
-  ITEMS,
   getItemById,
   getItems,
   getItemByNameAndType,
@@ -15,7 +13,10 @@ const { ROLES } = require('../utils/constants')
 const { getMediaUrl } = require('../utils/media-url')
 const { getCompaniesByItemId } = require('../entities/company')
 const { createItemHistory } = require('../entities/item-history')
-const { replaceCompany } = require('../entities/item-company')
+const {
+  replaceCompany,
+  replaceCompanyForItem,
+} = require('../entities/item-company')
 
 module.exports = [
   {
@@ -137,7 +138,7 @@ module.exports = [
         const newItem = await createItems({
           ...machine,
           author_id: author.id,
-          type: ITEM_TYPE.machine,
+          type: req.query.type,
         })
 
         return h.response(newItem).type('json').code(201)
@@ -205,12 +206,15 @@ module.exports = [
         // Replace the old company
         if (data.company_old_id) {
           try {
-            const newCompany = await replaceCompany(
+            // create if not exist
+            const newCompany = await replaceCompanyForItem(
               oldItem.id,
               data.company_id,
-              data.company_old_id
+              data.company_old_id,
+              data.company_relation_type,
+              author.id
             )
-            oldItem[newCompany.relation_type] = newCompany
+            oldItem[data.company_relation_type] = newCompany
             return h.response(oldItem).code(201)
           } catch (error) {
             console.log('COMPANY REPLACE :', error)
