@@ -26,6 +26,8 @@ module.exports = [
       await getAuthor(req, h, [ROLES.member])
       const items = []
 
+      console.log('GET ITEMS :', req.query.type, req.query)
+
       try {
         const query = await getItems(req.query.type)
         items.push(...query)
