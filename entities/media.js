@@ -63,6 +63,51 @@ module.exports = {
       console.log('MEDIA CREATE :', error)
     }
   },
+  async createMediasBase64(medias) {
+    const dir = path.join(__dirname, '../uploads')
+
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir)
+    const date = new Date()
+    const dateStr = `${date.getFullYear()}-${
+      date.getMonth() + 1
+    }-${date.getDate()}`
+
+    const dateFolder = path.join(dir, dateStr)
+
+    if (!fs.existsSync(dateFolder)) fs.mkdirSync(dateFolder)
+
+    const filesToSave = []
+    for (const file of medias.filter((media) => !!media.base64.length)) {
+      const extension = '.webp'
+      const id = uuidv4()
+      const uuidName = id + extension
+      const destination = path.join(dir, `${dateStr}/${uuidName}`)
+      const fileStream = fs.createWriteStream(destination)
+
+      await new Promise((resolve, reject) => {
+        file.pipe(fileStream)
+
+        file.on('end', resolve)
+        file.on('error', reject)
+        filesToSave.push({
+          id,
+          name: file.hapi.filename.split('.')[0],
+          size: file._data.length,
+          type: file.hapi.headers['content-type'],
+          url: `/uploads/${dateStr}/${uuidName}`,
+          alt: file.alt || file.hapi.filename,
+          description: file.description || '',
+        })
+      })
+    }
+
+    try {
+      await knex(TABLES.medias).insert(filesToSave)
+      return filesToSave
+    } catch (error) {
+      console.log('MEDIA CREATE :', error)
+    }
+  },
   async getMedia(mediaId) {
     try {
       return await knex(TABLES.medias).where({ id: mediaId }).first()
@@ -86,6 +131,15 @@ module.exports = {
           TABLES.medias + '.' + MEDIA.alt,
           TABLES.medias + '.' + MEDIA.type
         )
+    } catch (error) {
+      console.log('MEDIA GET :', error)
+    }
+  },
+  async getMedias(search) {
+    try {
+      const baseQuery = knex(TABLES.medias)
+      if (search) baseQuery.where(MEDIA.name, 'like', `%${search}%`)
+      return await baseQuery.select('id', 'url', 'name')
     } catch (error) {
       console.log('MEDIA GET :', error)
     }

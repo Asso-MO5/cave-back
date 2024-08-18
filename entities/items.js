@@ -13,6 +13,7 @@ const ITEMS = {
   release_year: 'release_year',
   description: 'description',
   type: 'type', // e.g., 'item', 'game'
+  status: 'status',
   cover_id: 'cover_id',
   author_id: 'author_id',
   created_at: 'created_at',

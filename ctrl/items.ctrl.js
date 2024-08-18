@@ -1,5 +1,9 @@
 const Joi = require('joi')
-const { createMedia, getMediasByItemId } = require('../entities/media')
+const {
+  createMedia,
+  getMediasByItemId,
+  createMediasBase64,
+} = require('../entities/media')
 const {
   createItems,
   getItemBySlug,
@@ -14,6 +18,9 @@ const { getMediaUrl } = require('../utils/media-url')
 const { getCompaniesByItemId } = require('../entities/company')
 const { createItemHistory } = require('../entities/item-history')
 const { replaceCompanyForItem } = require('../entities/item-company')
+const Canvas = require('@napi-rs/canvas')
+const fs = require('fs')
+const { Readable } = require('stream')
 
 module.exports = [
   {
@@ -196,6 +203,71 @@ module.exports = [
         return h.response(oldItem).code(201)
       }
 
+      if (data.cover_id) {
+        try {
+          await updateItem(oldItem.id, {
+            cover_id: data.cover_id,
+            author_id: author.id,
+          })
+        } catch (error) {
+          return h
+            .response({ error: 'Internal server error', details: error })
+            .code(500)
+        }
+
+        return h.response(oldItem).code(201)
+      }
+
+      if (data.cover_url && data.cover_url.includes('http')) {
+        const background = await Canvas.loadImage(data.cover_url)
+        const canvas = Canvas.createCanvas(background.width, background.height)
+        const context = canvas.getContext('2d')
+        context.drawImage(background, 0, 0)
+
+        const buffer = canvas.toBuffer('image/png')
+        const stream = new Readable()
+        stream.push(buffer)
+        stream.push(null)
+
+        const file = {
+          hapi: {
+            filename: data.cover_url.split('/').pop(),
+            headers: {
+              'content-type': 'image/png',
+            },
+          },
+          _data: buffer,
+          pipe: (dest) => stream.pipe(dest),
+          alt: '',
+          description: '',
+          on: (event, cb) => {
+            if (event === 'end') {
+              cb()
+            }
+          },
+        }
+
+        const [cover] = await createMedia([file])
+
+        oldItem.cover_id = cover.id
+        try {
+          await updateItem(oldItem.id, {
+            cover_id: cover.id,
+            author_id: author.id,
+          })
+        } catch (error) {
+          return h
+            .response({
+              error: 'Internal server error',
+              details: error,
+            })
+            .code(500)
+        }
+
+        oldItem.cover_url = getMediaUrl(cover.url, req)
+
+        return h.response(oldItem).code(201)
+      }
       // ====== COMPANIES ==========================================================
       if (data.company_id) {
         // Replace the old company
