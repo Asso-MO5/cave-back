@@ -5,6 +5,7 @@ const { getSlug } = require('../utils/get-slug')
 const { COMPANY } = require('./company')
 const { ITEM_COMPANIES } = require('./item-company')
 const { MEDIA } = require('./media')
+const { ITEM_ITEMS } = require('./item-items')
 
 const ITEMS = {
   id: 'id',
@@ -66,6 +67,72 @@ module.exports = {
       throw new Error(error)
     }
   },
+  async getMachineByGameId(gameId) {
+    try {
+      return await knex(TABLES.items)
+        .leftJoin(
+          TABLES.item_items,
+          `${TABLES.items}.${ITEMS.id}`,
+          `${TABLES.item_items}.${ITEM_ITEMS.item_left_id}`
+        )
+        .where({
+          [`${TABLES.item_items}.${ITEM_ITEMS.item_right_id}`]: gameId,
+          [`${TABLES.item_items}.${ITEM_ITEMS.relation_type}`]: 'machine_game',
+        })
+        .select(
+          TABLES.items + '.*',
+          `${TABLES.item_items}.${ITEM_ITEMS.item_ref_id}`
+        )
+        .first()
+    } catch (error) {
+      console.log('GET MACHINE BY GAME ID :', error)
+      throw new Error(error)
+    }
+  },
+  async getMachinesByRefId(id) {
+    try {
+      return await knex(TABLES.items)
+        // Joindre les relations entre les machines et les items dans la table `item_items`
+        .leftJoin(
+          TABLES.item_items,
+          `${TABLES.items}.${ITEMS.id}`,
+          `${TABLES.item_items}.${ITEM_ITEMS.item_left_id}` // Lier les machines aux items par `item_right_id`
+        )
+        // Jointure supplémentaire pour récupérer les informations de l'item lié via `item_right_id`
+        .leftJoin(
+          `${TABLES.items} as related_item`,
+          `${TABLES.item_items}.${ITEM_ITEMS.item_right_id}`,
+          `related_item.${ITEMS.id}`
+        )
+        // Sélectionner uniquement les items de type "machine"
+        .where(`${TABLES.items}.${ITEMS.type}`, 'machine')
+        // Vérifier s'il y a des relations et appliquer le filtre seulement si c'est pertinent
+        .modify(function (queryBuilder) {
+          if (id) {
+            queryBuilder.andWhere(function () {
+              this.where(
+                `${TABLES.item_items}.${ITEM_ITEMS.item_ref_id}`,
+                id
+              ).orWhereNull(`${TABLES.item_items}.${ITEM_ITEMS.item_ref_id}`)
+            })
+          }
+        })
+        // Sélectionner les colonnes nécessaires
+        .select(
+          `${TABLES.items}.${ITEMS.id}`,
+          `${TABLES.items}.${ITEMS.name}`,
+          'related_item.id as related_item_id'
+        )
+        // Trier les résultats par nom
+        .orderBy([
+          { column: 'related_item.id', order: 'desc' }, // Relations d'abord
+          { column: `${TABLES.items}.${ITEMS.name}`, order: 'asc' }, // Tri alphabétique
+        ])
+    } catch (error) {
+      console.log('GET MACHINES :', error)
+      throw new Error(error)
+    }
+  },
   async createItems(item) {
     try {
       const id = uuidv4()
@@ -73,7 +140,7 @@ module.exports = {
 
       const existslugs = await knex(TABLES.items)
         .where({ slug })
-        .count()
+        .count('* as count')
         .first()
 
       if (existslugs.count > 0) slug = slug + '-' + existslugs.count

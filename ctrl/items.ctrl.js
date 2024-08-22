@@ -1,9 +1,5 @@
 const Joi = require('joi')
-const {
-  createMedia,
-  getMediasByItemId,
-  createMediasBase64,
-} = require('../entities/media')
+const { createMedia, getMediasByItemId } = require('../entities/media')
 const {
   createItems,
   getItemBySlug,
@@ -11,6 +7,8 @@ const {
   getItems,
   getItemByNameAndType,
   updateItem,
+  getMachinesByRefId,
+  getMachineByGameId,
 } = require('../entities/items')
 const { getAuthor } = require('../utils/get-author')
 const { ROLES } = require('../utils/constants')
@@ -19,8 +17,12 @@ const { getCompaniesByItemId } = require('../entities/company')
 const { createItemHistory } = require('../entities/item-history')
 const { replaceCompanyForItem } = require('../entities/item-company')
 const Canvas = require('@napi-rs/canvas')
-const fs = require('fs')
 const { Readable } = require('stream')
+const {
+  createRelation,
+  getRelationbyLeftIdAndRightId,
+  getRelationByReIdAndType,
+} = require('../entities/item-items')
 
 module.exports = [
   {
@@ -33,7 +35,7 @@ module.exports = [
         const items = await getItems(req.query.type)
 
         const res = items.reduce((acc, item) => {
-          const isExist = acc.findIndex((i) => i.slug === item.slug)
+          const isExist = acc.findIndex((i) => i.name === item.name)
           if (isExist === -1) {
             acc.push({
               name: item.name,
@@ -54,6 +56,14 @@ module.exports = [
           .response({ error: 'Internal server error', details: error })
           .code(500)
       }
+    },
+  },
+  {
+    method: 'GET',
+    path: '/machines/{id}',
+    async handler(req, h) {
+      const query = await getMachinesByRefId(req.query.id)
+      return h.response(query).type('json')
     },
   },
   {
@@ -92,6 +102,25 @@ module.exports = [
           return h
             .response({ error: 'Internal server error', details: error })
             .code(500)
+        }
+
+        // ====== MACHINE ========================*
+        if (item.type === 'game') {
+          try {
+            const machine = await getMachineByGameId(item.id)
+            if (machine) {
+              item.machine = machine
+              item.ref_id = machine.item_ref_id
+            } else {
+              item.machine = {}
+              item.ref_id = item.id
+            }
+          } catch (error) {
+            console.log('ITEM MACHINE GET BY ID :', error)
+            return h
+              .response({ error: 'Internal server error', details: error })
+              .code(500)
+          }
         }
 
         return h.response(item).type('json')
@@ -154,6 +183,53 @@ module.exports = [
     },
   },
 
+  {
+    method: 'PUT',
+    path: '/machine/{machine_id}/game/{ref_id}',
+    async handler(req, h) {
+      const author = await getAuthor(req, h, [ROLES.member])
+      const { machine_id, ref_id } = req.params
+
+      const refItem = await getItemById(ref_id)
+
+      const relation = await getRelationbyLeftIdAndRightId(ref_id, machine_id)
+
+      if (relation) return h.response(refItem).code(200)
+
+      const existOtherRelation = await getRelationByReIdAndType(
+        ref_id,
+        'machine_game'
+      )
+
+      if (!existOtherRelation?.id) {
+        await createRelation(
+          ref_id,
+          ref_id,
+          machine_id,
+          'machine_game',
+          author.id
+        )
+
+        return h.response(refItem).code(201)
+      }
+
+      const newItem = await createItems({
+        name: refItem.name,
+        author_id: author.id,
+        type: 'game',
+      })
+
+      await createRelation(
+        ref_id,
+        newItem.id,
+        machine_id,
+        'machine_game',
+        author.id
+      )
+
+      return h.response(await getItemById(newItem.id)).code(201)
+    },
+  },
   {
     method: 'PUT',
     path: '/items/{id}',

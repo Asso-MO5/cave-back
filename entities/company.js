@@ -45,6 +45,21 @@ module.exports = {
       .orderBy(COMPANY.name)
       .select(COMPANY.id, COMPANY.name, COMPANY.slug)
   },
+  async getCompanyWithGame(itemId) {
+    return await knex(TABLES.companies)
+      .leftJoin(
+        TABLES.item_companies,
+        `${TABLES.companies}.${COMPANY.id}`,
+        '=',
+        `${TABLES.item_companies}.${ITEM_COMPANIES.company_id}`
+      )
+      .where(`${TABLES.item_companies}.${ITEM_COMPANIES.item_id}`, itemId)
+      .select(
+        TABLES.companies + '.' + COMPANY.id,
+        TABLES.companies + '.' + COMPANY.name,
+        TABLES.item_companies + '.' + ITEM_COMPANIES.relation_type
+      )
+  },
   async createCompanies(company) {
     try {
       const id = uuidv4()

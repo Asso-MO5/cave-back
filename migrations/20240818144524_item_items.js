@@ -10,15 +10,11 @@ exports.up = async function (knex) {
   await knex.schema.createTable(TABLES.item_items, (table) => {
     table.uuid(ITEM_ITEMS.id).primary()
     table
-      .uuid(ITEM_ITEMS.item_id)
-      .references('id')
-      .inTable(TABLES.items)
-      .notNullable()
-    table
       .uuid(ITEM_ITEMS.item_left_id)
       .references('id')
       .inTable(TABLES.items)
       .notNullable()
+    table.uuid(ITEM_ITEMS.item_ref_id).references('id').inTable(TABLES.items)
     table
       .uuid(ITEM_ITEMS.item_right_id)
       .references('id')
