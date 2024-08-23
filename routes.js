@@ -1,9 +1,11 @@
+const { routeDefs } = require('./utils/auth')
+
 const routes = [
   {
     method: 'GET',
     path: '/',
-    handler() {
-      return 'API EN LIGNE'
+    handler(_, h) {
+      return h?.response(routeDefs).type('json').code(200)
     },
   },
   {

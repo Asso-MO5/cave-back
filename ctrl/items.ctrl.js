@@ -29,8 +29,6 @@ module.exports = [
     method: 'GET',
     path: '/items',
     async handler(req, h) {
-      await getAuthor(req, h, [ROLES.member])
-
       try {
         const items = await getItems(req.query.type)
 
@@ -70,8 +68,6 @@ module.exports = [
     method: 'GET',
     path: '/items/{slug}',
     async handler(req, h) {
-      await getAuthor(req, h, [ROLES.member])
-
       try {
         const item = await getItemBySlug(req.params.slug)
         if (!item) return h.response({ error: 'Non trouvé' }).code(404)
@@ -144,8 +140,6 @@ module.exports = [
       },
     },
     async handler(req, h) {
-      const author = await getAuthor(req, h, [ROLES.member])
-
       const schema = Joi.object({
         name: Joi.string().required(),
       })
@@ -187,7 +181,6 @@ module.exports = [
     method: 'PUT',
     path: '/machine/{machine_id}/game/{ref_id}',
     async handler(req, h) {
-      const author = await getAuthor(req, h, [ROLES.member])
       const { machine_id, ref_id } = req.params
 
       const refItem = await getItemById(ref_id)

@@ -31,7 +31,12 @@ module.exports = [
           .setExpirationTime('24h')
           .encrypt(secret)
 
-        return h.response({ auth: jwt }).type('json').code(200)
+        return h
+          .response({
+            auth: jwt,
+          })
+          .type('json')
+          .code(200)
         //TODO save author in db
       } catch (error) {
         return h.response({ msg: 'auth fail' }).type('json').code(401)

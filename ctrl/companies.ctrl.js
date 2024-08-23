@@ -1,6 +1,5 @@
-const { getAuthor } = require('../utils/get-author')
 const { paginateCursor } = require('../utils/db')
-const { TABLES, ROLES } = require('../utils/constants')
+const { TABLES } = require('../utils/constants')
 const {
   createCompanies,
   getCompaniesLight,
@@ -39,7 +38,6 @@ module.exports = [
         ])
       }
 
-      await getAuthor(req, h, [ROLES.member])
       const query = await paginateCursor({
         tableName: TABLES.companies,
         pageSize: req.query.limit ? parseInt(req.query.limit) : 10,
@@ -63,8 +61,6 @@ module.exports = [
     },
     async handler(req, h) {
       const data = req.payload
-
-      const author = await getAuthor(req, h, [ROLES.member])
 
       const isExist = await getCompanyByName(data.name)
 
