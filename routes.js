@@ -18,6 +18,7 @@ const routes = [
       },
     },
   },
+  ...require('./ctrl/swagger.ctrl'),
   ...require('./ctrl/auth.ctrl'),
   ...require('./ctrl/items.ctrl'),
   ...require('./ctrl/companies.ctrl'),
