@@ -22,6 +22,8 @@ const TABLES = {
 const ROLES = {
   member: 'Membres MO5',
   admin: 'Master Control Program',
+  reviewer: 'reviewer',
+  publisher: 'publisher',
 }
 
 const METASEUR = 'https://metaseur-kazerlelutins-projects.vercel.app/api'

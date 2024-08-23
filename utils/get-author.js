@@ -3,7 +3,6 @@ const jose = require('jose')
 async function getAuthor(req, h, roles) {
   const secret = Buffer.from(process.env.API_KEY, 'hex')
   const jwt = req.headers.authorization.split(' ')[1]
-  const { payload } = await jose.jwtDecrypt(jwt, secret)
 
   try {
     const { payload } = await jose.jwtDecrypt(jwt, secret)
