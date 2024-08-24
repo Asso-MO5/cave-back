@@ -37,6 +37,7 @@ const routeDefs = {
       roles: [ROLES.reviewer],
     },
   },
+
   machine_by_slug: {
     path: '/machines/{slug}',
     get: {

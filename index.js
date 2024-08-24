@@ -2,11 +2,13 @@
 require('dotenv').config()
 const Hapi = require('@hapi/hapi')
 const Nes = require('@hapi/nes')
-const Inert = require('@hapi/inert')
 const { routes } = require('./routes')
 const { getAuthor } = require('./utils/get-author')
-const { ROLES } = require('./utils/constants')
 const { getRoles } = require('./utils/auth')
+const Inert = require('@hapi/inert')
+const Vision = require('@hapi/vision')
+const HapiSwagger = require('hapi-swagger')
+const Pack = require('./package')
 
 const init = async () => {
   const server = Hapi.server({
@@ -22,8 +24,24 @@ const init = async () => {
   })
 
   // === Register plugins ===
-  await server.register(Nes)
-  await server.register(Inert)
+
+  const swaggerOptions = {
+    info: {
+      title: 'CAVE API Documentation',
+      version: Pack.version,
+    },
+    documentationPath: '/api-docs',
+  }
+
+  await server.register([
+    Nes,
+    Inert,
+    Vision,
+    {
+      plugin: HapiSwagger,
+      options: swaggerOptions,
+    },
+  ])
 
   // === Add routes ===
   server.route(routes)
@@ -35,7 +53,12 @@ const init = async () => {
   server.subscription('/test')
 
   server.ext('onPreHandler', async (req, h) => {
-    const authorizedRoles = getRoles(req.route.path, req.method)
+    const authorizedRoles =
+      routes.find(
+        (r) =>
+          r.path === req.route.path &&
+          r.method.toLowerCase() === req.method.toLowerCase()
+      )?.options?.notes || []
 
     if (authorizedRoles.length === 0) return h.continue
 

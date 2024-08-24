@@ -4,7 +4,6 @@ const {
   createItems,
   getItemBySlug,
   getItemById,
-  getItems,
   getItemByNameAndType,
   updateItem,
   getMachinesByRefId,
@@ -21,37 +20,30 @@ const {
   getRelationbyLeftIdAndRightId,
   getRelationByReIdAndType,
 } = require('../entities/item-items')
+const { ROLES } = require('../utils/constants')
+const itemsHandler = require('../handlers/items.handler')
+const { ITEM_MODEL } = require('../models/item.model')
+const { stat } = require('fs')
 
 module.exports = [
   {
     method: 'GET',
     path: '/items',
-    async handler(req, h) {
-      try {
-        const items = await getItems(req.query.type)
+    handler: itemsHandler,
+    options: {
+      description: 'Récupère la liste des items (jeux, machines, listes, etc.)',
+      tags: ['api', 'items', 'listes', 'machines', 'jeux'],
+      notes: [ROLES.member],
 
-        const res = items.reduce((acc, item) => {
-          const isExist = acc.findIndex((i) => i.name === item.name)
-          if (isExist === -1) {
-            acc.push({
-              name: item.name,
-              slug: item.slug,
-              release_year: item.release_year,
-              [item.relation_type]: item.company_name,
-            })
-          } else {
-            acc[isExist][item.relation_type] = item.company_name
-          }
-          return acc
-        }, [])
-
-        return h.response(res).type('json')
-      } catch (error) {
-        console.log('GET ITEMS :', error)
-        return h
-          .response({ error: 'Internal server error', details: error })
-          .code(500)
-      }
+      validate: {
+        query: Joi.object({
+          type: Joi.string().valid('game', 'machine').required(),
+          limit: Joi.number().integer().min(1).max(100000).default(10),
+        }),
+        headers: Joi.object({
+          authorization: Joi.string().required(),
+        }).unknown(),
+      },
     },
   },
   {
@@ -384,6 +376,21 @@ module.exports = [
   {
     method: 'PUT',
     path: '/items/{id}/status/{status}',
+    options: {
+      description: "Permet de changer le status d'un item",
+      tags: ['api', 'items', 'listes', 'machines', 'jeux'],
+      notes: [ROLES.reviewer],
+      validate: {
+        headers: Joi.object({
+          authorization: Joi.string().required(),
+        }).unknown(),
+      },
+      response: {
+        status: {
+          201: ITEM_MODEL.required(),
+        },
+      },
+    },
     async handler(req, h) {
       const oldItem = await getItemById(req.params.id)
       if (!oldItem) return h.response({ error: 'Non trouvé' }).code(404)
