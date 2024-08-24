@@ -36,10 +36,13 @@ const init = async () => {
 
   server.ext('onPreHandler', async (req, h) => {
     const authorizedRoles = getRoles(req.route.path, req.method)
+
     if (authorizedRoles.length === 0) return h.continue
 
-    const { roles } = await getAuthor(req, h, [ROLES.member])
+    const user = await getAuthor(req, h, authorizedRoles)
 
+    const { roles } = user
+    req.app.user = user
     const checkRoles = authorizedRoles.some((role) => roles.includes(role))
     return checkRoles
       ? h.continue

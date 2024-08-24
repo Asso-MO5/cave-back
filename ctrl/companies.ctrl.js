@@ -77,7 +77,7 @@ module.exports = [
       try {
         const newItem = await createCompanies({
           ...data,
-          author_id: author.id,
+          author_id: req.app.user.id,
         })
         return h.response(newItem).type('json').code(201)
       } catch (error) {

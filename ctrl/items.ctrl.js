@@ -10,8 +10,6 @@ const {
   getMachinesByRefId,
   getMachineByGameId,
 } = require('../entities/items')
-const { getAuthor } = require('../utils/get-author')
-const { ROLES } = require('../utils/constants')
 const { getMediaUrl } = require('../utils/media-url')
 const { getCompaniesByItemId } = require('../entities/company')
 const { createItemHistory } = require('../entities/item-history')
@@ -162,7 +160,7 @@ module.exports = [
       try {
         const newItem = await createItems({
           ...machine,
-          author_id: author.id,
+          author_id: req.app.user.id,
           type: req.query.type,
         })
 
@@ -200,7 +198,7 @@ module.exports = [
           ref_id,
           machine_id,
           'machine_game',
-          author.id
+          req.app.user.id
         )
 
         return h.response(refItem).code(201)
@@ -208,7 +206,7 @@ module.exports = [
 
       const newItem = await createItems({
         name: refItem.name,
-        author_id: author.id,
+        author_id: req.app.user.id,
         type: 'game',
       })
 
@@ -217,7 +215,7 @@ module.exports = [
         newItem.id,
         machine_id,
         'machine_game',
-        author.id
+        req.app.user.id
       )
 
       return h.response(await getItemById(newItem.id)).code(201)
@@ -236,10 +234,15 @@ module.exports = [
     },
     async handler(req, h) {
       const data = req.payload
-      const author = await getAuthor(req, h, [ROLES.member])
-
       const oldItem = await getItemById(req.params.id)
       if (!oldItem) return h.response({ error: 'Non trouvé' }).code(404)
+
+      if (data.status)
+        return h
+          .response({
+            error: 'Vous ne pouvez pas modifier le status via cette route',
+          })
+          .code(400)
 
       // ====== COVER ==========================================================
 
@@ -259,7 +262,7 @@ module.exports = [
         try {
           await updateItem(oldItem.id, {
             cover_id: cover.id,
-            author_id: author.id,
+            author_id: req.app.user.id,
           })
         } catch (error) {
           return h
@@ -276,7 +279,7 @@ module.exports = [
         try {
           await updateItem(oldItem.id, {
             cover_id: data.cover_id,
-            author_id: author.id,
+            author_id: req.app.user.id,
           })
         } catch (error) {
           return h
@@ -322,7 +325,7 @@ module.exports = [
         try {
           await updateItem(oldItem.id, {
             cover_id: cover.id,
-            author_id: author.id,
+            author_id: req.app.user.id,
           })
         } catch (error) {
           return h
@@ -366,7 +369,42 @@ module.exports = [
       try {
         await updateItem(oldItem.id, {
           ...data,
-          author_id: author.id,
+          author_id: req.app.user.id,
+        })
+      } catch (error) {
+        console.log('ITEM UPDATE :', error)
+        return h
+          .response({ error: 'Internal server error', details: error })
+          .code(500)
+      }
+
+      return h.response(oldItem).code(201)
+    },
+  },
+  {
+    method: 'PUT',
+    path: '/items/{id}/status/{status}',
+    async handler(req, h) {
+      const oldItem = await getItemById(req.params.id)
+      if (!oldItem) return h.response({ error: 'Non trouvé' }).code(404)
+
+      const status = req.params.status
+
+      // ====== COVER ==========================================================
+
+      try {
+        await createItemHistory(oldItem.id)
+      } catch (error) {
+        console.log('ITEM HISTORY :', error)
+        return h
+          .response({ error: 'Internal server error', details: error })
+          .code(500)
+      }
+
+      try {
+        await updateItem(oldItem.id, {
+          status,
+          author_id: req.app.user.id,
         })
       } catch (error) {
         console.log('ITEM UPDATE :', error)

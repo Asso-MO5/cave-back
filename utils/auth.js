@@ -13,9 +13,10 @@ const routeDefs = {
     },
   },
   item: {
-    path: '/items/{id}',
+    path: '/items/{slug}',
     get: {
-      description: 'Récupère un item (jeu, machine, liste, etc.)',
+      description:
+        'Récupère un item (jeu, machine, liste, etc.) à partir de son slug',
       roles: [ROLES.member],
     },
     put: {
@@ -29,7 +30,7 @@ const routeDefs = {
     },
   },
   item_status: {
-    path: '/items/{state}/{id}',
+    path: '/items/{id}/status/{status}',
     put: {
       description:
         "Permet de changer le status (brouillon, en révision, publié ) d'un item (jeu, machine, liste, etc.)",
