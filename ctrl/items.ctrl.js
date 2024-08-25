@@ -4,9 +4,7 @@ const {
   createItems,
   getItemBySlug,
   getItemById,
-  getItemByNameAndType,
   updateItem,
-  getMachinesByRefId,
   getMachineByGameId,
 } = require('../entities/items')
 const { getMediaUrl } = require('../utils/media-url')
@@ -21,152 +19,39 @@ const {
   getRelationByReIdAndType,
 } = require('../entities/item-items')
 const { ROLES } = require('../utils/constants')
-const itemsHandler = require('../handlers/items.handler')
 const { ITEM_MODEL } = require('../models/item.model')
-const { stat } = require('fs')
+const itemStatusHandler = require('../handlers/item-status.handler')
+const itemCreateHandler = require('../handlers/item-create.handler')
+const { headers } = require('../models/header.model')
 
 module.exports = [
-  {
-    method: 'GET',
-    path: '/items',
-    handler: itemsHandler,
-    options: {
-      description: 'Récupère la liste des items (jeux, machines, listes, etc.)',
-      tags: ['api', 'items', 'listes', 'machines', 'jeux'],
-      notes: [ROLES.member],
-
-      validate: {
-        query: Joi.object({
-          type: Joi.string().valid('game', 'machine').required(),
-          limit: Joi.number().integer().min(1).max(100000).default(10),
-        }),
-        headers: Joi.object({
-          authorization: Joi.string().required(),
-        }).unknown(),
-      },
-    },
-  },
-  {
-    method: 'GET',
-    path: '/machines/{id}',
-    async handler(req, h) {
-      const query = await getMachinesByRefId(req.query.id)
-      return h.response(query).type('json')
-    },
-  },
-  {
-    method: 'GET',
-    path: '/items/{slug}',
-    async handler(req, h) {
-      try {
-        const item = await getItemBySlug(req.params.slug)
-        if (!item) return h.response({ error: 'Non trouvé' }).code(404)
-
-        // ====== MEDIAS ========================
-
-        if (item.cover_url) {
-          item.cover_url = getMediaUrl(item.cover_url, req)
-        }
-
-        try {
-          item.medias = await getMediasByItemId(item.id)
-        } catch (error) {
-          console.log('ITEM MEDIAS GET BY ID :', error)
-          return h
-            .response({ error: 'Internal server error', details: error })
-            .code(500)
-        }
-
-        // ====== COMPANY ========================
-        try {
-          const companies = await getCompaniesByItemId(item.id)
-          companies.forEach((c) => {
-            item[c.relation_type] = c
-          })
-        } catch (error) {
-          console.log('ITEM COMPANY GET BY ID :', error)
-          return h
-            .response({ error: 'Internal server error', details: error })
-            .code(500)
-        }
-
-        // ====== MACHINE ========================*
-        if (item.type === 'game') {
-          try {
-            const machine = await getMachineByGameId(item.id)
-            if (machine) {
-              item.machine = machine
-              item.ref_id = machine.item_ref_id
-            } else {
-              item.machine = {}
-              item.ref_id = item.id
-            }
-          } catch (error) {
-            console.log('ITEM MACHINE GET BY ID :', error)
-            return h
-              .response({ error: 'Internal server error', details: error })
-              .code(500)
-          }
-        }
-
-        return h.response(item).type('json')
-      } catch (error) {
-        console.log('MACHINE GET BY ID :', error)
-        return h
-          .response({ error: 'Internal server error', details: error })
-          .code(500)
-      }
-    },
-  },
   {
     method: 'POST',
     path: '/items',
     options: {
-      payload: {
-        parse: true,
-        output: 'stream',
-        multipart: true,
-        maxBytes: 800 * 1024 * 1024, //800 mb
+      description: 'Permet de créer un item (jeu, machine, liste...)',
+      tags: ['api', 'jeu', 'machine', 'liste'],
+      notes: [ROLES.reviewer, ROLES.publisher],
+      validate: {
+        payload: Joi.object({
+          type: Joi.string().required(),
+          name: Joi.string().required(),
+        }).label('ItemCreateBody'),
+        headers,
+      },
+      response: {
+        status: {
+          201: Joi.object({
+            id: Joi.string().required(),
+            slug: Joi.string().required(),
+          })
+            .label('itemCreated')
+            .required(),
+        },
       },
     },
-    async handler(req, h) {
-      const schema = Joi.object({
-        name: Joi.string().required(),
-      })
-
-      const { error, value: machine } = schema.validate(req.payload)
-
-      if (error) {
-        const details = error.details.map((i) => i.message).join(',')
-        return h.response({ error: details }).code(400)
-      }
-
-      const ifMachineExist = await getItemByNameAndType(
-        machine.name,
-        req.query.type
-      )
-
-      if (ifMachineExist)
-        return h.response({ error: 'Machine déjà existante' }).code(400)
-
-      try {
-        const newItem = await createItems({
-          ...machine,
-          author_id: req.app.user.id,
-          type: req.query.type,
-        })
-
-        return h.response(newItem).type('json').code(201)
-      } catch (error) {
-        console.log('MACHINE CREATE :', error)
-
-        return h
-          .response({ error: 'Internal server error', details: error })
-          .code(500)
-      }
-    },
+    handler: itemCreateHandler,
   },
-
   {
     method: 'PUT',
     path: '/machine/{machine_id}/game/{ref_id}',
@@ -381,46 +266,15 @@ module.exports = [
       tags: ['api', 'items', 'listes', 'machines', 'jeux'],
       notes: [ROLES.reviewer],
       validate: {
-        headers: Joi.object({
-          authorization: Joi.string().required(),
-        }).unknown(),
+        payload: Joi.object({}).label('ItemStatusBody'),
+        headers,
       },
       response: {
         status: {
-          201: ITEM_MODEL.required(),
+          201: ITEM_MODEL.label('ItemStatusUpdated').required(),
         },
       },
     },
-    async handler(req, h) {
-      const oldItem = await getItemById(req.params.id)
-      if (!oldItem) return h.response({ error: 'Non trouvé' }).code(404)
-
-      const status = req.params.status
-
-      // ====== COVER ==========================================================
-
-      try {
-        await createItemHistory(oldItem.id)
-      } catch (error) {
-        console.log('ITEM HISTORY :', error)
-        return h
-          .response({ error: 'Internal server error', details: error })
-          .code(500)
-      }
-
-      try {
-        await updateItem(oldItem.id, {
-          status,
-          author_id: req.app.user.id,
-        })
-      } catch (error) {
-        console.log('ITEM UPDATE :', error)
-        return h
-          .response({ error: 'Internal server error', details: error })
-          .code(500)
-      }
-
-      return h.response(oldItem).code(201)
-    },
+    handler: itemStatusHandler,
   },
 ]

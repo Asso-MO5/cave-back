@@ -1,6 +1,6 @@
 const { getCompaniesByItemId } = require('../entities/company')
 const { getItemBySlug, getMachineByGameId } = require('../entities/items')
-const { getMediasByItemId } = require('../entities/media')
+const { getMediasByItemId, getMedia } = require('../entities/media')
 const { getMediaUrl } = require('../utils/media-url')
 
 module.exports = async (req, h) => {
@@ -42,7 +42,9 @@ module.exports = async (req, h) => {
       try {
         const machine = await getMachineByGameId(item.id)
         if (machine) {
-          machine.cover_url = getMediaUrl(machine.cover_url, req)
+          const cover = await getMedia(machine.cover_id)
+          console.log('MACHINE COVER :', cover)
+          if (cover) machine.cover_url = getMediaUrl(cover.url, req)
           item.machine = machine
           item.ref_id = machine.item_ref_id
         } else {

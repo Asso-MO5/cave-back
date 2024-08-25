@@ -2,7 +2,8 @@ const Joi = require('joi')
 const itemsHandler = require('../handlers/items.handler')
 const { ROLES } = require('../utils/constants')
 const itemHandler = require('../handlers/item.handler')
-const { GAME_MODEL } = require('../models/game.model')
+const { GAME_MODEL, GAMES_MODEL } = require('../models/game.model')
+const { headers } = require('../models/header.model')
 
 module.exports = [
   {
@@ -16,14 +17,12 @@ module.exports = [
       validate: {
         query: Joi.object({
           limit: Joi.number().integer().min(1).max(100000).default(10),
-        }),
-        headers: Joi.object({
-          authorization: Joi.string().required(),
-        }).unknown(),
+        }).label('GameListQuery'),
+        headers,
       },
       response: {
         status: {
-          200: Joi.array().items(GAME_MODEL).required().label('Games'),
+          200: GAMES_MODEL.required(),
         },
       },
     },
@@ -33,13 +32,11 @@ module.exports = [
     path: '/game/{slug}',
     handler: itemHandler,
     options: {
-      description: 'Récupère jeu par son slug',
+      description: 'Récupère un jeu par son slug',
       tags: ['api', 'jeux'],
-      notes: [ROLES.member, ROLES.admin],
+      notes: [ROLES.member],
       validate: {
-        headers: Joi.object({
-          authorization: Joi.string().required(),
-        }).unknown(),
+        headers,
       },
       response: {
         status: {
