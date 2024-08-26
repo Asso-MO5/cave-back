@@ -1,18 +1,47 @@
 const { paginateCursor } = require('../utils/db')
-const { TABLES } = require('../utils/constants')
+const { TABLES, ROLES } = require('../utils/constants')
 const {
   createCompanies,
   getCompaniesLight,
   getCompanyByName,
   updateCompany,
 } = require('../entities/company')
+const { headers } = require('../models/header.model')
+const Joi = require('joi')
 
 module.exports = [
   {
     method: 'GET',
     path: '/companies/light',
+    options: {
+      description: 'Récupère la liste des entreprises',
+      tags: ['api', 'entreprise'],
+      notes: [ROLES.member],
+      validate: {
+        query: Joi.object({
+          activities: Joi.string().allow(''),
+          limit: Joi.number().integer().min(1).max(100000).default(10),
+        }).label('CompanyListLightQuery'),
+        headers,
+      },
+      response: {
+        status: {
+          200: Joi.array()
+            .items(
+              Joi.object({
+                id: Joi.string().required(),
+                name: Joi.string().required(),
+                slug: Joi.string().required(),
+              }).label('CompanyLight')
+            )
+            .label('CompaniesLight')
+            .required(),
+        },
+      },
+    },
     async handler(req, h) {
       const conditions = []
+
       if (req.query.activities) {
         conditions.push([
           'activities',
@@ -20,7 +49,6 @@ module.exports = [
           '%' + req.query.activities + '%',
         ])
       }
-
       const query = await getCompaniesLight(req.query.activities)
       return h.response(query).type('json')
     },
@@ -74,6 +102,7 @@ module.exports = [
         return h.response(isExist).type('json').code(200)
       }
 
+      console.log('isExist :', req.app.user)
       try {
         const newItem = await createCompanies({
           ...data,
