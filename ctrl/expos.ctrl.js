@@ -6,9 +6,16 @@ const { EXPOS_MODEL, EXPO_MODEL } = require('../models/expo.model')
 const itemHandler = require('../handlers/item.handler')
 const {
   CARTELS_MODEL,
-  CARTEL_MODEL,
   CARTEL_CREATE_PAYLOAD_MODEL,
 } = require('../models/cartels.model')
+const {
+  getItemById,
+  getItemBySlug,
+  createItems,
+  getCartelByExpoId,
+} = require('../entities/items')
+const { ITEM_MODEL } = require('../models/item.model')
+const { createRelation } = require('../entities/item-items')
 
 module.exports = [
   {
@@ -54,8 +61,8 @@ module.exports = [
   // ======|| CARTELS ||================================================================================================
   {
     method: 'GET',
-    path: '/expos/cartels',
-    handler: itemsHandler,
+    path: '/expos/{expoId}/cartels',
+
     options: {
       description: "Récupère la liste des cartels d'une exposition",
       tags: ['api', 'expo'],
@@ -69,10 +76,15 @@ module.exports = [
         },
       },
     },
+    async handler(req, h) {
+      const cartels = await getCartelByExpoId(req.params.expoId)
+
+      return h.response(cartels).type('json').code(200)
+    },
   },
   {
     method: 'POST',
-    path: '/expos/cartels',
+    path: '/expos/{expoId}/cartels',
 
     options: {
       description: "Récupère la liste des cartels d'une exposition",
@@ -84,7 +96,7 @@ module.exports = [
       },
       response: {
         status: {
-          200: CARTEL_MODEL.required(),
+          200: ITEM_MODEL.required(),
         },
       },
     },
@@ -94,12 +106,29 @@ module.exports = [
         console.error('error', error)
         return h.response({ message: error.message }).code(400)
       }
-      const { id, name } = req.payload
-      /*
-      Les cartels sont des fiches dérivées des items de base comme les jeux. 
-      */
-      if (id) {
-        //TODO rechercher et créer une fiche dérivée
+      const { slug, name } = req.payload
+
+      const expo = await getItemById(req.params.expoId)
+
+      if (slug) {
+        const item = await getItemBySlug(slug)
+
+        const cartel = await createItems({
+          name: item.name,
+          type: 'cartel',
+          author_id: req.app.user.id,
+        })
+        // RefId = Item de base, RightID = Cartel, LeftID = Expo
+        await createRelation(
+          item.id,
+          cartel.id,
+          expo.id,
+          'cartel',
+          req.app.user.id
+        )
+        const newCartel = await getItemById(cartel.id)
+
+        return h.response(newCartel).type('json')
       }
       if (name) {
         //TODO créer un nouvelle items de base puis créer le cartel

@@ -176,12 +176,15 @@ module.exports = {
       const id = uuidv4()
       let slug = getSlug(item.name)
 
+      const endIsNumber = slug.match(/-\d+$/)
+      if (endIsNumber) slug = slug.replace(/-\d+$/, '')
+
       const existslugs = await knex(TABLES.items)
-        .where({ slug })
+        .where('slug', 'like', `${slug}%`)
         .count('* as count')
         .first()
 
-      if (existslugs.count > 0) slug = slug + '-' + existslugs.count
+      if (existslugs.count > 0) slug = slug + '-' + (existslugs.count + 1)
 
       const newItem = {
         id,
@@ -258,6 +261,36 @@ module.exports = {
       await knex(TABLES.items).where({ id }).update(update)
     } catch (error) {
       console.log('ITEM UPDATE :', error)
+    }
+  },
+  async getCartelByExpoId(expoId) {
+    // RefId = Item de base, RightID = Cartel, LeftID = Expo
+    try {
+      return await knex(TABLES.items)
+        .join(
+          TABLES.item_items,
+          `${TABLES.items}.${ITEMS.id}`,
+          `${TABLES.item_items}.${ITEM_ITEMS.item_right_id}`
+        )
+        .leftJoin(
+          `${TABLES.items} as ref_item`,
+          `ref_item.${ITEMS.id}`,
+          `${TABLES.item_items}.${ITEM_ITEMS.item_ref_id}`
+        )
+        .select(
+          `${TABLES.items}.${ITEMS.name}`,
+          `${TABLES.items}.${ITEMS.slug}`,
+          `${TABLES.items}.${ITEMS.status}`,
+          'ref_item.type as type'
+        )
+        .where({
+          [`${TABLES.item_items}.${ITEM_ITEMS.item_left_id}`]: expoId,
+          [`${TABLES.item_items}.${ITEM_ITEMS.relation_type}`]: 'cartel',
+          [`${TABLES.items}.${ITEMS.type}`]: 'cartel',
+        })
+    } catch (error) {
+      console.log('GET CARTEL BY EXPO ID :', error)
+      throw new Error(error)
     }
   },
 }
