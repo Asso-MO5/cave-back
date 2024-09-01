@@ -1,18 +1,10 @@
 const Joi = require('joi')
-const { createMedia, getMediasByItemId } = require('../entities/media')
-const {
-  createItems,
-  getItemBySlug,
-  getItemById,
-  updateItem,
-  getMachineByGameId,
-} = require('../entities/items')
+const { createMedia } = require('../entities/media')
+const { createItems, getItemById, updateItem } = require('../entities/items')
 const { getMediaUrl } = require('../utils/media-url')
-const { getCompaniesByItemId } = require('../entities/company')
 const { createItemHistory } = require('../entities/item-history')
 const { replaceCompanyForItem } = require('../entities/item-company')
-const Canvas = require('@napi-rs/canvas')
-const { Readable } = require('stream')
+
 const {
   createRelation,
   getRelationbyLeftIdAndRightId,
@@ -168,36 +160,8 @@ module.exports = [
       }
 
       if (data.cover_url && data.cover_url.includes('http')) {
-        const background = await Canvas.loadImage(data.cover_url)
-        const canvas = Canvas.createCanvas(background.width, background.height)
-        const context = canvas.getContext('2d')
-        context.drawImage(background, 0, 0)
-
-        const buffer = canvas.toBuffer('image/png')
-        const stream = new Readable()
-        stream.push(buffer)
-        stream.push(null)
-
-        const file = {
-          hapi: {
-            filename: data.cover_url.split('/').pop(),
-            headers: {
-              'content-type': 'image/png',
-            },
-          },
-          _data: buffer,
-          pipe: (dest) => stream.pipe(dest),
-          alt: '',
-          description: '',
-          on: (event, cb) => {
-            if (event === 'end') {
-              cb()
-            }
-          },
-        }
-
+        const file = await getMediaFromUrl(data.cover_url)
         const [cover] = await createMedia([file])
-
         oldItem.cover_id = cover.id
         try {
           await updateItem(oldItem.id, {

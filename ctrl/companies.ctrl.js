@@ -7,7 +7,12 @@ const {
   updateCompany,
 } = require('../entities/company')
 const { headers } = require('../models/header.model')
-const Joi = require('joi')
+const {
+  COMPANY_LIGHT_MODEL,
+  COMPANIES_LIGHT_MODEL,
+  COMPANIES_LIST_QUERY,
+  COMPANY_CREATE_BODY,
+} = require('../models/company.model')
 
 module.exports = [
   {
@@ -18,24 +23,12 @@ module.exports = [
       tags: ['api', 'entreprise'],
       notes: [ROLES.member],
       validate: {
-        query: Joi.object({
-          activities: Joi.string().allow(''),
-          limit: Joi.number().integer().min(1).max(100000).default(10),
-        }).label('CompanyListLightQuery'),
+        query: COMPANIES_LIST_QUERY,
         headers,
       },
       response: {
         status: {
-          200: Joi.array()
-            .items(
-              Joi.object({
-                id: Joi.string().required(),
-                name: Joi.string().required(),
-                slug: Joi.string().required(),
-              }).label('CompanyLight')
-            )
-            .label('CompaniesLight')
-            .required(),
+          200: COMPANIES_LIGHT_MODEL.required(),
         },
       },
     },
@@ -56,6 +49,7 @@ module.exports = [
   {
     method: 'GET',
     path: '/companies',
+
     async handler(req, h) {
       const conditions = []
       if (req.query.activities) {
@@ -80,15 +74,26 @@ module.exports = [
     method: 'POST',
     path: '/companies',
     options: {
-      payload: {
-        parse: true,
-        output: 'stream',
-        multipart: true,
-        maxBytes: 800 * 1024 * 1024, //800 mb
+      description: 'Crée une entreprise',
+      tags: ['api', 'entreprise'],
+      notes: [ROLES.publisher, ROLES.reviewer],
+      validate: {
+        query: COMPANY_CREATE_BODY.required(),
+        headers,
+      },
+      response: {
+        status: {
+          200: COMPANY_LIGHT_MODEL.required(),
+        },
       },
     },
     async handler(req, h) {
-      const data = req.payload
+      const { error, value: data } = COMPANY_CREATE_BODY.validate(req.payload)
+
+      if (error)
+        return h
+          .response({ error: error.details.map((i) => i.message).join(',') })
+          .code(400)
 
       const isExist = await getCompanyByName(data.name)
 

@@ -25,12 +25,12 @@ const GAMES_MODEL = Joi.array()
         Joi.number().integer(),
         Joi.allow(null)
       ),
+      status: Joi.string(),
       publisher: Joi.alternatives().try(Joi.string(), Joi.allow(null)),
       developer: Joi.alternatives().try(Joi.string(), Joi.allow(null)),
     }).label('GameForList')
   )
   .label('GameList')
-  .required()
 
 module.exports = {
   GAME_MODEL,

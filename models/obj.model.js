@@ -2,12 +2,22 @@ const Joi = require('joi')
 const { ITEM_MODEL } = require('./item.model')
 const { COMPANY_MODEL } = require('./company.model')
 
-const MACHINE_MODEL = ITEM_MODEL.keys({
+// ===== BODY ========================================
+
+// ===== QUERY ========================================
+
+const OBJS_QUERY_MODEL = Joi.object({
+  limit: Joi.number().integer().min(1).max(100000).default(10),
+}).label('ObjListQuery')
+
+// ===== GET ========================================
+
+const OBJ_MODEL = ITEM_MODEL.keys({
   manufacturer: COMPANY_MODEL,
   medias: Joi.array().items(Joi.object().unknown()).required(), // TODO Media
-}).label('Machine')
+}).label('Obj')
 
-const MACHINES_MODEL = Joi.array()
+const OBJS_MODEL = Joi.array()
   .items(
     Joi.object({
       name: Joi.string().required(),
@@ -18,11 +28,12 @@ const MACHINES_MODEL = Joi.array()
       ),
       manufacturer: Joi.alternatives().try(Joi.string(), Joi.allow(null)),
       status: Joi.string(),
-    }).label('MachineForList')
+    }).label('ObjForList')
   )
-  .label('MachineList')
+  .label('ObjList')
 
 module.exports = {
-  MACHINES_MODEL,
-  MACHINE_MODEL,
+  OBJS_MODEL,
+  OBJ_MODEL,
+  OBJS_QUERY_MODEL,
 }

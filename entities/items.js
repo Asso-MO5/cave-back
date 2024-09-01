@@ -74,6 +74,7 @@ module.exports = {
           `${TABLES.items}.${ITEMS.name}`,
           `${TABLES.items}.${ITEMS.slug}`,
           `${TABLES.items}.${ITEMS.release_year}`,
+          `${TABLES.items}.${ITEMS.status}`,
           `${TABLES.companies}.${COMPANY.name} as company_name`,
           `${ITEM_COMPANIES.relation_type}`
         )

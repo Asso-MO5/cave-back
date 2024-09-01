@@ -5,6 +5,8 @@ function getType(path) {
     return 'game'
   } else if (path === '/machines') {
     return 'machine'
+  } else if (path === '/objs') {
+    return 'obj'
   } else {
     return 'list'
   }
@@ -17,11 +19,13 @@ module.exports = async (req, h) => {
 
     const res = items.reduce((acc, item) => {
       const isExist = acc.findIndex((i) => i.name === item.name)
+
       if (isExist === -1) {
         const obj = {
           name: item.name,
           slug: item.slug,
           release_year: item.release_year,
+          status: item.status,
         }
 
         if (item.relation_type)
@@ -37,7 +41,7 @@ module.exports = async (req, h) => {
     return h
       .response(
         res.map((r) => {
-          if (type === 'machine' && !r.manufacturer) {
+          if (type.match(/machine|obj/) && !r.manufacturer) {
             return {
               ...r,
               manufacturer: null,
