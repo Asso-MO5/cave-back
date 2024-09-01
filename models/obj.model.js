@@ -33,7 +33,7 @@ const OBJS_MODEL = Joi.array()
   .label('ObjList')
 
 module.exports = {
-  OBJS_MODEL,
   OBJ_MODEL,
+  OBJS_MODEL,
   OBJS_QUERY_MODEL,
 }

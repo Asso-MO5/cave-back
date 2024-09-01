@@ -15,7 +15,7 @@ module.exports = async (req, h) => {
     }
 
     try {
-      item.medias = await getMediasByItemId(item.id)
+      item.medias = (await getMediasByItemId(item.id)) || []
     } catch (error) {
       console.log('ITEM MEDIAS GET BY ID :', error)
       return h
@@ -43,7 +43,7 @@ module.exports = async (req, h) => {
         const machine = await getMachineByGameId(item.id)
         if (machine) {
           const cover = await getMedia(machine.cover_id)
-          console.log('MACHINE COVER :', cover)
+
           if (cover) machine.cover_url = getMediaUrl(cover.url, req)
           item.machine = machine
           item.ref_id = machine.item_ref_id
@@ -57,6 +57,12 @@ module.exports = async (req, h) => {
           .response({ error: 'Internal server error', details: error })
           .code(500)
       }
+    }
+
+    // ====== EXPO ========================
+
+    if (item.type === 'expo') {
+      item.cartelModel = 'default'
     }
 
     if (!item.description) item.description = ''

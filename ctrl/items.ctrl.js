@@ -1,6 +1,11 @@
 const Joi = require('joi')
 const { createMedia } = require('../entities/media')
-const { createItems, getItemById, updateItem } = require('../entities/items')
+const {
+  createItems,
+  getItemById,
+  updateItem,
+  getItems,
+} = require('../entities/items')
 const { getMediaUrl } = require('../utils/media-url')
 const { createItemHistory } = require('../entities/item-history')
 const { replaceCompanyForItem } = require('../entities/item-company')
@@ -11,24 +16,67 @@ const {
   getRelationByReIdAndType,
 } = require('../entities/item-items')
 const { ROLES } = require('../utils/constants')
-const { ITEM_MODEL } = require('../models/item.model')
+const {
+  ITEM_MODEL,
+  ITEM_CREATE_PAYLOAD_MODEL,
+  ITEM_SEARCH_MODEL,
+  ITEM_SEARCH_QUERY_MODEL,
+} = require('../models/item.model')
 const itemStatusHandler = require('../handlers/item-status.handler')
 const itemCreateHandler = require('../handlers/item-create.handler')
 const { headers } = require('../models/header.model')
 
 module.exports = [
   {
+    method: 'GET',
+    path: '/items',
+
+    options: {
+      description: 'Récupère la liste des items par type et recherche',
+      tags: ['api', 'jeux'],
+      notes: [ROLES.member],
+      validate: {
+        query: ITEM_SEARCH_QUERY_MODEL.required(),
+        headers,
+      },
+      response: {
+        status: {
+          200: ITEM_SEARCH_MODEL.required(),
+        },
+      },
+    },
+    async handler(req, h) {
+      const { error } = ITEM_SEARCH_QUERY_MODEL.validate(req.query)
+      if (error) return h.response({ error: error.message }).code(400)
+      try {
+        const items = await getItems(req.query.type, req.query.search)
+        return h
+          .response(
+            items.map((item) => ({
+              name: item.related_item_name
+                ? `${item.name} (${item.related_item_name})`
+                : item.name,
+              slug: item.slug,
+            }))
+          )
+          .code(200)
+      } catch (error) {
+        console.log('ITEMS GET :', error)
+        return h
+          .response({ error: 'Internal server error', details: error })
+          .code(500)
+      }
+    },
+  },
+  {
     method: 'POST',
     path: '/items',
     options: {
       description: 'Permet de créer un item (jeu, machine, liste...)',
-      tags: ['api', 'jeu', 'machine', 'liste'],
+      tags: ['api', 'jeu', 'machine', 'expositions'],
       notes: [ROLES.reviewer, ROLES.publisher],
       validate: {
-        payload: Joi.object({
-          type: Joi.string().required(),
-          name: Joi.string().required(),
-        }).label('ItemCreateBody'),
+        payload: ITEM_CREATE_PAYLOAD_MODEL,
         headers,
       },
       response: {

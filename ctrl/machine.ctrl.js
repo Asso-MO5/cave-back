@@ -1,7 +1,11 @@
 const Joi = require('joi')
 const itemsHandler = require('../handlers/items.handler')
 const { ROLES } = require('../utils/constants')
-const { MACHINE_MODEL, MACHINES_MODEL } = require('../models/machine.model')
+const {
+  MACHINE_MODEL,
+  MACHINES_MODEL,
+  MACHINE_LIGHT_LIST_MODEL,
+} = require('../models/machine.model')
 const { getMachinesByRefId } = require('../entities/items')
 const { headers } = require('../models/header.model')
 const itemHandler = require('../handlers/item.handler')
@@ -58,12 +62,17 @@ module.exports = [
       },
       response: {
         status: {
-          200: MACHINE_MODEL.required(),
+          200: MACHINE_LIGHT_LIST_MODEL.required(),
         },
       },
     },
     async handler(req, h) {
       const query = await getMachinesByRefId(req.query.id)
+      const { error } = MACHINE_LIGHT_LIST_MODEL.validate(query)
+      if (error) {
+        console.error('error', error)
+        return h.response(error).code(400)
+      }
       return h.response(query).type('json')
     },
   },

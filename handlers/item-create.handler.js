@@ -1,13 +1,9 @@
 const Joi = require('joi')
 const { getItemByNameAndType, createItems } = require('../entities/items')
+const { ITEM_CREATE_PAYLOAD_MODEL } = require('../models/item.model')
 
 module.exports = async (req, h) => {
-  const schema = Joi.object({
-    name: Joi.string().required(),
-    type: Joi.string().required(),
-  })
-
-  const { error, value: item } = schema.validate(req.payload)
+  const { error, value: item } = ITEM_CREATE_PAYLOAD_MODEL.validate(req.payload)
 
   if (error) {
     const details = error.details.map((i) => i.message).join(',')
@@ -25,7 +21,6 @@ module.exports = async (req, h) => {
       author_id: req.app.user.id,
     })
 
-    console.log('newItem :', newItem)
     return h
       .response({ slug: newItem.slug, id: newItem.id })
       .type('json')

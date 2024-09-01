@@ -1,20 +1,16 @@
 const { getItems } = require('../entities/items')
 
-function getType(path) {
-  if (path === '/games') {
-    return 'game'
-  } else if (path === '/machines') {
-    return 'machine'
-  } else if (path === '/objs') {
-    return 'obj'
-  } else {
-    return 'list'
-  }
+const TYPE = {
+  '/games': 'game',
+  '/machines': 'machine',
+  '/objs': 'obj',
+  '/expos': 'expo',
+  '/expos/cartels': 'expo_cartels',
 }
 
 module.exports = async (req, h) => {
   try {
-    const type = getType(req.route.path)
+    const type = TYPE?.[req.route.path]
     const items = await getItems(type)
 
     const res = items.reduce((acc, item) => {
@@ -42,9 +38,27 @@ module.exports = async (req, h) => {
       .response(
         res.map((r) => {
           if (type.match(/machine|obj/) && !r.manufacturer) {
+            const obj = { ...r }
+            delete obj.type // remove type from obj
             return {
-              ...r,
+              ...obj,
               manufacturer: null,
+            }
+          }
+          if (type.match(/expo/) && !r.machines) {
+            return {
+              name: r.name,
+              slug: r.slug,
+              status: r.status,
+            }
+          }
+
+          if (type.match(/expo_cartels/) && !r.publisher) {
+            return {
+              name: r.name,
+              slug: r.slug,
+              status: r.status,
+              type: r.type,
             }
           }
           return r
