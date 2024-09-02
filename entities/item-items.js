@@ -32,10 +32,6 @@ module.exports = {
       .first()
   },
   async getRelationbyRefIdAndLeftId(refId, itemLeftId) {
-    console.log({
-      [`${ITEM_ITEMS.item_ref_id}`]: refId,
-      [`${ITEM_ITEMS.item_left_id}`]: itemLeftId,
-    })
     return await knex(TABLES.item_items)
       .where({
         [`${ITEM_ITEMS.item_ref_id}`]: refId,

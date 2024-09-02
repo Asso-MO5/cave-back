@@ -1,18 +1,40 @@
 const { paginateCursor } = require('../utils/db')
-const { TABLES } = require('../utils/constants')
+const { TABLES, ROLES } = require('../utils/constants')
 const {
   createCompanies,
   getCompaniesLight,
   getCompanyByName,
   updateCompany,
 } = require('../entities/company')
+const { headers } = require('../models/header.model')
+const {
+  COMPANY_LIGHT_MODEL,
+  COMPANIES_LIGHT_MODEL,
+  COMPANIES_LIST_QUERY,
+  COMPANY_CREATE_BODY,
+} = require('../models/company.model')
 
 module.exports = [
   {
     method: 'GET',
     path: '/companies/light',
+    options: {
+      description: 'Récupère la liste des entreprises',
+      tags: ['api', 'entreprise'],
+      notes: [ROLES.member],
+      validate: {
+        query: COMPANIES_LIST_QUERY,
+        headers,
+      },
+      response: {
+        status: {
+          200: COMPANIES_LIGHT_MODEL.required(),
+        },
+      },
+    },
     async handler(req, h) {
       const conditions = []
+
       if (req.query.activities) {
         conditions.push([
           'activities',
@@ -20,7 +42,6 @@ module.exports = [
           '%' + req.query.activities + '%',
         ])
       }
-
       const query = await getCompaniesLight(req.query.activities)
       return h.response(query).type('json')
     },
@@ -28,6 +49,7 @@ module.exports = [
   {
     method: 'GET',
     path: '/companies',
+
     async handler(req, h) {
       const conditions = []
       if (req.query.activities) {
@@ -52,15 +74,26 @@ module.exports = [
     method: 'POST',
     path: '/companies',
     options: {
-      payload: {
-        parse: true,
-        output: 'stream',
-        multipart: true,
-        maxBytes: 800 * 1024 * 1024, //800 mb
+      description: 'Crée une entreprise',
+      tags: ['api', 'entreprise'],
+      notes: [ROLES.publisher, ROLES.reviewer],
+      validate: {
+        query: COMPANY_CREATE_BODY.required(),
+        headers,
+      },
+      response: {
+        status: {
+          200: COMPANY_LIGHT_MODEL.required(),
+        },
       },
     },
     async handler(req, h) {
-      const data = req.payload
+      const { error, value: data } = COMPANY_CREATE_BODY.validate(req.payload)
+
+      if (error)
+        return h
+          .response({ error: error.details.map((i) => i.message).join(',') })
+          .code(400)
 
       const isExist = await getCompanyByName(data.name)
 
@@ -74,6 +107,7 @@ module.exports = [
         return h.response(isExist).type('json').code(200)
       }
 
+      console.log('isExist :', req.app.user)
       try {
         const newItem = await createCompanies({
           ...data,

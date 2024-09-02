@@ -32,7 +32,7 @@ module.exports = {
     if (!fs.existsSync(dateFolder)) fs.mkdirSync(dateFolder)
 
     const filesToSave = []
-    for (const file of medias.filter((media) => !!media._data.length)) {
+    for (const file of medias.filter((media) => !!media?._data)) {
       const extension = path.extname(file.hapi.filename)
       const id = uuidv4()
       const uuidName = id + extension
@@ -139,7 +139,7 @@ module.exports = {
     try {
       const baseQuery = knex(TABLES.medias)
       if (search) baseQuery.where(MEDIA.name, 'like', `%${search}%`)
-      return await baseQuery.select('id', 'url', 'name')
+      return await baseQuery.select('id', 'url', 'name', 'type')
     } catch (error) {
       console.log('MEDIA GET :', error)
     }

@@ -5,10 +5,8 @@ module.exports = [
   {
     method: 'POST',
     path: '/auth/login',
-
     async handler(req, h) {
       const secret = Buffer.from(process.env.API_KEY, 'hex')
-
       try {
         const { payload } = await jose.jwtDecrypt(req.payload, secret)
 

@@ -1,46 +1,48 @@
-const Joi = require('joi')
 const itemsHandler = require('../handlers/items.handler')
-const { ROLES } = require('../utils/constants')
 const itemHandler = require('../handlers/item.handler')
-const { GAME_MODEL, GAMES_MODEL } = require('../models/game.model')
+const { ROLES } = require('../utils/constants')
 const { headers } = require('../models/header.model')
+const {
+  OBJS_QUERY_MODEL,
+  OBJS_MODEL,
+  OBJ_MODEL,
+} = require('../models/obj.model')
 
 module.exports = [
   {
     method: 'GET',
-    path: '/games',
+    path: '/objs',
     handler: itemsHandler,
     options: {
-      description: 'Récupère la liste des jeux',
-      tags: ['api', 'jeux'],
+      description: 'Récupère la liste des objets',
+      tags: ['api', 'objets'],
       notes: [ROLES.member],
       validate: {
-        query: Joi.object({
-          limit: Joi.number().integer().min(1).max(100000).default(10),
-        }).label('GameListQuery'),
+        query: OBJS_QUERY_MODEL,
         headers,
       },
       response: {
         status: {
-          200: GAMES_MODEL.required(),
+          200: OBJS_MODEL.required(),
         },
       },
     },
   },
+
   {
     method: 'GET',
-    path: '/game/{slug}',
+    path: '/obj/{slug}',
     handler: itemHandler,
     options: {
-      description: 'Récupère un jeu par son slug',
-      tags: ['api', 'jeux'],
+      description: 'Récupère un objet par son slug',
+      tags: ['api', 'objets'],
       notes: [ROLES.member],
       validate: {
         headers,
       },
       response: {
         status: {
-          200: GAME_MODEL.required(),
+          200: OBJ_MODEL.required(),
         },
       },
     },
