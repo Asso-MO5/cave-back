@@ -7,15 +7,18 @@ const itemHandler = require('../handlers/item.handler')
 const {
   CARTELS_MODEL,
   CARTEL_CREATE_PAYLOAD_MODEL,
+  CARTEL_DETAILS_MODEL,
 } = require('../models/cartels.model')
 const {
   getItemById,
   getItemBySlug,
   createItems,
   getCartelByExpoId,
+  getCartelBySlug,
 } = require('../entities/items')
 const { ITEM_MODEL } = require('../models/item.model')
 const { createRelation } = require('../entities/item-items')
+const { getItem } = require('../handlers/get-item')
 
 module.exports = [
   {
@@ -61,6 +64,37 @@ module.exports = [
   // ======|| CARTELS ||================================================================================================
   {
     method: 'GET',
+    path: '/cartel/{slug}',
+
+    options: {
+      description: 'Récupère un cartel par son slug',
+      tags: ['api', 'expo', 'cartel'],
+      notes: [ROLES.member],
+      validate: {
+        headers,
+      },
+
+      response: {
+        status: {
+          200: CARTEL_DETAILS_MODEL.required(),
+        },
+      },
+    },
+    async handler(req, h) {
+      const baseCartel = await getCartelBySlug(req.params.slug)
+      const cartel = { ...baseCartel }
+      const refItem = await getItem(baseCartel.refItem, req, h)
+      cartel.refItem = refItem
+
+      const { error } = CARTEL_DETAILS_MODEL.validate(cartel)
+
+      console.log('cartel', cartel)
+      if (error) return h.response({ message: error.message }).code(400)
+      return h.response(cartel).type('json').code(200)
+    },
+  },
+  {
+    method: 'GET',
     path: '/expos/{expoId}/cartels',
 
     options: {
@@ -78,7 +112,6 @@ module.exports = [
     },
     async handler(req, h) {
       const cartels = await getCartelByExpoId(req.params.expoId)
-
       return h.response(cartels).type('json').code(200)
     },
   },
@@ -89,7 +122,7 @@ module.exports = [
     options: {
       description: "Récupère la liste des cartels d'une exposition",
       tags: ['api', 'expo'],
-      notes: [ROLES.member],
+      notes: [ROLES.reviewer, ROLES.publisher],
       validate: {
         payload: CARTEL_CREATE_PAYLOAD_MODEL,
         headers,
@@ -106,7 +139,7 @@ module.exports = [
         console.error('error', error)
         return h.response({ message: error.message }).code(400)
       }
-      const { slug, name } = req.payload
+      const { slug, name, type } = req.payload
 
       const expo = await getItemById(req.params.expoId)
 
@@ -130,8 +163,28 @@ module.exports = [
 
         return h.response(newCartel).type('json')
       }
-      if (name) {
-        //TODO créer un nouvelle items de base puis créer le cartel
+      if (name && type) {
+        const newBaseItem = await createItems({
+          name: name,
+          type,
+          author_id: req.app.user.id,
+        })
+
+        const cartel = await createItems({
+          name: name,
+          type: 'cartel',
+          author_id: req.app.user.id,
+        })
+        await createRelation(
+          newBaseItem.id, //REF ID the new item
+          cartel.id,
+          expo.id,
+          'cartel',
+          req.app.user.id
+        )
+        const newCartel = await getItemById(cartel.id)
+
+        return h.response(newCartel).type('json')
       }
       return h.response({}).type('json')
     },

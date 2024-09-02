@@ -142,6 +142,7 @@ module.exports = [
     method: 'PUT',
     path: '/items/{id}',
     options: {
+      notes: [ROLES.reviewer, ROLES.publisher],
       payload: {
         parse: true,
         output: 'stream',
@@ -240,7 +241,7 @@ module.exports = [
               data.company_id,
               data.company_old_id,
               data.company_relation_type,
-              author.id
+              req.app.user.id
             )
             oldItem[data.company_relation_type] = newCompany
             return h.response(oldItem).code(201)

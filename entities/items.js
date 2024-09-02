@@ -293,4 +293,35 @@ module.exports = {
       throw new Error(error)
     }
   },
+  async getCartelBySlug(slug) {
+    try {
+      return await knex(TABLES.items + ' as cartel')
+        .join(
+          TABLES.item_items,
+          `cartel.${ITEMS.id}`,
+          `${TABLES.item_items}.${ITEM_ITEMS.item_right_id}`
+        )
+        .join(
+          `${TABLES.items} as expo`,
+          `${TABLES.item_items}.${ITEM_ITEMS.item_left_id}`,
+          'expo.id'
+        )
+        .join(
+          `${TABLES.items} as ref_item`,
+          `${TABLES.item_items}.${ITEM_ITEMS.item_ref_id}`,
+          'ref_item.id'
+        )
+        .select(
+          `cartel.*`,
+          'expo.name as expo_name',
+          'expo.slug as expo_slug',
+          'ref_item.slug as refItem'
+        )
+        .where({ 'cartel.slug': slug, 'cartel.type': 'cartel' })
+        .first()
+    } catch (error) {
+      console.log('GET CARTEL BY SLUG :', error)
+      throw new Error(error)
+    }
+  },
 }
