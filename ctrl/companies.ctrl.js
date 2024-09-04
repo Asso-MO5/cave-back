@@ -5,11 +5,9 @@ const {
   getCompaniesLight,
   getCompanyByName,
   updateCompany,
-  COMPANY,
 } = require('../entities/company')
 const { headers } = require('../models/header.model')
 const {
-  COMPANY_LIGHT_MODEL,
   COMPANIES_LIGHT_MODEL,
   COMPANIES_LIST_QUERY,
   COMPANY_CREATE_BODY,
@@ -118,6 +116,7 @@ module.exports = [
         return h.response(isExist).type('json').code(200)
       }
 
+      console.log('isExist :', req.app.user)
       try {
         const newItem = await createCompanies({
           ...data,
