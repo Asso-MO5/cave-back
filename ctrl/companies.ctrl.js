@@ -5,6 +5,7 @@ const {
   getCompaniesLight,
   getCompanyByName,
   updateCompany,
+  COMPANY,
 } = require('../entities/company')
 const { headers } = require('../models/header.model')
 const {
@@ -12,6 +13,7 @@ const {
   COMPANIES_LIGHT_MODEL,
   COMPANIES_LIST_QUERY,
   COMPANY_CREATE_BODY,
+  COMPANY_MODEL,
 } = require('../models/company.model')
 
 module.exports = [
@@ -78,18 +80,17 @@ module.exports = [
       tags: ['api', 'entreprise'],
       notes: [ROLES.publisher, ROLES.reviewer],
       validate: {
-        query: COMPANY_CREATE_BODY.required(),
+        payload: COMPANY_CREATE_BODY.required(),
         headers,
       },
       response: {
         status: {
-          200: COMPANY_LIGHT_MODEL.required(),
+          201: COMPANY_MODEL.required(),
         },
       },
     },
     async handler(req, h) {
       const { error, value: data } = COMPANY_CREATE_BODY.validate(req.payload)
-
       if (error)
         return h
           .response({ error: error.details.map((i) => i.message).join(',') })
@@ -104,16 +105,38 @@ module.exports = [
 
         await updateCompany(isExist.id, { activities: isExist.activities })
 
+        const { error } = COMPANY_MODEL.validate({
+          ...isExist,
+          relation_type: '___',
+        })
+
+        if (error) {
+          console.error('error', error)
+          return h.response({ message: error.message }).code(400)
+        }
+
         return h.response(isExist).type('json').code(200)
       }
 
-      console.log('isExist :', req.app.user)
       try {
         const newItem = await createCompanies({
           ...data,
           author_id: req.app.user.id,
         })
-        return h.response(newItem).type('json').code(201)
+        const dataSend = {
+          ...newItem,
+          relation_type: '___',
+        }
+        const { error } = COMPANY_MODEL.validate({
+          ...newItem,
+          relation_type: '___',
+        })
+
+        if (error) {
+          console.error('error', error)
+          return h.response({ message: error.message }).code(400)
+        }
+        return h.response(dataSend).type('json').code(201)
       } catch (error) {
         console.log('company CREATE :', error)
         return h

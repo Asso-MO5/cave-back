@@ -88,7 +88,6 @@ module.exports = [
 
       const { error } = CARTEL_DETAILS_MODEL.validate(cartel)
 
-      console.log('cartel', cartel)
       if (error) return h.response({ message: error.message }).code(400)
       return h.response(cartel).type('json').code(200)
     },

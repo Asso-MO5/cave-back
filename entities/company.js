@@ -61,6 +61,17 @@ module.exports = {
       )
   },
   async createCompanies(company) {
+    let slug = getSlug(company.name)
+    const endIsNumber = slug.match(/-\d+$/)
+    if (endIsNumber) slug = slug.replace(/-\d+$/, '')
+
+    const existslugs = await knex(TABLES.companies)
+      .where('slug', 'like', `${slug}%`)
+      .count('* as count')
+      .first()
+
+    if (existslugs.count > 0) slug = slug + '-' + (existslugs.count + 1)
+
     try {
       const id = uuidv4()
       const newCompany = {
@@ -71,7 +82,7 @@ module.exports = {
         activities: company.activities || null,
         author_id: company.author_id,
         description: company.description || null,
-        slug: getSlug(company.name),
+        slug,
         created_at: new Date(),
         updated_at: new Date(),
       }
