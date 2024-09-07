@@ -20,7 +20,7 @@ const COMPANY_MODEL = Joi.object({
   slug: Joi.string().required(),
   country: Joi.alternatives().try(Joi.string(), Joi.allow(null)),
   description: Joi.alternatives().try(Joi.string(), Joi.allow(null)),
-  borned_at: Joi.alternatives().try(Joi.number().integer(), Joi.allow(null)),
+  borned_at: Joi.alternatives().try(Joi.string(), Joi.allow(null)),
   logo_id: Joi.alternatives().try(Joi.string(), Joi.allow(null)),
   logo_url: Joi.alternatives().try(Joi.string(), Joi.allow(null)),
   activities: Joi.alternatives().try(Joi.string(), Joi.allow(null)),

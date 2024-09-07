@@ -1,6 +1,5 @@
 const { TABLES } = require('../utils/constants')
 const { ITEM_ITEMS } = require('../entities/item-items')
-const { ITEMS } = require('../entities/items')
 
 /**
  * @param { import("knex").Knex } knex
@@ -24,10 +23,6 @@ exports.up = async function (knex) {
     table.uuid(ITEM_ITEMS.author_id).references('id').inTable(TABLES.authors)
 
     table.timestamps(true, true)
-  })
-
-  await knex.schema.alterTable(TABLES.items, (table) => {
-    table.string(ITEMS.status).defaultTo('draft')
   })
 }
 

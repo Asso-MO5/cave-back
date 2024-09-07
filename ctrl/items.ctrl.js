@@ -95,6 +95,20 @@ module.exports = [
   {
     method: 'PUT',
     path: '/machine/{machine_id}/game/{ref_id}',
+    options: {
+      description: 'Permet de lier un jeu à une machine',
+      tags: ['api', 'jeu', 'machine', 'expositions'],
+      notes: [ROLES.reviewer, ROLES.publisher],
+      validate: {
+        headers,
+      },
+      response: {
+        status: {
+          200: ITEM_MODEL.required(),
+          201: ITEM_MODEL.required(),
+        },
+      },
+    },
     async handler(req, h) {
       const { machine_id, ref_id } = req.params
 
