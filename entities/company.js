@@ -3,6 +3,7 @@ const { v4: uuidv4 } = require('uuid')
 const { TABLES } = require('../utils/constants')
 const { getSlug } = require('../utils/get-slug')
 const { ITEM_COMPANIES } = require('./item-company')
+const { MEDIA } = require('./media')
 
 const COMPANY = {
   id: 'id',
@@ -39,11 +40,11 @@ module.exports = {
   COMPANY,
   COMPANY_HISTORY,
   COMPANY_ACTIVITIES,
-  async getCompaniesLight(activities) {
+  async getCompaniesLight(activities = '') {
     return await knex(TABLES.companies)
       .where(COMPANY.activities, 'like', '%' + activities + '%')
       .orderBy(COMPANY.name)
-      .select(COMPANY.id, COMPANY.name, COMPANY.slug)
+      .select(COMPANY.id, COMPANY.name, COMPANY.slug, COMPANY.activities)
   },
   async getCompanyWithGame(itemId) {
     return await knex(TABLES.companies)
@@ -111,7 +112,23 @@ module.exports = {
     return await knex(TABLES.companies).where(COMPANY.id, companyId).first()
   },
   async getCompanyBySlug(slug) {
-    return await knex(TABLES.companies).where(COMPANY.slug, slug).first()
+    const baseQuery = knex(TABLES.companies).where({
+      [TABLES.companies + '.' + COMPANY.slug]: slug,
+    })
+
+    baseQuery
+      .leftJoin(
+        TABLES.medias,
+        TABLES.medias + '.' + MEDIA.id,
+        '=',
+        TABLES.companies + '.' + COMPANY.logo_id
+      )
+      .select(
+        TABLES.companies + '.*',
+        TABLES.medias + '.' + MEDIA.url + ' as logo_url'
+      )
+
+    return await baseQuery.first()
   },
   async getCompanyByName(name) {
     try {

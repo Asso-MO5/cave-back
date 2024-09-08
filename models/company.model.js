@@ -13,6 +13,10 @@ const COMPANIES_LIST_QUERY = Joi.object({
   limit: Joi.number().integer().min(1).max(100000).default(10),
 }).label('CompanyListQuery')
 
+const COMPANY_BY_SLUG_QUERY = Joi.object({
+  slug: Joi.string().required(),
+}).label('CompanyBySlugQuery')
+
 // ===== GET ========================================
 const COMPANY_MODEL = Joi.object({
   id: Joi.string().required(),
@@ -34,6 +38,7 @@ const COMPANY_LIGHT_MODEL = Joi.object({
   id: Joi.string().required(),
   name: Joi.string().required(),
   slug: Joi.string().required(),
+  activities: Joi.string().required(),
 }).label('CompanyLight')
 
 const COMPANIES_LIGHT_MODEL = Joi.array()
@@ -46,4 +51,5 @@ module.exports = {
   COMPANY_CREATE_BODY,
   COMPANIES_LIST_QUERY,
   COMPANIES_LIGHT_MODEL,
+  COMPANY_BY_SLUG_QUERY,
 }
