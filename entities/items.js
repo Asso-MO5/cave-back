@@ -7,6 +7,7 @@ const { ITEM_COMPANIES } = require('./item-company')
 const { MEDIA } = require('./media')
 const { ITEM_ITEMS } = require('./item-items')
 const Joi = require('joi')
+const { ITEM_MEDIAS } = require('./item-medias')
 
 const ITEM_BASE_MODEL = {
   id: Joi.string().required(),
@@ -224,19 +225,25 @@ module.exports = {
       [TABLES.items + '.' + ITEMS.slug]: slug,
     })
 
-    baseQuery
-      .leftJoin(
-        TABLES.medias,
-        TABLES.medias + '.' + MEDIA.id,
-        '=',
-        TABLES.items + '.' + ITEMS.cover_id
-      )
-      .select(
-        TABLES.items + '.*',
-        TABLES.medias + '.' + MEDIA.url + ' as cover_url'
-      )
+    try {
+      const item = await baseQuery.first()
 
-    return await baseQuery.first()
+      const medias = await knex(TABLES.medias)
+        .join(
+          TABLES.item_medias,
+          `${TABLES.medias}.${MEDIA.id}`,
+          '=',
+          `${TABLES.item_medias}.${ITEM_MEDIAS.media_id}`
+        )
+        .where(`${TABLES.item_medias}.${ITEM_MEDIAS.item_id}`, item.id)
+
+      return {
+        ...item,
+        medias,
+      }
+    } catch (error) {
+      console.log('GET ITEM BY SLUG :', error)
+    }
   },
   async updateItem(id, partial) {
     const item = await knex(TABLES.items).where({ id }).first()

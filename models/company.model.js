@@ -1,4 +1,5 @@
 const Joi = require('joi')
+const media = require('../entities/media')
 
 // ===== BODY ========================================
 
@@ -25,13 +26,12 @@ const COMPANY_MODEL = Joi.object({
   country: Joi.alternatives().try(Joi.string(), Joi.allow(null)),
   description: Joi.alternatives().try(Joi.string(), Joi.allow(null)),
   borned_at: Joi.alternatives().try(Joi.string(), Joi.allow(null)),
-  logo_id: Joi.alternatives().try(Joi.string(), Joi.allow(null)),
-  logo_url: Joi.alternatives().try(Joi.string(), Joi.allow(null)),
   activities: Joi.alternatives().try(Joi.string(), Joi.allow(null)),
   author_id: Joi.string().required(),
   relation_type: Joi.string().required(),
   created_at: Joi.date().required(),
   updated_at: Joi.date().required(),
+  medias: Joi.array().items(Joi.object().unknown()).required(), // TODO Media
 }).label('Company')
 
 const COMPANY_LIGHT_MODEL = Joi.object({

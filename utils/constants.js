@@ -6,6 +6,8 @@ const TABLES = {
   // === COMPANIES ===
   companies: 'companies',
   item_companies: 'item_companies',
+  company_medias: 'company_medias',
+
   // === ITEMS ===
   items: 'items',
   item_tags: 'item_tags',

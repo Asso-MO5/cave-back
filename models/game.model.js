@@ -10,7 +10,6 @@ const GAME_MODEL = ITEM_MODEL.keys({
     }).label('MachineInGame'),
     Joi.allow(null)
   ),
-
   developer: COMPANY_MODEL,
   publisher: COMPANY_MODEL,
   medias: Joi.array().items(Joi.object().unknown()).required(), // TODO Media

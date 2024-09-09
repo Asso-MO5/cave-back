@@ -1,10 +1,11 @@
 const { getCompaniesByItemId } = require('../entities/company')
 const { getItemBySlug, getMachineByGameId } = require('../entities/items')
-const { getMediasByItemId, getMedia } = require('../entities/media')
+const { getMedia } = require('../entities/media')
 const { getMediaUrl } = require('../utils/media-url')
 
 async function getItem(slug, req, h) {
   const item = await getItemBySlug(slug)
+
   if (!item) return h.response({ error: 'Non trouvé' }).code(404)
 
   // ====== MEDIAS ========================
@@ -13,20 +14,12 @@ async function getItem(slug, req, h) {
     item.cover_url = getMediaUrl(item.cover_url, req)
   }
 
-  try {
-    item.medias = (await getMediasByItemId(item.id)) || []
-  } catch (error) {
-    console.log('ITEM MEDIAS GET BY ID :', error)
-    return h
-      .response({ error: 'Internal server error', details: error })
-      .code(500)
-  }
-
   // ====== COMPANY ========================
   try {
     const companies = await getCompaniesByItemId(item.id)
     companies.forEach((c) => {
-      c.logo_url = getMediaUrl(c.logo_id, req)
+      delete c.logo_id
+      c.medias = []
       item[c.relation_type] = c
     })
   } catch (error) {
@@ -41,9 +34,7 @@ async function getItem(slug, req, h) {
     try {
       const machine = await getMachineByGameId(item.id)
       if (machine) {
-        const cover = await getMedia(machine.cover_id)
-
-        if (cover) machine.cover_url = getMediaUrl(cover.url, req)
+        delete machine.cover_id
         item.machine = machine
         item.ref_id = machine.item_ref_id
       } else {

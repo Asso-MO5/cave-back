@@ -36,11 +36,13 @@ module.exports = [
 
       try {
         const query = await getMedias(req?.query?.search)
+        console.log('query :', query)
 
         const medias = query.map((m) => ({
           id: m.id,
           name: m.name,
           type: m.type,
+          total_usage_count: m.total_usage_count,
           url: getMediaUrl(m.url, req),
         }))
 

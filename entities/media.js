@@ -138,12 +138,39 @@ module.exports = {
   async getMedias(search) {
     try {
       const baseQuery = knex(TABLES.medias)
-      if (search) baseQuery.where(MEDIA.name, 'like', `%${search}%`)
-      return await baseQuery.select('id', 'url', 'name', 'type')
+        .leftJoin(
+          `${TABLES.company_medias} as cm`,
+          'cm.media_id',
+          `${TABLES.medias}.id`
+        )
+        .leftJoin(
+          `${TABLES.item_medias} as im`,
+          'im.media_id',
+          `${TABLES.medias}.id`
+        )
+        .groupBy(`${TABLES.medias}.id`)
+        .select(
+          `${TABLES.medias}.id`,
+          `${TABLES.medias}.url`,
+          `${TABLES.medias}.name`,
+          `${TABLES.medias}.type`,
+          knex.raw('COUNT(DISTINCT cm.id) as company_usage_count'), // Count for company_medias
+          knex.raw('COUNT(DISTINCT im.id) as item_usage_count'), // Count for item_medias
+          knex.raw(
+            'COUNT(DISTINCT cm.id) + COUNT(DISTINCT im.id) as total_usage_count'
+          ) // Total usage
+        )
+
+      if (search) {
+        baseQuery.where(`${TABLES.medias}.name`, 'like', `%${search}%`)
+      }
+
+      return await baseQuery
     } catch (error) {
       console.log('MEDIA GET :', error)
     }
   },
+
   async getMedia(url) {
     try {
       return await knex(TABLES.medias).where({ url }).first()

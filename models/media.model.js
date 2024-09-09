@@ -9,6 +9,7 @@ const MEDIA_MODEL_LIGHT = Joi.object({
   url: Joi.string().required(),
   name: Joi.string().required(),
   type: Joi.string().required(),
+  total_usage_count: Joi.number().required(),
 }).label('MediaLight')
 
 const MEDIA_MODEL = Joi.object({

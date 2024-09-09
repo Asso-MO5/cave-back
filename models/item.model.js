@@ -25,8 +25,6 @@ const ITEM_MODEL = Joi.object({
   slug: Joi.string().required(),
   description: Joi.alternatives().try(Joi.string(), Joi.allow(null)),
   release_year: Joi.alternatives().try(Joi.string(), Joi.allow(null)),
-  cover_id: Joi.alternatives().try(Joi.string(), Joi.allow(null)),
-  cover_url: Joi.alternatives().try(Joi.string(), Joi.allow(null)),
   type: Joi.string().required(),
   author_id: Joi.string().required(),
   status: Joi.string().required(),

@@ -18,6 +18,10 @@ const {
 } = require('../models/company.model')
 const { getMediaUrl } = require('../utils/media-url')
 const { getMedia, getMedias } = require('../entities/media')
+const {
+  createCompanyMedia,
+  createOrUpdateCompanyLogo,
+} = require('../entities/company_medias')
 
 module.exports = [
   {
@@ -97,28 +101,20 @@ module.exports = [
       const { slug } = req.params
       const _company = await getCompanyBySlug(slug)
 
+      // Legacy
+      if (_company?.logo_id) delete _company.logo_id
+
       const company = {
         ..._company,
         relation_type: '___',
+        medias: _company.medias.map((m) => ({
+          id: m.id,
+          name: m.name,
+          type: m.type,
+          relation_type: m.relation_type,
+          url: getMediaUrl(m.url, req),
+        })),
       }
-
-      // ====== LOGO ========================
-
-      if (company.logo_url) {
-        company.logo_url = getMediaUrl(company.logo_url, req)
-      }
-
-      /*
-      try {
-        item.medias = (await getMediasByItemId(item.id)) || []
-      } catch (error) {
-        console.log('ITEM MEDIAS GET BY ID :', error)
-        return h
-          .response({ error: 'Internal server error', details: error })
-          .code(500)
-      }
-
-      */
 
       const { error } = COMPANY_MODEL.validate(company)
 
@@ -245,10 +241,11 @@ module.exports = [
 
         oldCompany.logo_id = logo.id
         try {
-          await updateCompany(oldCompany.id, {
-            logo_id_id: cover.id,
-            author_id: req.app.user.id,
-          })
+          await createOrUpdateCompanyLogo(
+            oldCompany.id,
+            logo.id,
+            req.app.user.id
+          )
         } catch (error) {
           return h
             .response({ error: 'Internal server error', details: error })
@@ -262,10 +259,11 @@ module.exports = [
 
       if (data.logo_id) {
         try {
-          await updateCompany(oldCompany.id, {
-            logo_id: data.logo_id,
-            author_id: req.app.user.id,
-          })
+          await createOrUpdateCompanyLogo(
+            oldCompany.id,
+            data.logo_id,
+            req.app.user.id
+          )
         } catch (error) {
           return h
             .response({ error: 'Internal server error', details: error })
@@ -280,10 +278,11 @@ module.exports = [
         const [logo] = await createMedia([file])
         oldCompany.logo_id = logo.id
         try {
-          await updateCompany(oldCompany.id, {
-            logo_id: logo.id,
-            author_id: req.app.user.id,
-          })
+          await createOrUpdateCompanyLogo(
+            oldCompany.id,
+            logo.id,
+            req.app.user.id
+          )
         } catch (error) {
           return h
             .response({

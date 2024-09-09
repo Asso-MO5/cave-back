@@ -25,6 +25,7 @@ const {
 const itemStatusHandler = require('../handlers/item-status.handler')
 const itemCreateHandler = require('../handlers/item-create.handler')
 const { headers } = require('../models/header.model')
+const { updateOrCreateCover } = require('../entities/item-medias')
 
 module.exports = [
   {
@@ -192,10 +193,7 @@ module.exports = [
 
         oldItem.cover_id = cover.id
         try {
-          await updateItem(oldItem.id, {
-            cover_id: cover.id,
-            author_id: req.app.user.id,
-          })
+          await updateOrCreateCover(oldItem.id, cover.id, req.app.user.id)
         } catch (error) {
           return h
             .response({ error: 'Internal server error', details: error })
@@ -209,10 +207,7 @@ module.exports = [
 
       if (data.cover_id) {
         try {
-          await updateItem(oldItem.id, {
-            cover_id: data.cover_id,
-            author_id: req.app.user.id,
-          })
+          await updateOrCreateCover(oldItem.id, data.cover_id, req.app.user.id)
         } catch (error) {
           return h
             .response({ error: 'Internal server error', details: error })
@@ -227,10 +222,7 @@ module.exports = [
         const [cover] = await createMedia([file])
         oldItem.cover_id = cover.id
         try {
-          await updateItem(oldItem.id, {
-            cover_id: cover.id,
-            author_id: req.app.user.id,
-          })
+          await updateOrCreateCover(oldItem.id, cover.id, req.app.user.id)
         } catch (error) {
           return h
             .response({

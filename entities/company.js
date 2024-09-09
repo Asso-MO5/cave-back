@@ -4,6 +4,8 @@ const { TABLES } = require('../utils/constants')
 const { getSlug } = require('../utils/get-slug')
 const { ITEM_COMPANIES } = require('./item-company')
 const { MEDIA } = require('./media')
+const { COMPANY_MEDIAS } = require('./company_medias')
+const { getMediaUrl } = require('../utils/media-url')
 
 const COMPANY = {
   id: 'id',
@@ -115,20 +117,28 @@ module.exports = {
     const baseQuery = knex(TABLES.companies).where({
       [TABLES.companies + '.' + COMPANY.slug]: slug,
     })
+    try {
+      const company = await baseQuery.first()
 
-    baseQuery
-      .leftJoin(
-        TABLES.medias,
-        TABLES.medias + '.' + MEDIA.id,
-        '=',
-        TABLES.companies + '.' + COMPANY.logo_id
-      )
-      .select(
-        TABLES.companies + '.*',
-        TABLES.medias + '.' + MEDIA.url + ' as logo_url'
-      )
+      const medias = await knex(TABLES.medias)
+        .join(
+          TABLES.company_medias,
+          `${TABLES.medias}.${MEDIA.id}`,
+          '=',
+          `${TABLES.company_medias}.${COMPANY_MEDIAS.media_id}`
+        )
+        .where(
+          `${TABLES.company_medias}.${COMPANY_MEDIAS.company_id}`,
+          company.id
+        )
 
-    return await baseQuery.first()
+      return {
+        ...company,
+        medias,
+      }
+    } catch (e) {
+      console.log('GET COMPANY BY SLUG :', e)
+    }
   },
   async getCompanyByName(name) {
     try {
