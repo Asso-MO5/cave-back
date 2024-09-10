@@ -1,4 +1,4 @@
-const { getMedias, createMedia } = require('../entities/media')
+const { getMedias, createMedia, deleteMedia } = require('../entities/media')
 const {
   MEDIAS_MODEL,
   MEDIAS_QUERY_MODEL,
@@ -36,7 +36,6 @@ module.exports = [
 
       try {
         const query = await getMedias(req?.query?.search)
-        console.log('query :', query)
 
         const medias = query.map((m) => ({
           id: m.id,
@@ -99,6 +98,42 @@ module.exports = [
         return h.response(medias[0]).code(201)
       } catch (error) {
         console.log('CREATE MEDIA :', error)
+        return h
+          .response({ error: 'Internal server error', details: error })
+          .code(500)
+      }
+    },
+  },
+  {
+    method: 'DELETE',
+    path: '/medias/{id}',
+    options: {
+      description: 'Supprime un media',
+      tags: ['api', 'medias'],
+      notes: [ROLES.publisher, ROLES.reviewer],
+      validate: {
+        headers,
+      },
+      response: {
+        status: {
+          204: Joi.object({
+            message: Joi.string().required(),
+          })
+            .label('DeleteMediaModel')
+            .required(),
+        },
+      },
+    },
+    async handler(req, h) {
+      try {
+        await deleteMedia(req.params.id)
+        return h
+          .response({
+            message: 'Media deleted',
+          })
+          .code(204)
+      } catch (error) {
+        console.log('DELETE MEDIA :', error)
         return h
           .response({ error: 'Internal server error', details: error })
           .code(500)

@@ -18,6 +18,7 @@ const MEDIA = {
 }
 
 module.exports = {
+  MEDIA,
   async createMedia(medias) {
     const dir = path.join(__dirname, '../uploads')
 
@@ -168,6 +169,7 @@ module.exports = {
       return await baseQuery
     } catch (error) {
       console.log('MEDIA GET :', error)
+      throw error
     }
   },
 
@@ -176,14 +178,26 @@ module.exports = {
       return await knex(TABLES.medias).where({ url }).first()
     } catch (error) {
       console.log('MEDIA GET :', error)
+      throw error
     }
   },
   async deleteMedia(mediaId) {
+    //TODO protection pour ne pas effacer les relations
+    const existMedia = await knex(TABLES.medias).where({ id: mediaId }).first()
+    if (!existMedia) return
+
     try {
       await knex(TABLES.medias).where({ id: mediaId }).del()
     } catch (error) {
       console.log('MEDIA DELETE :', error)
+      throw error
+    }
+    try {
+      const dir = path.join(__dirname, existMedia.url)
+      if (fs.existsSync(dir)) fs.unlinkSync(dir)
+    } catch (error) {
+      console.log('MEDIA DELETE :', error)
+      throw error
     }
   },
-  MEDIA,
 }
