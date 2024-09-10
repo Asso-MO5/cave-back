@@ -17,11 +17,7 @@ const {
   COMPANY_BY_SLUG_QUERY,
 } = require('../models/company.model')
 const { getMediaUrl } = require('../utils/media-url')
-const { getMedia, getMedias } = require('../entities/media')
-const {
-  createCompanyMedia,
-  createOrUpdateCompanyLogo,
-} = require('../entities/company_medias')
+const { createOrUpdateCompanyLogo } = require('../entities/company_medias')
 
 module.exports = [
   {
@@ -156,31 +152,36 @@ module.exports = [
 
         await updateCompany(isExist.id, { activities: isExist.activities })
 
-        const { error } = COMPANY_MODEL.validate({
+        const res = {
           ...isExist,
           relation_type: '___',
-        })
+          medias: [],
+        }
+
+        if (Object.keys(res).includes('logo_id')) delete res.logo_id
+        const { error } = COMPANY_MODEL.validate(res)
 
         if (error) {
           console.error('error', error)
           return h.response({ message: error.message }).code(400)
         }
 
-        return h.response(isExist).type('json').code(200)
+        return h.response(res).type('json').code(200)
       }
       try {
         const newItem = await createCompanies({
           ...data,
           author_id: req.app.user.id,
         })
+
+        if (Object.keys(newItem).includes('logo_id')) delete newItem.logo_id
         const dataSend = {
           ...newItem,
           relation_type: '___',
+          medias: [],
         }
-        const { error } = COMPANY_MODEL.validate({
-          ...newItem,
-          relation_type: '___',
-        })
+
+        const { error } = COMPANY_MODEL.validate(dataSend)
 
         if (error) {
           console.error('error', error)
