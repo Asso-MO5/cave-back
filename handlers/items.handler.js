@@ -37,6 +37,11 @@ module.exports = async (req, h) => {
     return h
       .response(
         res.map((r) => {
+          // Legacy
+          const keys = Object.keys(r)
+          if (keys.includes('logo_id')) delete r.logo_id
+          if (keys.includes('cover_id')) delete r.cover_id
+
           if (type.match(/machine|obj/) && !r.manufacturer) {
             const obj = { ...r }
             delete obj.type // remove type from obj

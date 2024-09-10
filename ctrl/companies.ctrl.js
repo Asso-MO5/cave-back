@@ -102,7 +102,8 @@ module.exports = [
       const _company = await getCompanyBySlug(slug)
 
       // Legacy
-      if (_company?.logo_id) delete _company.logo_id
+      const keys = Object.keys(_company)
+      if (keys.includes('logo_id')) delete _company.logo_id
 
       const company = {
         ..._company,
