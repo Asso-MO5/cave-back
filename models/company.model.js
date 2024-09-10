@@ -38,6 +38,7 @@ const COMPANY_LIGHT_MODEL = Joi.object({
   id: Joi.string().required(),
   name: Joi.string().required(),
   slug: Joi.string().required(),
+  item_count: Joi.number().required(),
   activities: Joi.string().required(),
 }).label('CompanyLight')
 

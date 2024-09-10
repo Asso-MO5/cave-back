@@ -43,10 +43,29 @@ module.exports = {
   COMPANY_HISTORY,
   COMPANY_ACTIVITIES,
   async getCompaniesLight(activities = '') {
-    return await knex(TABLES.companies)
-      .where(COMPANY.activities, 'like', '%' + activities + '%')
-      .orderBy(COMPANY.name)
-      .select(COMPANY.id, COMPANY.name, COMPANY.slug, COMPANY.activities)
+    try {
+      return await knex(TABLES.companies)
+        // Jointure avec la table item_companies pour lier les items aux companies
+        .leftJoin(
+          `${TABLES.item_companies} as ic`,
+          'ic.company_id',
+          `${TABLES.companies}.id`
+        )
+        // Filtrer sur les activités
+        .where(COMPANY.activities, 'like', `%${activities}%`)
+        // Compter le nombre d'items liés à chaque company
+        .groupBy(`${TABLES.companies}.id`)
+        .orderBy(COMPANY.name)
+        .select(
+          TABLES.companies + '.' + COMPANY.id,
+          COMPANY.name,
+          COMPANY.slug,
+          COMPANY.activities,
+          knex.raw('COUNT(ic.id) as item_count') // Count des items associés
+        )
+    } catch (error) {
+      console.log('GET COMPANIES LIGHT :', error)
+    }
   },
   async getCompanyWithGame(itemId) {
     return await knex(TABLES.companies)
@@ -152,6 +171,18 @@ module.exports = {
       await knex(TABLES.companies).where(COMPANY.id, companyId).update(partial)
     } catch (error) {
       console.log('COMPANY UPDATE :', error)
+    }
+  },
+  async deleteCompany(companyId) {
+    try {
+      await knex(TABLES.company_medias)
+        .where(COMPANY_MEDIAS.company_id, companyId)
+        .del()
+
+      await knex(TABLES.companies).where(COMPANY.id, companyId).del()
+    } catch (error) {
+      console.log('COMPANY DELETE :', error)
+      throw error
     }
   },
 }

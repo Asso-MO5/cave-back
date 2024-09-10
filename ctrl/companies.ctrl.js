@@ -7,6 +7,7 @@ const {
   updateCompany,
   getCompanyBySlug,
   getCompanyById,
+  deleteCompany,
 } = require('../entities/company')
 const { headers } = require('../models/header.model')
 const {
@@ -18,6 +19,7 @@ const {
 } = require('../models/company.model')
 const { getMediaUrl } = require('../utils/media-url')
 const { createOrUpdateCompanyLogo } = require('../entities/company_medias')
+const Joi = require('joi')
 
 module.exports = [
   {
@@ -312,6 +314,43 @@ module.exports = [
       }
 
       return h.response(oldCompany).code(201)
+    },
+  },
+  {
+    method: 'DELETE',
+    path: '/companies/{id}',
+    options: {
+      description: 'Supprime une entreprise',
+      tags: ['api', 'entreprise'],
+      notes: [ROLES.publisher, ROLES.reviewer],
+      validate: {
+        headers,
+      },
+      response: {
+        status: {
+          //201 for send message
+          201: Joi.object({
+            message: Joi.string().required(),
+          })
+            .label('DeleteCompanyModel')
+            .required(),
+        },
+      },
+    },
+    async handler(req, h) {
+      try {
+        await deleteCompany(req.params.id)
+        return h
+          .response({
+            message: 'Entreprise supprimée',
+          })
+          .code(201)
+      } catch (error) {
+        console.log('DELETE COMPANY :', error)
+        return h
+          .response({ error: 'Internal server error', details: error })
+          .code(500)
+      }
     },
   },
 ]
