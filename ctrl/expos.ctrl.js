@@ -82,12 +82,18 @@ module.exports = [
     },
     async handler(req, h) {
       const baseCartel = await getCartelBySlug(req.params.slug)
-      const cartel = { ...baseCartel }
+      const cartel = { ...baseCartel, medias: [] }
       const refItem = await getItem(baseCartel.refItem, req, h)
       cartel.refItem = refItem
 
+      if (Object.keys(cartel).includes('cover_id')) delete cartel.cover_id
+
       const { error } = CARTEL_DETAILS_MODEL.validate(cartel)
-      if (error) return h.response({ message: error.message }).code(400)
+
+      if (error) {
+        console.log('error', error)
+        return h.response({ message: error.message }).code(400)
+      }
       return h.response(cartel).type('json').code(200)
     },
   },

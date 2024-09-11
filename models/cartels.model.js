@@ -23,6 +23,7 @@ const CARTEL_DETAILS_MODEL = ITEM_MODEL.keys({
     Joi.allow(OBJ_MODEL),
     Joi.allow(MACHINES_MODEL)
   ),
+  medias: Joi.array().items(Joi.object().unknown()).required(),
 }).label('CartelDetails')
 
 const CARTELS_MODEL = Joi.array()
