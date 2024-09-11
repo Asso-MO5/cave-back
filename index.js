@@ -71,7 +71,7 @@ const init = async () => {
       : h
           .response({
             message:
-              'Vous devez avoir une res rôles suivants: ' +
+              'Vous devez avoir une des rôles suivants: ' +
               authorizedRoles.join(', '),
           })
           .code(401)

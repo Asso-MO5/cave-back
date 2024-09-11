@@ -35,8 +35,8 @@ module.exports = [
           })
           .type('json')
           .code(200)
-        //TODO save author in db
       } catch (error) {
+        console.error(error)
         return h.response({ msg: 'auth fail' }).type('json').code(401)
       }
     },
