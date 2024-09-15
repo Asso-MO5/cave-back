@@ -1,4 +1,5 @@
 const { updateOrCreateCover } = require('../entities/item-medias')
+const { createItemRelation } = require('../entities/item-relations')
 const {
   createItem,
   getItemById,
@@ -6,6 +7,8 @@ const {
   createOrUpdateItemTextAttrs,
   createOrUpdateItemLongTextAttrs,
   getItems,
+  deleteItem,
+  getSimilarCartel,
 } = require('../entities/items')
 const { createMedia } = require('../entities/media')
 const { headers } = require('../models/header.model')
@@ -35,6 +38,32 @@ module.exports = [
         type,
         author_id: req.app.user.id,
       })
+
+      // -----|| CARTEL ||------------------------------------------------------------------
+      if (type === 'cartel') {
+        const itemRelation = {
+          item_ref_id: id,
+          item_left_id: id,
+          relation_type: 'cartel',
+          author_id: req.app.user.id,
+        }
+
+        const searchSimilar = await getSimilarCartel(name)
+        if (searchSimilar) {
+          itemRelation.item_ref_id = searchSimilar.id
+        } else {
+          const refId = await createItem({
+            name,
+            type: 'obj',
+            author_id: req.app.user.id,
+          })
+          itemRelation.item_ref_id = refId
+        }
+
+        await createItemRelation(itemRelation)
+      }
+
+      // -----|| END CARTEL ||------------------------------------------------------------------
 
       return h.response({ id }).code(201)
     },
@@ -242,6 +271,26 @@ module.exports = [
       }
 
       return h.response(oldItem).code(201)
+    },
+  },
+  {
+    method: 'DELETE',
+    path: '/items/{id}',
+    options: {
+      description: 'Permet de supprimer un item',
+      tags: ['api', 'jeux'],
+      notes: [ROLES.publisher, ROLES.reviewer],
+      validate: {
+        headers,
+      },
+    },
+    async handler(req, h) {
+      const { id } = req.params
+      if (!id) return h.response({ error: 'Un id est requis' }).code(400)
+
+      await deleteItem(id)
+
+      return h.response({ msg: 'ok' }).code(204)
     },
   },
 ]

@@ -52,6 +52,17 @@ module.exports = {
       return null
     }
   },
+  async getSimilarCartel(name) {
+    try {
+      return knex(TABLES.items)
+        .where(ITEMS.type, '<>', ITEM_TYPE.cartel)
+        .where(ITEMS.name, 'like', `%${name}%`)
+        .first()
+    } catch (e) {
+      console.error(e)
+      return null
+    }
+  },
   async getItems({ type, search, limit, offset }) {
     const query = knex(TABLES.items)
     try {
@@ -103,6 +114,13 @@ module.exports = {
           'item_medias.relation_type',
           'item_medias.position'
         )
+
+      const relations = await knex(TABLES.item_relation)
+        .where({ item_left_id: id })
+        .join(TABLES.items, 'items.id', '=', 'item_relation.item_ref_id')
+        .select('items.*', 'item_relation.relation_type')
+
+      item.relations = relations
 
       const attrs = [
         ...additionalTextAttrs,
@@ -183,6 +201,23 @@ module.exports = {
         value,
         author_id: auth.id,
       })
+    } catch (e) {
+      console.error(e)
+      return null
+    }
+  },
+  async deleteItem(id) {
+    try {
+      await knex(TABLES.item_history).where({ item_id: id }).delete()
+      await knex(TABLES.item_text_attrs).where({ item_id: id }).delete()
+      await knex(TABLES.item_long_text_attrs).where({ item_id: id }).delete()
+      await knex(TABLES.item_number_attrs).where({ item_id: id }).delete()
+      await knex(TABLES.item_medias).where({ item_id: id }).delete()
+      await knex(TABLES.item_relation)
+        .where({ item_left_id: id })
+        .orWhere({ item_ref_id: id })
+        .delete()
+      return knex(TABLES.items).where(ITEMS.id, id).delete()
     } catch (e) {
       console.error(e)
       return null

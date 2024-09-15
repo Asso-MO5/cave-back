@@ -127,7 +127,7 @@ exports.up = async (knex) => {
       .notNullable()
 
     table
-      .uuid(ITEM_RELATION.item_relation_id)
+      .uuid(ITEM_RELATION.item_left_id)
       .references('id')
       .inTable(TABLES.items)
       .notNullable()
