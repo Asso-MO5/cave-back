@@ -14,6 +14,18 @@ const ITEM_RELATION = {
 
 module.exports = {
   ITEM_RELATION,
+  async deleteItemRelationByLeftIdAndSameType(item_left_id, relation_type) {
+    try {
+      await knex(TABLES.item_relation)
+        .where(ITEM_RELATION.item_left_id, item_left_id)
+        .where(ITEM_RELATION.relation_type, relation_type)
+        .del()
+      return true
+    } catch (e) {
+      console.error(e)
+      return false
+    }
+  },
 
   async createItemRelation({
     item_ref_id,

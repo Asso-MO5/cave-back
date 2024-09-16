@@ -41,7 +41,7 @@ module.exports = {
         [ITEMS.id]: id,
         [ITEMS.name]: name,
         [ITEMS.type]: type,
-        [ITEMS.status]: 'active',
+        [ITEMS.status]: 'draft',
         [ITEMS.author_id]: author_id,
         [ITEMS.created_at]: now,
         [ITEMS.updated_at]: now,
@@ -168,7 +168,6 @@ module.exports = {
     }
   },
   async createOrUpdateItemLongTextAttrs(itemId, attr, value, auth) {
-    console.log('createOrUpdateItemLongTextAttrs', itemId, attr, value, auth)
     try {
       await knex(TABLES.item_long_text_attrs)
         .where({ item_id: itemId, key: attr })
@@ -232,10 +231,9 @@ module.exports = {
    **/
   async changeItemType(id, type) {
     // supprimer les items en relation
-
     try {
       await knex(TABLES.item_relation)
-        .where('item_ref_id ', id)
+        .where('item_left_id ', id)
         .where('relation_type', '<>', 'cartel')
         .delete()
       await knex(TABLES.item_text_attrs).where({ item_id: id }).delete()

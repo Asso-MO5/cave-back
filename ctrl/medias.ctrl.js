@@ -63,10 +63,7 @@ module.exports = [
     },
     async handler(req, h) {
       let file = req.payload?.file
-      if (req.payload?.url) {
-        console.log('req.payload.url :', req.payload.url)
-        file = await getMediaFromUrl(req.payload.url)
-      }
+      if (req.payload?.url) file = await getMediaFromUrl(req.payload.url)
 
       try {
         const medias = await createMedia([file])

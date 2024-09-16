@@ -1,5 +1,8 @@
 const { updateOrCreateCover } = require('../entities/item-medias')
-const { createItemRelation } = require('../entities/item-relations')
+const {
+  createItemRelation,
+  deleteItemRelationByLeftIdAndSameType,
+} = require('../entities/item-relations')
 const {
   createItem,
   getItemById,
@@ -31,6 +34,7 @@ module.exports = [
     },
     async handler(req, h) {
       const { name, type } = JSON.parse(req.payload || '{}')
+
       if (!name) return h.response({ error: 'Un nom est requis' }).code(400)
       if (!type) return h.response({ error: 'Un type est requis' }).code(400)
 
@@ -138,11 +142,6 @@ module.exports = [
 
       const keys = Object.keys(payload).join(' ')
 
-      // ----- TYPE -----
-      /**
-       * @description Si le type est modifié, il faut supprimer les relations et les attributs textuels
-       */
-
       if (keys.match(/place|description|origin/)) {
         for (const key in payload) {
           // ----- VARCHAR -----
@@ -163,8 +162,20 @@ module.exports = [
               req.app.user
             )
         }
-      } else if (keys.match(/type/)) {
+      }
+      // ----- TYPE -----
+      else if (keys.match(/type/)) {
         await changeItemType(id, payload.type)
+      }
+      // ----- COMPANY -----
+      else if (keys.match(/company/)) {
+        await deleteItemRelationByLeftIdAndSameType(id, payload.company.type)
+        await createItemRelation({
+          item_ref_id: payload.company.id,
+          item_left_id: id,
+          relation_type: payload.company.type,
+          author_id: req.app.user.id,
+        })
       } else {
         // ----- ITEM -----
         await updateItem(id, payload)
