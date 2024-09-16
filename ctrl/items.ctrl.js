@@ -9,6 +9,7 @@ const {
   getItems,
   deleteItem,
   getSimilarCartel,
+  changeItemType,
 } = require('../entities/items')
 const { createMedia } = require('../entities/media')
 const { headers } = require('../models/header.model')
@@ -135,11 +136,14 @@ module.exports = [
 
       const payload = JSON.parse(req.payload || '{}')
 
-      if (
-        Object.keys(payload)
-          .join(' ')
-          .match(/place|description|origin/)
-      ) {
+      const keys = Object.keys(payload).join(' ')
+
+      // ----- TYPE -----
+      /**
+       * @description Si le type est modifié, il faut supprimer les relations et les attributs textuels
+       */
+
+      if (keys.match(/place|description|origin/)) {
         for (const key in payload) {
           // ----- VARCHAR -----
           if (key.match(/place|origin/))
@@ -159,6 +163,8 @@ module.exports = [
               req.app.user
             )
         }
+      } else if (keys.match(/type/)) {
+        await changeItemType(id, payload.type)
       } else {
         // ----- ITEM -----
         await updateItem(id, payload)

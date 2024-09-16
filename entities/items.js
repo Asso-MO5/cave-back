@@ -223,4 +223,30 @@ module.exports = {
       return null
     }
   },
+  /**
+   * @description ### Modification du type d'un item
+   * *Utilisé principalement pour les items imbriqués*
+   * - Supprime les relation ou l'item est en `item_ref_id`
+   * - Supprime les champs additionnels
+   *
+   **/
+  async changeItemType(id, type) {
+    // supprimer les items en relation
+
+    try {
+      await knex(TABLES.item_relation)
+        .where('item_ref_id ', id)
+        .where('relation_type', '<>', 'cartel')
+        .delete()
+      await knex(TABLES.item_text_attrs).where({ item_id: id }).delete()
+      await knex(TABLES.item_long_text_attrs).where({ item_id: id }).delete()
+      await knex(TABLES.item_number_attrs).where({ item_id: id }).delete()
+      await knex(TABLES.item_medias).where({ item_id: id }).delete()
+      // Attributes
+      return knex(TABLES.items).where(ITEMS.id, id).update({ type })
+    } catch (e) {
+      console.error(e)
+      return null
+    }
+  },
 }
