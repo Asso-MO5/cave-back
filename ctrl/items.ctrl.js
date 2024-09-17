@@ -142,10 +142,10 @@ module.exports = [
 
       const keys = Object.keys(payload).join(' ')
 
-      if (keys.match(/place|description|origin/)) {
+      if (keys.match(/var_|long_/)) {
         for (const key in payload) {
           // ----- VARCHAR -----
-          if (key.match(/place|origin/))
+          if (key.match(/var_/))
             await createOrUpdateItemTextAttrs(
               id,
               key,
@@ -154,7 +154,7 @@ module.exports = [
             )
 
           // ----- TEXT -----
-          if (key.match(/description/))
+          if (key.match(/long_/))
             await createOrUpdateItemLongTextAttrs(
               id,
               key,
