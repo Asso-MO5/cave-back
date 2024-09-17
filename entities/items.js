@@ -69,13 +69,36 @@ module.exports = {
       if (type) query.where(ITEMS.type, type)
       if (search) query.where(ITEMS.name, 'like', `%${search}%`)
 
+      // Cloner la requête pour obtenir le count
       const countQuery = query.clone()
       const count = await countQuery.count()
 
       if (limit) query.limit(limit)
       if (offset) query.offset(offset)
 
-      const items = await query.select('*')
+      // Jointure avec item_text_attrs pour récupérer "place" et "origin"
+      const items = await query
+        .leftJoin(`${TABLES.item_text_attrs} as attrs_place`, function () {
+          this.on('attrs_place.item_id', '=', `${TABLES.items}.id`).andOn(
+            'attrs_place.key',
+            '=',
+            knex.raw('?', 'place')
+          ) // Récupérer "place"
+        })
+        .leftJoin(`${TABLES.item_text_attrs} as attrs_origin`, function () {
+          this.on('attrs_origin.item_id', '=', `${TABLES.items}.id`).andOn(
+            'attrs_origin.key',
+            '=',
+            knex.raw('?', 'origin')
+          ) // Récupérer "origin"
+        })
+        .select(
+          `${TABLES.items}.*`,
+          'attrs_place.value as place', // Attribut "place"
+          'attrs_origin.value as origin' // Attribut "origin"
+        )
+        .orderBy('place', 'desc')
+
       return {
         total: count[0]['count(*)'],
         items,
