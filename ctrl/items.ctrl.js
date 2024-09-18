@@ -86,7 +86,7 @@ module.exports = [
       },
     },
     async handler(req, h) {
-      const { type, search, page, limit = 5 } = req.query
+      const { type, search, page, limit = 5000 } = req.query
 
       const offset = page ? (page - 1) * limit : 0
       const items = await getItems({ type, search, limit, offset })

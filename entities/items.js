@@ -64,10 +64,10 @@ module.exports = {
     }
   },
   async getItems({ type, search, limit, offset }) {
-    const query = knex(TABLES.items)
+    const query = knex(TABLES.items + ' as it_origin')
     try {
-      if (type) query.where(ITEMS.type, type)
-      if (search) query.where(ITEMS.name, 'like', `%${search}%`)
+      if (type) query.where('it_origin.type', type)
+      if (search) query.where('it_origin.name', 'like', `%${search}%`)
 
       // Cloner la requête pour obtenir le count
       const countQuery = query.clone()
@@ -79,24 +79,39 @@ module.exports = {
       // Jointure avec item_text_attrs pour récupérer "place" et "origin"
       const items = await query
         .leftJoin(`${TABLES.item_text_attrs} as attrs_place`, function () {
-          this.on('attrs_place.item_id', '=', `${TABLES.items}.id`).andOn(
+          this.on('attrs_place.item_id', '=', `it_origin.id`).andOn(
             'attrs_place.key',
             '=',
             knex.raw('?', 'place')
           ) // Récupérer "place"
         })
         .leftJoin(`${TABLES.item_text_attrs} as attrs_origin`, function () {
-          this.on('attrs_origin.item_id', '=', `${TABLES.items}.id`).andOn(
+          this.on('attrs_origin.item_id', '=', `it_origin.id`).andOn(
             'attrs_origin.key',
             '=',
             knex.raw('?', 'origin')
           ) // Récupérer "origin"
         })
+        .leftJoin(
+          `${TABLES.item_relation} as relation`,
+          'it_origin.id',
+          '=',
+          'relation.item_left_id'
+        )
+        .leftJoin(`${TABLES.items} as it`, function () {
+          this.on('relation.item_ref_id', '=', 'it.id')
+        })
         .select(
-          `${TABLES.items}.*`,
+          `it_origin.name`,
+          `it_origin.id`,
+          `it_origin.type`,
+          `it_origin.status`,
+          `it.type as rType`, // type de l'item lié
           'attrs_place.value as place', // Attribut "place"
           'attrs_origin.value as origin' // Attribut "origin"
         )
+        .distinct('it_origin.id')
+        .orderBy('it_origin.name', 'asc')
         .orderBy('place', 'desc')
 
       return {
