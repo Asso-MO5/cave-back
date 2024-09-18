@@ -111,7 +111,6 @@ module.exports = {
           'attrs_origin.value as origin' // Attribut "origin"
         )
         .distinct('it_origin.id')
-        .orderBy('it_origin.name', 'asc')
         .orderBy('place', 'desc')
 
       return {
