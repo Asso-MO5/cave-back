@@ -82,14 +82,14 @@ module.exports = {
           this.on('attrs_place.item_id', '=', `it_origin.id`).andOn(
             'attrs_place.key',
             '=',
-            knex.raw('?', 'place')
+            knex.raw('?', 'var_place')
           ) // Récupérer "place"
         })
         .leftJoin(`${TABLES.item_text_attrs} as attrs_origin`, function () {
           this.on('attrs_origin.item_id', '=', `it_origin.id`).andOn(
             'attrs_origin.key',
             '=',
-            knex.raw('?', 'origin')
+            knex.raw('?', 'var_origin')
           ) // Récupérer "origin"
         })
         .leftJoin(
