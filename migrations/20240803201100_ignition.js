@@ -1,18 +1,15 @@
 const { TABLES } = require('../utils/constants')
 const { ITEMS } = require('../entities/items')
-const { COMPANY } = require('../entities/company')
-const { ITEM_COMPANIES } = require('../entities/item-company')
 const {
   ITEM_LONG_TEXT_ATTRS,
   ITEM_NUMBER_ATTRS,
   ITEM_TEXT_ATTRS,
 } = require('../entities/item-attrs')
 const { ITEM_MEDIAS } = require('../entities/item-medias')
-const { ITEM_TAGS } = require('../entities/item-tags')
 const { ITEM_HISTORY } = require('../entities/item-history')
 const { MEDIA } = require('../entities/media')
-const { TAG } = require('../entities/tag')
 const { AUTHOR } = require('../entities/author')
+const { ITEM_RELATION } = require('../entities/item-relations')
 
 exports.up = async (knex) => {
   await knex.schema.createTable(TABLES.medias, (table) => {
@@ -23,7 +20,6 @@ exports.up = async (knex) => {
     table.integer(MEDIA.size).notNullable()
     table.text(MEDIA.description)
     table.string(MEDIA.type).notNullable()
-
     table.timestamps(true, true)
     table.unique([MEDIA.url])
   })
@@ -36,59 +32,12 @@ exports.up = async (knex) => {
     table.unique([AUTHOR.provider_id])
   })
 
-  await knex.schema.createTable(TABLES.tags, (table) => {
-    table.uuid(TAG.id).primary()
-    table.string(TAG.name).notNullable()
-    table.string(TAG.slug).notNullable()
-    table.uuid(TAG.author_id).references('id').inTable(TABLES.authors)
-    table.timestamps(true, true)
-    table.unique([TAG.slug])
-  })
-
   await knex.schema.createTable(TABLES.items, (table) => {
     table.uuid(ITEMS.id).primary()
     table.string(ITEMS.name).notNullable()
-    table.string(ITEMS.slug).notNullable()
-    table.text(ITEMS.description)
-    table.integer(ITEMS.release_year)
     table.string(ITEMS.type).notNullable()
-    table.string(ITEMS.cover_id).references('id').inTable(TABLES.medias)
+    table.string(ITEMS.status).notNullable().defaultTo('draft')
     table.uuid(ITEMS.author_id).references('id').inTable(TABLES.authors)
-    table.timestamps(true, true)
-    table.unique([ITEMS.slug])
-  })
-
-  await knex.schema.createTable(TABLES.companies, (table) => {
-    table.uuid(COMPANY.id).primary()
-    table.string(COMPANY.name).notNullable()
-    table.string(COMPANY.slug).notNullable()
-    table.text(COMPANY.description)
-    table.string(COMPANY.logo_id).references('id').inTable(TABLES.medias)
-    table.string(COMPANY.country)
-    table.json(COMPANY.activities)
-    table.integer(COMPANY.borned_at)
-    table.uuid(COMPANY.author_id).references('id').inTable(TABLES.authors)
-    table.timestamps(true, true)
-    table.unique([COMPANY.slug])
-  })
-
-  await knex.schema.createTable(TABLES.item_companies, (table) => {
-    table.uuid(ITEM_COMPANIES.id).primary()
-    table
-      .uuid(ITEM_COMPANIES.item_id)
-      .references('id')
-      .inTable(TABLES.items)
-      .notNullable()
-    table
-      .uuid(ITEM_COMPANIES.company_id)
-      .references('id')
-      .inTable(TABLES.companies)
-      .notNullable()
-    table.string(ITEM_COMPANIES.relation_type).notNullable()
-    table
-      .uuid(ITEM_COMPANIES.author_id)
-      .references('id')
-      .inTable(TABLES.authors)
     table.timestamps(true, true)
   })
 
@@ -156,22 +105,6 @@ exports.up = async (knex) => {
     table.timestamps(true, true)
   })
 
-  await knex.schema.createTable(TABLES.item_tags, (table) => {
-    table.uuid(ITEM_TAGS.id).primary()
-    table
-      .uuid(ITEM_TAGS.item_id)
-      .references('id')
-      .inTable(TABLES.items)
-      .notNullable()
-    table
-      .uuid(ITEM_TAGS.tag_id)
-      .references('id')
-      .inTable(TABLES.tags)
-      .notNullable()
-    table.uuid(ITEM_TAGS.author_id).references('id').inTable(TABLES.authors)
-    table.timestamps(true, true)
-  })
-
   await knex.schema.createTable(TABLES.item_history, (table) => {
     table.uuid(ITEM_HISTORY.id).primary()
     table
@@ -184,18 +117,34 @@ exports.up = async (knex) => {
     table.timestamp(ITEM_HISTORY.modified_at).defaultTo(knex.fn.now())
     table.uuid(ITEM_HISTORY.author_id).references('id').inTable(TABLES.authors)
   })
+
+  await knex.schema.createTable(TABLES.item_relation, (table) => {
+    table.uuid(ITEM_RELATION.id).primary()
+    table
+      .uuid(ITEM_RELATION.item_ref_id)
+      .references('id')
+      .inTable(TABLES.items)
+      .notNullable()
+
+    table
+      .uuid(ITEM_RELATION.item_left_id)
+      .references('id')
+      .inTable(TABLES.items)
+      .notNullable()
+    table.string(ITEM_RELATION.relation_type).notNullable()
+    table.uuid(ITEM_RELATION.author_id).references('id').inTable(TABLES.authors)
+
+    table.timestamps(true, true)
+  })
 }
 
 exports.down = async (knex) => {
   await knex.schema.dropTableIfExists(TABLES.medias)
-  await knex.schema.dropTableIfExists(TABLES.tags)
   await knex.schema.dropTableIfExists(TABLES.item_history)
-  await knex.schema.dropTableIfExists(TABLES.item_tags)
   await knex.schema.dropTableIfExists(TABLES.item_medias)
+  await knex.schema.dropTableIfExists(TABLES.item_relation)
   await knex.schema.dropTableIfExists(TABLES.item_long_text_attrs)
   await knex.schema.dropTableIfExists(TABLES.item_number_attrs)
   await knex.schema.dropTableIfExists(TABLES.item_text_attrs)
-  await knex.schema.dropTableIfExists(TABLES.item_companies)
-  await knex.schema.dropTableIfExists(TABLES.companies)
   await knex.schema.dropTableIfExists(TABLES.items)
 }

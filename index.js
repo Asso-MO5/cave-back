@@ -65,6 +65,7 @@ const init = async () => {
 
     const { roles } = user
     req.app.user = user
+
     const checkRoles = authorizedRoles.some((role) => roles.includes(role))
     return checkRoles
       ? h.continue

@@ -1,33 +1,78 @@
-const Joi = require('joi')
-const { createMedia } = require('../entities/media')
+const { updateOrCreateCover } = require('../entities/item-medias')
 const {
-  createItems,
+  createItemRelation,
+  deleteItemRelationByLeftIdAndSameType,
+} = require('../entities/item-relations')
+const {
+  createItem,
   getItemById,
   updateItem,
+  createOrUpdateItemTextAttrs,
+  createOrUpdateItemLongTextAttrs,
   getItems,
+  deleteItem,
+  getSimilarCartel,
+  changeItemType,
 } = require('../entities/items')
-const { getMediaUrl } = require('../utils/media-url')
-const { createItemHistory } = require('../entities/item-history')
-const { replaceCompanyForItem } = require('../entities/item-company')
-
-const {
-  createRelation,
-  getRelationbyLeftIdAndRightId,
-  getRelationByReIdAndType,
-} = require('../entities/item-items')
-const { ROLES } = require('../utils/constants')
-const {
-  ITEM_MODEL,
-  ITEM_CREATE_PAYLOAD_MODEL,
-  ITEM_SEARCH_MODEL,
-  ITEM_SEARCH_QUERY_MODEL,
-} = require('../models/item.model')
-const itemStatusHandler = require('../handlers/item-status.handler')
-const itemCreateHandler = require('../handlers/item-create.handler')
+const { createMedia } = require('../entities/media')
 const { headers } = require('../models/header.model')
-const { updateOrCreateCover } = require('../entities/item-medias')
+const { ROLES } = require('../utils/constants')
+const { getMediaFromUrl } = require('../utils/get-media-from-url')
+const { getMediaUrl } = require('../utils/media-url')
 
 module.exports = [
+  {
+    method: 'POST',
+    path: '/items',
+    options: {
+      description: 'Permet de créer un item',
+      tags: ['api', 'jeux'],
+      notes: [ROLES.publisher, ROLES.reviewer],
+      validate: {
+        headers,
+      },
+    },
+    async handler(req, h) {
+      const { name, type } = JSON.parse(req.payload || '{}')
+
+      if (!name) return h.response({ error: 'Un nom est requis' }).code(400)
+      if (!type) return h.response({ error: 'Un type est requis' }).code(400)
+
+      const id = await createItem({
+        name,
+        type,
+        author_id: req.app.user.id,
+      })
+
+      // -----|| CARTEL ||------------------------------------------------------------------
+      if (type === 'cartel') {
+        const itemRelation = {
+          item_ref_id: id,
+          item_left_id: id,
+          relation_type: 'cartel',
+          author_id: req.app.user.id,
+        }
+
+        const searchSimilar = await getSimilarCartel(name)
+        if (searchSimilar) {
+          itemRelation.item_ref_id = searchSimilar.id
+        } else {
+          const refId = await createItem({
+            name,
+            type: 'obj',
+            author_id: req.app.user.id,
+          })
+          itemRelation.item_ref_id = refId
+        }
+
+        await createItemRelation(itemRelation)
+      }
+
+      // -----|| END CARTEL ||------------------------------------------------------------------
+
+      return h.response({ id }).code(201)
+    },
+  },
   {
     method: 'GET',
     path: '/items',
@@ -37,127 +82,140 @@ module.exports = [
       tags: ['api', 'jeux'],
       notes: [ROLES.member],
       validate: {
-        query: ITEM_SEARCH_QUERY_MODEL.required(),
         headers,
-      },
-      response: {
-        status: {
-          200: ITEM_SEARCH_MODEL.required(),
-        },
       },
     },
     async handler(req, h) {
-      const { error } = ITEM_SEARCH_QUERY_MODEL.validate(req.query)
-      if (error) return h.response({ error: error.message }).code(400)
-      try {
-        const items = await getItems(req.query.type, req.query.search)
-        return h
-          .response(
-            items.map((item) => ({
-              name: item.related_item_name
-                ? `${item.name} (${item.related_item_name})`
-                : item.name,
-              slug: item.slug,
-            }))
-          )
-          .code(200)
-      } catch (error) {
-        console.log('ITEMS GET :', error)
-        return h
-          .response({ error: 'Internal server error', details: error })
-          .code(500)
-      }
+      const { type, search, page, limit = 5000 } = req.query
+
+      const offset = page ? (page - 1) * limit : 0
+      const items = await getItems({ type, search, limit, offset })
+      return h.response(items).code(200)
     },
   },
   {
-    method: 'POST',
-    path: '/items',
+    method: 'GET',
+    path: '/item/{id}',
+
     options: {
-      description: 'Permet de créer un item (jeu, machine, liste...)',
-      tags: ['api', 'jeu', 'machine', 'expositions'],
-      notes: [ROLES.reviewer, ROLES.publisher],
-      validate: {
-        payload: ITEM_CREATE_PAYLOAD_MODEL,
-        headers,
-      },
-      response: {
-        status: {
-          201: Joi.object({
-            id: Joi.string().required(),
-            slug: Joi.string().required(),
-          })
-            .label('itemCreated')
-            .required(),
-        },
-      },
-    },
-    handler: itemCreateHandler,
-  },
-  {
-    method: 'PUT',
-    path: '/machine/{machine_id}/game/{ref_id}',
-    options: {
-      description: 'Permet de lier un jeu à une machine',
-      tags: ['api', 'jeu', 'machine', 'expositions'],
-      notes: [ROLES.reviewer, ROLES.publisher],
+      description: 'Récupère un item par son id',
+      tags: ['api', 'jeux'],
+      notes: [ROLES.member],
       validate: {
         headers,
-      },
-      response: {
-        status: {
-          200: ITEM_MODEL.required(),
-          201: ITEM_MODEL.required(),
-        },
       },
     },
     async handler(req, h) {
-      const { machine_id, ref_id } = req.params
-
-      const refItem = await getItemById(ref_id)
-
-      const relation = await getRelationbyLeftIdAndRightId(ref_id, machine_id)
-
-      if (relation) return h.response(refItem).code(200)
-
-      const existOtherRelation = await getRelationByReIdAndType(
-        ref_id,
-        'machine_game'
-      )
-
-      if (!existOtherRelation?.id) {
-        await createRelation(
-          ref_id,
-          ref_id,
-          machine_id,
-          'machine_game',
-          req.app.user.id
-        )
-
-        return h.response(refItem).code(201)
-      }
-
-      const newItem = await createItems({
-        name: refItem.name,
-        author_id: req.app.user.id,
-        type: 'game',
-      })
-
-      await createRelation(
-        ref_id,
-        newItem.id,
-        machine_id,
-        'machine_game',
-        req.app.user.id
-      )
-
-      return h.response(await getItemById(newItem.id)).code(201)
+      const { id } = req.params
+      if (!id) return h.response({ error: 'Un id est requis' }).code(400)
+      const item = await getItemById(id)
+      if (!item) return h.response({ error: 'Non trouvé' }).code(404)
+      return h
+        .response({
+          item: {
+            ...item,
+            medias: item.medias.map((media) => ({
+              ...media,
+              url: getMediaUrl(media.url, req),
+            })),
+          },
+        })
+        .code(200)
     },
   },
   {
     method: 'PUT',
-    path: '/items/{id}',
+    path: '/item/{id}',
+    options: {
+      description: 'Permet de modifier un item',
+      tags: ['api', 'jeux'],
+      notes: [ROLES.publisher, ROLES.reviewer],
+      validate: {
+        headers,
+      },
+    },
+    async handler(req, h) {
+      const { id } = req.params
+      if (!id) return h.response({ error: 'Un id est requis' }).code(400)
+
+      const payload = JSON.parse(req.payload || '{}')
+
+      const keys = Object.keys(payload).join(' ')
+
+      if (keys.match(/var_|long_/)) {
+        for (const key in payload) {
+          // ----- VARCHAR -----
+          if (key.match(/var_/))
+            await createOrUpdateItemTextAttrs(
+              id,
+              key,
+              payload[key],
+              req.app.user
+            )
+
+          // ----- TEXT -----
+          if (key.match(/long_/))
+            await createOrUpdateItemLongTextAttrs(
+              id,
+              key,
+              payload[key],
+              req.app.user
+            )
+        }
+      }
+      // ----- TYPE -----
+      else if (keys.match(/type/)) {
+        await changeItemType(id, payload.type)
+      }
+      // ----- COMPANY -----
+      else if (keys.match(/company/)) {
+        await deleteItemRelationByLeftIdAndSameType(id, payload.company.type)
+        await createItemRelation({
+          item_ref_id: payload.company.id,
+          item_left_id: id,
+          relation_type: payload.company.type,
+          author_id: req.app.user.id,
+        })
+      } else {
+        // ----- ITEM -----
+        await updateItem(id, payload)
+      }
+
+      const item = await getItemById(id)
+      return h.response({ item }).code(204)
+    },
+  },
+  {
+    method: 'PUT',
+    path: '/item/{id}/status/{status}',
+    options: {
+      description: "Permet de modifier le status d'un item",
+      tags: ['api', 'jeux'],
+      notes: [ROLES.publisher, ROLES.reviewer],
+      validate: {
+        headers,
+      },
+    },
+    async handler(req, h) {
+      const { id, status } = req.params
+      if (!id) return h.response({ error: 'Un id est requis' }).code(400)
+      if (!status)
+        return h.response({ error: 'Un status est requis' }).code(400)
+
+      await updateItem(id, { status })
+
+      const item = await getItemById(id)
+      return h.response({ item }).code(204)
+    },
+  },
+
+  {
+    method: 'PUT',
+    path: '/item/{id}/media',
     options: {
       notes: [ROLES.reviewer, ROLES.publisher],
+      description: 'Permet de mettre à jour le media d un item',
+      tags: ['api', 'items'],
       payload: {
         parse: true,
         output: 'stream',
@@ -170,17 +228,8 @@ module.exports = [
       const oldItem = await getItemById(req.params.id)
       if (!oldItem) return h.response({ error: 'Non trouvé' }).code(404)
 
-      if (data.status)
-        return h
-          .response({
-            error: 'Vous ne pouvez pas modifier le status via cette route',
-          })
-          .code(400)
-
-      // ====== COVER ==========================================================
-
       try {
-        await createItemHistory(oldItem.id)
+        //  await createItemHistory(oldItem.id)
       } catch (error) {
         console.log('ITEM HISTORY :', error)
         return h
@@ -188,6 +237,7 @@ module.exports = [
           .code(500)
       }
 
+      // ====== COVER ==========================================================
       if (data.cover && data.cover?.hapi?.filename) {
         const [cover] = await createMedia([data.cover])
 
@@ -236,64 +286,28 @@ module.exports = [
 
         return h.response(oldItem).code(201)
       }
-      // ====== COMPANIES ==========================================================
-      if (data.company_id) {
-        // Replace the old company
-        if (data.company_old_id) {
-          try {
-            // create if not exist
-            const newCompany = await replaceCompanyForItem(
-              oldItem.id,
-              data.company_id,
-              data.company_old_id,
-              data.company_relation_type,
-              req.app.user.id
-            )
-            oldItem[data.company_relation_type] = newCompany
-            return h.response(oldItem).code(201)
-          } catch (error) {
-            console.log('COMPANY REPLACE :', error)
-            return h
-              .response({ error: 'Internal server error', details: error })
-              .code(500)
-          }
-        }
-
-        return h.response(oldItem).code(201)
-      }
-
-      try {
-        await updateItem(oldItem.id, {
-          ...data,
-          author_id: req.app.user.id,
-        })
-      } catch (error) {
-        console.log('ITEM UPDATE :', error)
-        return h
-          .response({ error: 'Internal server error', details: error })
-          .code(500)
-      }
 
       return h.response(oldItem).code(201)
     },
   },
   {
-    method: 'PUT',
-    path: '/items/{id}/status/{status}',
+    method: 'DELETE',
+    path: '/items/{id}',
     options: {
-      description: "Permet de changer le status d'un item",
-      tags: ['api', 'items', 'listes', 'machines', 'jeux'],
-      notes: [ROLES.reviewer],
+      description: 'Permet de supprimer un item',
+      tags: ['api', 'jeux'],
+      notes: [ROLES.publisher, ROLES.reviewer],
       validate: {
-        payload: Joi.object({}).label('ItemStatusBody'),
         headers,
       },
-      response: {
-        status: {
-          201: ITEM_MODEL.label('ItemStatusUpdated').required(),
-        },
-      },
     },
-    handler: itemStatusHandler,
+    async handler(req, h) {
+      const { id } = req.params
+      if (!id) return h.response({ error: 'Un id est requis' }).code(400)
+
+      await deleteItem(id)
+
+      return h.response({ msg: 'ok' }).code(204)
+    },
   },
 ]

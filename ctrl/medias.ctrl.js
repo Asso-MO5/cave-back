@@ -1,10 +1,5 @@
 const { getMedias, createMedia, deleteMedia } = require('../entities/media')
-const {
-  MEDIAS_MODEL,
-  MEDIAS_QUERY_MODEL,
-  MEDIA_MODEL,
-  MEDIA_CREATE_PAYLOAD_MODEL,
-} = require('../models/media.model')
+const { MEDIAS_MODEL, MEDIA_MODEL } = require('../models/media.model')
 const { ROLES } = require('../utils/constants')
 const { headers } = require('../models/header.model')
 const { getMediaUrl } = require('../utils/media-url')
@@ -21,19 +16,9 @@ module.exports = [
       notes: [ROLES.member],
       validate: {
         headers,
-        query: MEDIAS_QUERY_MODEL,
-      },
-      response: {
-        status: {
-          200: MEDIAS_MODEL.required(),
-        },
       },
     },
     async handler(req, h) {
-      const { error: reqError } = MEDIAS_QUERY_MODEL.validate(req.query)
-      if (reqError)
-        return h.response({ error: 'Bad request', details: reqError }).code(400)
-
       try {
         const query = await getMedias(req?.query?.search)
 
@@ -73,21 +58,12 @@ module.exports = [
       tags: ['api', 'medias'],
       notes: [ROLES.publisher, ROLES.reviewer],
       validate: {
-        payload: MEDIA_CREATE_PAYLOAD_MODEL.required(),
         headers,
-      },
-      response: {
-        status: {
-          201: MEDIA_MODEL.required(),
-        },
       },
     },
     async handler(req, h) {
       let file = req.payload?.file
-      if (req.payload?.url) {
-        console.log('req.payload.url :', req.payload.url)
-        file = await getMediaFromUrl(req.payload.url)
-      }
+      if (req.payload?.url) file = await getMediaFromUrl(req.payload.url)
 
       try {
         const medias = await createMedia([file])

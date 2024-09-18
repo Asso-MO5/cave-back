@@ -1,3 +1,4 @@
+const { ITEM_MEDIAS } = require('../entities/item-medias')
 const { TABLES } = require('../utils/constants')
 
 /**
@@ -5,12 +6,9 @@ const { TABLES } = require('../utils/constants')
  * @returns { Promise<void> }
  */
 exports.up = async function (knex) {
-  await knex.schema.alterTable(TABLES.companies, (table) => {
-    table.dropColumn('logo_id')
-  })
-
-  await knex.schema.alterTable(TABLES.items, (table) => {
-    table.dropColumn('cover_id')
+  await knex.schema.alterTable(TABLES.item_medias, (table) => {
+    table.string(ITEM_MEDIAS.relation_type).after(ITEM_MEDIAS.author_id)
+    table.bigint(ITEM_MEDIAS.position).after(ITEM_MEDIAS.relation_type)
   })
 }
 
