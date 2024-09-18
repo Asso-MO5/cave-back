@@ -112,7 +112,7 @@ module.exports = {
         )
         .distinct('it_origin.id')
         .orderBy('it_origin.name', 'asc')
-        .orderBy('place', 'desc')
+        .orderBy('var_place', 'desc')
 
       return {
         total: count[0]['count(*)'],
