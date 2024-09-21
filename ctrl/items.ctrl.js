@@ -21,6 +21,9 @@ const { ROLES } = require('../utils/constants')
 const { getMediaFromUrl } = require('../utils/get-media-from-url')
 const { getMediaUrl } = require('../utils/media-url')
 const { printItem } = require('../utils/print-item')
+const AdmZip = require('adm-zip')
+const path = require('path')
+const fs = require('fs')
 
 module.exports = [
   {
@@ -370,23 +373,43 @@ module.exports = [
         headers,
       },
     },
+
     async handler(req, h) {
-      const { exportType, type, ids, selectedTotal } = JSON.parse(
-        req.payload || '{}'
-      )
+      const { exportType, type, ids, format } = JSON.parse(req.payload || '{}')
 
       const items = await getItemsForExport({ type, ids })
 
       if (exportType === 'csv') {
         const csv = items
           .map((item) => {
+            delete item.id
             return Object.values(item).join(',')
           })
           .join('\n')
 
         return h.response(csv).code(200).header('Content-Type', 'text/csv')
       }
-      console.log('type', type, 'ids', ids, 'selectedTotal', selectedTotal)
+
+      if (exportType === 'print') {
+        const zip = new AdmZip()
+
+        for (const item of items) {
+          const filePath = await printItem(item, format) // Chemin du fichier généré
+          const fileName = path.basename(filePath) // Nom du fichier sans le chemin
+          const fileData = fs.readFileSync(filePath) // Lire le fichier généré
+
+          zip.addFile(fileName, fileData) // Ajouter le fichier au ZIP
+        }
+
+        // Générer le fichier ZIP
+        const zipBuffer = zip.toBuffer()
+
+        return h
+          .response(zipBuffer)
+          .header('Content-Type', 'application/zip')
+          .header('Content-Disposition', 'attachment; filename=export.zip')
+          .code(200)
+      }
 
       return h.response({ msg: 'ok' }).code(204)
     },

@@ -25,6 +25,7 @@
     "@hapi/nes": "^13.0.1",
     "@hapi/vision": "^7.0.3",
     "@napi-rs/canvas": "^0.1.54",
+    "adm-zip": "^0.5.16",
     "dotenv": "^16.4.5",
     "hapi-swagger": "^17.3.0",
     "image-to-pdf": "^2.0.0",

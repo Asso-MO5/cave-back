@@ -177,7 +177,7 @@ module.exports = {
         })
         .select(
           `it_origin.name`,
-          // `it_origin.id`,
+          `it_origin.id`,
           // `it_origin.type`,
           `it_origin.status`,
           `it.type as type`,

@@ -10,7 +10,11 @@ function getTextFromBlock({
   let currentY = y
   let currentX = x
 
+  if (!blocks || !Array.isArray(blocks)) return
+
   blocks.forEach((block) => {
+    if (!block.content) return
+
     block.content.forEach((content) => {
       const { text, styles } = content
       let fontStyle = `${fontSize || 12}px Arial`
