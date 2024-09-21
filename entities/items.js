@@ -63,9 +63,17 @@ module.exports = {
       return null
     }
   },
-  async getItems({ type, search, limit, offset }) {
+  async getItems({
+    type,
+    search,
+    limit,
+    offset,
+    order = 'asc',
+    sort = 'name',
+  }) {
     const query = knex(TABLES.items + ' as it_origin')
     try {
+      // Appliquer les filtres sur le type et la recherche
       if (type) query.where('it_origin.type', type)
       if (search) query.where('it_origin.name', 'like', `%${search}%`)
 
@@ -73,11 +81,12 @@ module.exports = {
       const countQuery = query.clone()
       const count = await countQuery.count()
 
+      // Appliquer la limite et l'offset
       if (limit) query.limit(limit)
       if (offset) query.offset(offset)
 
-      // Jointure avec item_text_attrs pour récupérer "place" et "origin"
-      const items = await query
+      // Ajouter les jointures pour les attributs "place" et "origin"
+      query
         .leftJoin(`${TABLES.item_text_attrs} as attrs_place`, function () {
           this.on('attrs_place.item_id', '=', `it_origin.id`).andOn(
             'attrs_place.key',
@@ -111,7 +120,19 @@ module.exports = {
           'attrs_origin.value as origin' // Attribut "origin"
         )
         .distinct('it_origin.id')
-        .orderBy('place', 'desc')
+
+      // Validation du champ "sort" (par défaut sur "name")
+      const validSortFields = ['name', 'type', 'status', 'place', 'origin']
+      const sortField = validSortFields.includes(sort) ? sort : 'name'
+
+      // Validation de l'ordre (par défaut "asc")
+      const sortOrder = order === 'desc' ? 'desc' : 'asc'
+
+      // Appliquer l'ordre de tri dynamique
+      query.orderBy(sortField, sortOrder)
+
+      // Exécuter la requête pour obtenir les items
+      const items = await query
 
       return {
         total: count[0]['count(*)'],

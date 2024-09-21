@@ -19,6 +19,7 @@ const { headers } = require('../models/header.model')
 const { ROLES } = require('../utils/constants')
 const { getMediaFromUrl } = require('../utils/get-media-from-url')
 const { getMediaUrl } = require('../utils/media-url')
+const { printItem } = require('../utils/print-item')
 
 module.exports = [
   {
@@ -86,10 +87,26 @@ module.exports = [
       },
     },
     async handler(req, h) {
-      const { type, search, page, limit = 5000 } = req.query
+      const {
+        type,
+        search,
+        searchBy,
+        page,
+        limit = 50,
+        order,
+        sort,
+      } = req.query
 
       const offset = page ? (page - 1) * limit : 0
-      const items = await getItems({ type, search, limit, offset })
+      const items = await getItems({
+        type,
+        search,
+        searchBy,
+        limit,
+        offset,
+        order,
+        sort,
+      })
       return h.response(items).code(200)
     },
   },
@@ -308,6 +325,31 @@ module.exports = [
       await deleteItem(id)
 
       return h.response({ msg: 'ok' }).code(204)
+    },
+  },
+  {
+    method: 'GET',
+    path: '/items/{id}/print/{type}',
+    options: {
+      description: 'la version imprimable d un item',
+      tags: ['api', 'jeux'],
+      notes: [ROLES.member],
+
+      validate: {
+        headers,
+      },
+    },
+    async handler(req, h) {
+      const { id, type } = req.params
+      if (!id) return h.response({ error: 'Un id est requis' }).code(400)
+      if (!type) return h.response({ error: 'Un type est requis' }).code(400)
+
+      const item = await getItemById(id)
+      if (!item) return h.response({ error: 'Non trouvé' }).code(404)
+
+      const file = await printItem(item, type)
+      console.log('file', file)
+      return h.file(file)
     },
   },
 ]
