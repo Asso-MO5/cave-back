@@ -356,6 +356,7 @@ module.exports = [
 
         return h.file(file)
       } catch (error) {
+        console.log('PRINT ITEM :', error)
         return h
           .response({ error: 'Internal server error', details: error })
           .code(500)

@@ -15,7 +15,7 @@ function getTextFromBlock({
   blocks.forEach((block) => {
     if (!block.content) return
 
-    block.content.forEach((content) => {
+    block?.content?.forEach((content) => {
       const { text, styles } = content
       let fontStyle = `${fontSize || 12}px Arial`
 
@@ -24,7 +24,7 @@ function getTextFromBlock({
       ctx.font = fontStyle
 
       // Séparer le texte en mots
-      const words = text.split(' ')
+      const words = text ? text?.split(' ') : ['']
 
       words.forEach((word) => {
         const wordWithSpace = word + ' ' // Ajoute l'espace après chaque mot
