@@ -13,6 +13,7 @@ const {
   deleteItem,
   getSimilarCartel,
   changeItemType,
+  getItemsForExport,
 } = require('../entities/items')
 const { createMedia } = require('../entities/media')
 const { headers } = require('../models/header.model')
@@ -356,6 +357,38 @@ module.exports = [
           .response({ error: 'Internal server error', details: error })
           .code(500)
       }
+    },
+  },
+  {
+    method: 'POST',
+    path: '/items/export',
+    options: {
+      description: 'Permet d exporter les items',
+      tags: ['api', 'jeux'],
+      notes: [ROLES.member],
+      validate: {
+        headers,
+      },
+    },
+    async handler(req, h) {
+      const { exportType, type, ids, selectedTotal } = JSON.parse(
+        req.payload || '{}'
+      )
+
+      const items = await getItemsForExport({ type, ids })
+
+      if (exportType === 'csv') {
+        const csv = items
+          .map((item) => {
+            return Object.values(item).join(',')
+          })
+          .join('\n')
+
+        return h.response(csv).code(200).header('Content-Type', 'text/csv')
+      }
+      console.log('type', type, 'ids', ids, 'selectedTotal', selectedTotal)
+
+      return h.response({ msg: 'ok' }).code(204)
     },
   },
 ]

@@ -143,6 +143,57 @@ module.exports = {
       return null
     }
   },
+  async getItemsForExport({ type, ids }) {
+    const query = knex(TABLES.items + ' as it_origin')
+    try {
+      // Appliquer les filtres sur le type et la recherche
+      if (type) query.where('it_origin.type', type)
+      if (ids) query.whereIn('it_origin.id', ids)
+
+      // Ajouter les jointures pour les attributs "place" et "origin"
+      query
+        .leftJoin(`${TABLES.item_text_attrs} as attrs_place`, function () {
+          this.on('attrs_place.item_id', '=', `it_origin.id`).andOn(
+            'attrs_place.key',
+            '=',
+            knex.raw('?', 'var_place')
+          ) // Récupérer "place"
+        })
+        .leftJoin(`${TABLES.item_text_attrs} as attrs_origin`, function () {
+          this.on('attrs_origin.item_id', '=', `it_origin.id`).andOn(
+            'attrs_origin.key',
+            '=',
+            knex.raw('?', 'var_origin')
+          ) // Récupérer "origin"
+        })
+        .leftJoin(
+          `${TABLES.item_relation} as relation`,
+          'it_origin.id',
+          '=',
+          'relation.item_left_id'
+        )
+        .leftJoin(`${TABLES.items} as it`, function () {
+          this.on('relation.item_ref_id', '=', 'it.id')
+        })
+        .select(
+          `it_origin.name`,
+          // `it_origin.id`,
+          // `it_origin.type`,
+          `it_origin.status`,
+          `it.type as type`,
+          'attrs_place.value as place',
+          'attrs_origin.value as origin'
+        )
+        .distinct('it_origin.id')
+
+      query.orderBy('place', 'asc')
+
+      return await query
+    } catch (e) {
+      console.error(e)
+      return null
+    }
+  },
   async getItemById(id) {
     try {
       const item_ = await knex(TABLES.items).where(ITEMS.id, id).first()
