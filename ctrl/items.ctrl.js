@@ -347,9 +347,15 @@ module.exports = [
       const item = await getItemById(id)
       if (!item) return h.response({ error: 'Non trouvé' }).code(404)
 
-      const file = await printItem(item, type)
-      console.log('file', file)
-      return h.file(file)
+      try {
+        const file = await printItem(item, type)
+
+        return h.file(file)
+      } catch (error) {
+        return h
+          .response({ error: 'Internal server error', details: error })
+          .code(500)
+      }
     },
   },
 ]
