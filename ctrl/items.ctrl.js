@@ -1,4 +1,4 @@
-const { updateOrCreateCover } = require('../entities/item-medias')
+const { updateOrCreateMediaForItem } = require('../entities/item-medias')
 const {
   createItemRelation,
   deleteItemRelationByLeftIdAndSameType,
@@ -258,42 +258,51 @@ module.exports = [
           .code(500)
       }
 
-      // ====== COVER ==========================================================
-      if (data.cover && data.cover?.hapi?.filename) {
-        const [cover] = await createMedia([data.cover])
+      if (data.file && data.file?.hapi?.filename) {
+        const [{ id: mediaId }] = await createMedia([data.file])
 
-        oldItem.cover_id = cover.id
         try {
-          await updateOrCreateCover(oldItem.id, cover.id, req.app.user.id)
+          await updateOrCreateMediaForItem({
+            itemId: oldItem.id,
+            mediaId,
+            authorId: req.app.user.id,
+            type: data.media,
+          })
         } catch (error) {
           return h
             .response({ error: 'Internal server error', details: error })
             .code(500)
         }
-
-        oldItem.cover_url = getMediaUrl(cover.url, req)
-
-        return h.response(oldItem).code(201)
       }
 
-      if (data.cover_id) {
+      if (data.id) {
+        console.log('data.id', data.id)
         try {
-          await updateOrCreateCover(oldItem.id, data.cover_id, req.app.user.id)
+          await updateOrCreateMediaForItem({
+            itemId: oldItem.id,
+            mediaId: data.id,
+            authorId: req.app.user.id,
+            type: data.media,
+          })
         } catch (error) {
           return h
             .response({ error: 'Internal server error', details: error })
             .code(500)
         }
-
-        return h.response(oldItem).code(201)
       }
 
-      if (data.cover_url && data.cover_url.includes('http')) {
-        const file = await getMediaFromUrl(data.cover_url)
-        const [cover] = await createMedia([file])
-        oldItem.cover_id = cover.id
+      if (data.url && data.url.includes('http')) {
+        const file = await getMediaFromUrl(data.url)
+
+        const [{ id: mediaId }] = await createMedia([file])
+
         try {
-          await updateOrCreateCover(oldItem.id, cover.id, req.app.user.id)
+          await updateOrCreateMediaForItem({
+            itemId: oldItem.id,
+            mediaId,
+            authorId: req.app.user.id,
+            type: data.media,
+          })
         } catch (error) {
           return h
             .response({
@@ -302,13 +311,9 @@ module.exports = [
             })
             .code(500)
         }
-
-        oldItem.cover_url = getMediaUrl(cover.url, req)
-
-        return h.response(oldItem).code(201)
       }
 
-      return h.response(oldItem).code(201)
+      return h.response(await getItemById(req.params.id)).code(201)
     },
   },
   {

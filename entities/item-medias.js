@@ -15,16 +15,16 @@ const ITEM_MEDIAS = {
 
 module.exports = {
   ITEM_MEDIAS,
-  async updateOrCreateCover(itemId, mediaId, authorId) {
+  async updateOrCreateMediaForItem({ itemId, mediaId, authorId, type }) {
     const itemMediaExists = await knex(TABLES.item_medias)
       .where(ITEM_MEDIAS.item_id, itemId)
-      .andWhere(ITEM_MEDIAS.relation_type, 'cover')
+      .andWhere(ITEM_MEDIAS.relation_type, type)
       .first()
 
     if (itemMediaExists) {
       await knex(TABLES.item_medias)
         .where(ITEM_MEDIAS.item_id, itemId)
-        .andWhere(ITEM_MEDIAS.relation_type, 'cover')
+        .andWhere(ITEM_MEDIAS.relation_type, type)
         .update({ media_id: mediaId, updated_at: new Date() })
       return itemMediaExists
     }
@@ -33,7 +33,7 @@ module.exports = {
       id: uuidv4(),
       item_id: itemId,
       media_id: mediaId,
-      relation_type: 'cover',
+      relation_type: type,
       author_id: authorId,
       created_at: new Date(),
       updated_at: new Date(),

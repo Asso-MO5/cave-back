@@ -6,13 +6,13 @@ const { getTextFromBlock } = require('./get-text-from-block')
 const QRCode = require('qrcode')
 // en mm
 const sizes = {
-  A4: {
+  a4: {
     width: 210,
     height: 297,
     fontSize: 13,
     qrSize: 50,
   },
-  A5: {
+  a5: {
     width: 148,
     height: 210,
     fontSize: 10,
@@ -32,7 +32,8 @@ const sizes = {
   },
 }
 
-async function printItem(item, type) {
+async function printItem(item, _type = 'carte') {
+  const type = _type.toLowerCase()
   if (!sizes?.[type]?.width) throw new Error('Type de print inconnu')
 
   const size = sizes[type]
