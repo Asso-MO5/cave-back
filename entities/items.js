@@ -194,6 +194,19 @@ module.exports = {
       return null
     }
   },
+  async getSimilarItems(name, type, id = '__new__') {
+    try {
+      return knex(TABLES.items)
+        .where(ITEMS.type, type)
+        .where(ITEMS.name, '=', name)
+        .whereNot(ITEMS.id, id)
+        .select('id', 'name')
+        .first()
+    } catch (e) {
+      console.error(e)
+      return null
+    }
+  },
   async getItemById(id) {
     try {
       const item_ = await knex(TABLES.items).where(ITEMS.id, id).first()

@@ -14,6 +14,7 @@ const {
   getSimilarCartel,
   changeItemType,
   getItemsForExport,
+  getSimilarItems,
 } = require('../entities/items')
 const { createMedia } = require('../entities/media')
 const { headers } = require('../models/header.model')
@@ -116,6 +117,27 @@ module.exports = [
     },
   },
   {
+    method: 'POST',
+    path: '/items/exist',
+    options: {
+      description: 'Vérifie si un item existe',
+      tags: ['api', 'jeux'],
+      notes: [ROLES.publisher, ROLES.reviewer],
+      validate: {
+        headers,
+      },
+    },
+    async handler(req, h) {
+      const { name, type, id = '__NEW__' } = JSON.parse(req.payload || '{}')
+
+      if (!name) return h.response({ error: 'Un nom est requis' }).code(400)
+      if (!type) return h.response({ error: 'Un type est requis' }).code(400)
+
+      const item = await getSimilarItems(name, type, id)
+      return h.response({ exist: !!item }).code(200)
+    },
+  },
+  {
     method: 'GET',
     path: '/item/public/{id}',
     options: {
@@ -194,8 +216,16 @@ module.exports = [
       const { id } = req.params
       if (!id) return h.response({ error: 'Un id est requis' }).code(400)
 
-      await createItemHistory(id)
       const payload = JSON.parse(req.payload || '{}')
+      if (payload.name) {
+        const { type } = await getItemById(id)
+        const existName = await getSimilarItems(payload.name, type, id)
+        if (existName)
+          return h
+            .response({ error: 'Un item avec ce nom existe déjà' })
+            .code(400)
+      }
+      await createItemHistory(id)
 
       const keys = Object.keys(payload).join(' ')
 
