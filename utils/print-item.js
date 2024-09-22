@@ -168,7 +168,7 @@ async function printItem(item, _type = 'carte') {
     // ===== FOOTER
     QRCode.toFile(
       path.join(__dirname, '../uploads/qr/', `${item.id}.png`),
-      `${FRONT_URL}/visitor/fiches/${item.id}`,
+      `${FRONT_URL}/fiches/${item.id}`,
       {
         color: {
           dark: '#000',
