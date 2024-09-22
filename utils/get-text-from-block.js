@@ -5,6 +5,7 @@ function getTextFromBlock({
   x = 50,
   fontSize = 12,
   maxX = 600,
+  fontFamily = 'Arial',
 }) {
   // Position de base
   let currentY = y
@@ -17,10 +18,10 @@ function getTextFromBlock({
 
     block?.content?.forEach((content) => {
       const { text, styles } = content
-      let fontStyle = `${fontSize || 12}px Arial`
+      let fontStyle = `${fontSize || 12}px ${fontFamily}`
 
-      if (styles?.bold) fontStyle = `bold ${fontSize || 12}px Arial`
-      if (styles?.italic) fontStyle = `italic ${fontSize || 12}px Arial`
+      if (styles?.bold) fontStyle = `bold ${fontSize || 12}px ${fontFamily}`
+      if (styles?.italic) fontStyle = `italic ${fontSize || 12}px ${fontFamily}`
       ctx.font = fontStyle
 
       // Séparer le texte en mots
@@ -56,6 +57,10 @@ function getTextFromBlock({
     currentY += fontSize * 1.5
     currentX = x // Réinitialiser X pour le début de la ligne
   })
+  return {
+    x: currentX,
+    y: currentY,
+  }
 }
 
 module.exports = { getTextFromBlock }

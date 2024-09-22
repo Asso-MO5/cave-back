@@ -1,3 +1,8 @@
+const { TABLES } = require('../utils/constants')
+const { knex } = require('../utils/db')
+const { getItemById } = require('./items')
+const { v4: uuidv4 } = require('uuid')
+
 const ITEM_HISTORY = {
   id: 'id',
   item_id: 'item_id',
@@ -9,4 +14,30 @@ const ITEM_HISTORY = {
 
 module.exports = {
   ITEM_HISTORY,
+  async createItemHistory(id) {
+    const item = await getItemById(id)
+    const relations = {}
+    for (const relation of item.relations) {
+      const rel = await getItemById(relation.id)
+      relations[rel.type] = rel
+    }
+
+    const history = {
+      id: uuidv4(),
+      [ITEM_HISTORY.item_id]: id,
+      [ITEM_HISTORY.version]: 1,
+      [ITEM_HISTORY.changes]: {
+        ...item,
+        relations,
+      },
+      [ITEM_HISTORY.modified_at]: new Date(),
+      [ITEM_HISTORY.author_id]: null,
+    }
+
+    try {
+      await knex(TABLES.item_history).insert(history)
+    } catch (e) {
+      console.error(e)
+    }
+  },
 }

@@ -24,6 +24,7 @@ const { printItem } = require('../utils/print-item')
 const AdmZip = require('adm-zip')
 const path = require('path')
 const fs = require('fs')
+const { createItemHistory } = require('../entities/item-history')
 
 module.exports = [
   {
@@ -116,6 +117,40 @@ module.exports = [
   },
   {
     method: 'GET',
+    path: '/item/public/{id}',
+    options: {
+      description: 'Récupère un item par son id',
+      tags: ['api', 'jeux'],
+    },
+    async handler(req, h) {
+      const { id } = req.params
+
+      if (!id) return h.response({ error: 'Un id est requis' }).code(400)
+      const item = await getItemById(id)
+      if (!item) return h.response({ error: 'Non trouvé' }).code(404)
+
+      const relations = {}
+      for (const relation of item.relations) {
+        const rel = await getItemById(relation.id)
+        relations[rel.type] = rel
+      }
+
+      return h
+        .response({
+          item: {
+            ...item,
+            ...relations,
+            medias: item.medias.map((media) => ({
+              ...media,
+              url: getMediaUrl(media.url, req),
+            })),
+          },
+        })
+        .code(200)
+    },
+  },
+  {
+    method: 'GET',
     path: '/item/{id}',
 
     options: {
@@ -159,6 +194,7 @@ module.exports = [
       const { id } = req.params
       if (!id) return h.response({ error: 'Un id est requis' }).code(400)
 
+      await createItemHistory(id)
       const payload = JSON.parse(req.payload || '{}')
 
       const keys = Object.keys(payload).join(' ')
@@ -223,6 +259,7 @@ module.exports = [
       if (!status)
         return h.response({ error: 'Un status est requis' }).code(400)
 
+      await createItemHistory(id)
       await updateItem(id, { status })
 
       const item = await getItemById(id)
@@ -249,6 +286,7 @@ module.exports = [
       const oldItem = await getItemById(req.params.id)
       if (!oldItem) return h.response({ error: 'Non trouvé' }).code(404)
 
+      await createItemHistory(id)
       try {
         //  await createItemHistory(oldItem.id)
       } catch (error) {
@@ -276,7 +314,6 @@ module.exports = [
       }
 
       if (data.id) {
-        console.log('data.id', data.id)
         try {
           await updateOrCreateMediaForItem({
             itemId: oldItem.id,
@@ -322,7 +359,7 @@ module.exports = [
     options: {
       description: 'Permet de supprimer un item',
       tags: ['api', 'jeux'],
-      notes: [ROLES.publisher, ROLES.reviewer],
+      notes: [ROLES.reviewer],
       validate: {
         headers,
       },

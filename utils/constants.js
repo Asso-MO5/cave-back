@@ -23,9 +23,11 @@ const ROLES = {
 }
 
 const METASEUR = 'https://metaseur-kazerlelutins-projects.vercel.app/api'
+const FRONT_URL = 'https://cave.mo5.com/'
 
 module.exports = {
   TABLES,
   ROLES,
   METASEUR,
+  FRONT_URL,
 }
