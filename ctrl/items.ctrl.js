@@ -26,6 +26,7 @@ const AdmZip = require('adm-zip')
 const path = require('path')
 const fs = require('fs')
 const { createItemHistory } = require('../entities/item-history')
+const { v4: uuidv4 } = require('uuid')
 
 module.exports = [
   {
@@ -315,10 +316,10 @@ module.exports = [
       const data = req.payload
       const oldItem = await getItemById(req.params.id)
       if (!oldItem) return h.response({ error: 'Non trouvé' }).code(404)
+      const type = data.create ? `${data.media}-${uuidv4()}` : data.media
 
-      await createItemHistory(id)
       try {
-        //  await createItemHistory(oldItem.id)
+        await createItemHistory(oldItem.id)
       } catch (error) {
         console.log('ITEM HISTORY :', error)
         return h
@@ -334,7 +335,7 @@ module.exports = [
             itemId: oldItem.id,
             mediaId,
             authorId: req.app.user.id,
-            type: data.media,
+            type,
           })
         } catch (error) {
           return h
@@ -349,7 +350,7 @@ module.exports = [
             itemId: oldItem.id,
             mediaId: data.id,
             authorId: req.app.user.id,
-            type: data.media,
+            type,
           })
         } catch (error) {
           return h
@@ -368,7 +369,7 @@ module.exports = [
             itemId: oldItem.id,
             mediaId,
             authorId: req.app.user.id,
-            type: data.media,
+            type,
           })
         } catch (error) {
           return h
@@ -379,8 +380,19 @@ module.exports = [
             .code(500)
         }
       }
+      const newItem = await getItemById(oldItem.id)
 
-      return h.response(await getItemById(req.params.id)).code(201)
+      return h
+        .response({
+          item: {
+            ...newItem,
+            medias: newItem.medias.map((media) => ({
+              ...media,
+              url: getMediaUrl(media.url, req),
+            })),
+          },
+        })
+        .code(201)
     },
   },
   {
