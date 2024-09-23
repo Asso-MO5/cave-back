@@ -19,8 +19,13 @@ async function printItems({ ids: _ids, format, selectedTotal }) {
   for (const id of ids) {
     const item = await getItemById(id)
     if (!item || (selectedTotal ? item.status !== 'published' : false)) continue
-    const filePath = await printItem(item, format)
-    images.push(filePath) // Ajouter l'image générée dans le tableau
+    try {
+      const filePath = await printItem(item, format)
+      if (!filePath) continue
+      images.push(filePath) // Ajouter l'image générée dans le tableau
+    } catch (e) {
+      console.error(e)
+    }
   }
 
   // Appeler printPages pour générer des planches d'images
