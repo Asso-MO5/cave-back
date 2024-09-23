@@ -29,6 +29,7 @@ async function printItems({ ids: _ids, format, selectedTotal }) {
   // Ajouter chaque planche dans le fichier ZIP
   for (const page of pages) {
     const fileData = fs.readFileSync(page)
+    if (!fileData) continue
     zip.addFile(path.basename(page), fileData)
   }
 
