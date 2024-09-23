@@ -17,6 +17,7 @@ const routes = [
     },
   },
   ...require('./ctrl/auth.ctrl'),
+  ...require('./ctrl/companies.ctrl'),
   ...require('./ctrl/items.ctrl'),
   ...require('./ctrl/medias.ctrl'),
 ]

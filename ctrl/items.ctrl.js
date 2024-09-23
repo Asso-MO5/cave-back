@@ -15,6 +15,7 @@ const {
   changeItemType,
   getItemsForExport,
   getSimilarItems,
+  getCompanies,
 } = require('../entities/items')
 const { createMedia } = require('../entities/media')
 const { headers } = require('../models/header.model')
@@ -104,6 +105,7 @@ module.exports = [
       } = req.query
 
       const offset = page ? (page - 1) * limit : 0
+
       const items = await getItems({
         type,
         search,

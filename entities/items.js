@@ -74,7 +74,9 @@ module.exports = {
     const query = knex(TABLES.items + ' as it_origin')
     try {
       // Appliquer les filtres sur le type et la recherche
+
       if (type) query.where('it_origin.type', type)
+
       if (search) query.where('it_origin.name', 'like', `%${search}%`)
 
       // Cloner la requête pour obtenir le count
@@ -123,6 +125,92 @@ module.exports = {
 
       // Validation du champ "sort" (par défaut sur "name")
       const validSortFields = ['name', 'rType', 'status', 'place', 'origin']
+      const sortField = validSortFields.includes(sort) ? sort : 'name'
+
+      // Validation de l'ordre (par défaut "asc")
+      const sortOrder = order === 'desc' ? 'desc' : 'asc'
+
+      // Appliquer l'ordre de tri dynamique
+      query.orderBy(sortField, sortOrder)
+
+      // Exécuter la requête pour obtenir les items
+      const items = await query
+
+      return {
+        total: count[0]['count(*)'],
+        items,
+      }
+    } catch (e) {
+      console.error(e)
+      return null
+    }
+  },
+  async getCompanies({ search, limit, offset, order = 'asc', sort = 'name' }) {
+    const query = knex(TABLES.items + ' as it_origin')
+    try {
+      // Appliquer les filtres sur le type et la recherche
+      query.where((builder) => {
+        builder
+          .where('it_origin.type', 'manufacturer')
+          .orWhere('it_origin.type', 'publisher')
+          .orWhere('it_origin.type', 'developer')
+          .orWhere('it_origin.type', 'distributor')
+          .orWhere('it_origin.type', 'retailer')
+          .orWhere('it_origin.type', 'association')
+      })
+
+      if (search) {
+        query.andWhere('it_origin.name', 'like', `%${search}%`)
+      }
+
+      // Cloner la requête pour obtenir le count
+      const countQuery = query.clone()
+      const count = await countQuery.count()
+
+      // Appliquer la limite et l'offset
+      if (limit) query.limit(limit)
+      if (offset) query.offset(offset)
+
+      // Ajouter les jointures pour les attributs "place" et "origin"
+      query
+        .leftJoin(`${TABLES.item_text_attrs} as attrs_place`, function () {
+          this.on('attrs_place.item_id', '=', `it_origin.id`).andOn(
+            'attrs_place.key',
+            '=',
+            knex.raw('?', 'var_place')
+          ) // Récupérer "place"
+        })
+        .leftJoin(`${TABLES.item_text_attrs} as attrs_origin`, function () {
+          this.on('attrs_origin.item_id', '=', `it_origin.id`).andOn(
+            'attrs_origin.key',
+            '=',
+            knex.raw('?', 'var_origin')
+          ) // Récupérer "origin"
+        })
+        .leftJoin(
+          `${TABLES.item_relation} as relation`,
+          'it_origin.id',
+          '=',
+          'relation.item_left_id'
+        )
+        .leftJoin(`${TABLES.items} as it`, function () {
+          this.on('relation.item_ref_id', '=', 'it.id')
+        })
+
+      // Sélectionner les champs
+      query
+        .select(
+          'it_origin.id',
+          'it_origin.name',
+          knex.raw('GROUP_CONCAT(DISTINCT it_origin.type) as types'), // Regrouper les types
+          'it_origin.status',
+          'attrs_place.value as place', // Attribut "place"
+          'attrs_origin.value as origin' // Attribut "origin"
+        )
+        .groupBy('it_origin.name') // Grouper par nom d'entreprise
+
+      // Validation du champ "sort" (par défaut sur "name")
+      const validSortFields = ['name', 'types', 'status', 'place', 'origin']
       const sortField = validSortFields.includes(sort) ? sort : 'name'
 
       // Validation de l'ordre (par défaut "asc")
@@ -270,16 +358,14 @@ module.exports = {
       return null
     }
   },
-  async createOrUpdateItemTextAttrs(itemId, attr, value, auth) {
+  async createOrUpdateItemTextAttrs(item_id, attr, value, auth) {
     try {
-      await knex(TABLES.item_text_attrs)
-        .where({ item_id: itemId, key: attr })
-        .delete()
+      await knex(TABLES.item_text_attrs).where({ item_id, key: attr }).delete()
 
       const id = uuidv4()
       return knex(TABLES.item_text_attrs).insert({
         id,
-        item_id: itemId,
+        item_id,
         key: attr,
         value,
         author_id: auth.id,
@@ -289,16 +375,16 @@ module.exports = {
       return null
     }
   },
-  async createOrUpdateItemLongTextAttrs(itemId, attr, value, auth) {
+  async createOrUpdateItemLongTextAttrs(item_id, attr, value, auth) {
     try {
       await knex(TABLES.item_long_text_attrs)
-        .where({ item_id: itemId, key: attr })
+        .where({ item_id, key: attr })
         .delete()
 
       const id = uuidv4()
       return knex(TABLES.item_long_text_attrs).insert({
         id,
-        item_id: itemId,
+        item_id,
         key: attr,
         value: typeof value !== 'string' ? JSON.stringify(value) : value,
         author_id: auth.id,
@@ -308,16 +394,16 @@ module.exports = {
       return null
     }
   },
-  async createOrUpdateItemNumberAttrs(itemId, attr, value, auth) {
+  async createOrUpdateItemNumberAttrs(item_id, attr, value, auth) {
     try {
       await knex(TABLES.item_number_attrs)
-        .where({ item_id: itemId, key: attr })
+        .where({ item_id, key: attr })
         .delete()
 
       const id = uuidv4()
       return knex(TABLES.item_number_attrs).insert({
         id,
-        item_id: itemId,
+        item_id,
         key: attr,
         value,
         author_id: auth.id,
