@@ -5,35 +5,9 @@ const { getSlug } = require('./get-slug')
 const { getTextFromBlock } = require('./get-text-from-block')
 const QRCode = require('qrcode')
 const { printCanvasText } = require('./print-canvas-text')
-const { FRONT_URL } = require('./constants')
+const { FRONT_URL, SIZES } = require('./constants')
 const { getItemById } = require('../entities/items')
 // en mm
-const sizes = {
-  a4: {
-    width: 210,
-    height: 297,
-    fontSize: 13,
-    qrSize: 50,
-  },
-  a5: {
-    width: 148,
-    height: 210,
-    fontSize: 10,
-    qrSize: 50,
-  },
-  carte: {
-    width: 85,
-    height: 55,
-    fontSize: 13,
-    qrSize: 60,
-  },
-  rollup: {
-    width: 850,
-    height: 2000,
-    fontSize: 20,
-    qrSize: 100,
-  },
-}
 
 GlobalFonts.registerFromPath(
   path.join(__dirname, '../data/fonts/Oswald/Oswald-VariableFont_wght.ttf'),
@@ -64,10 +38,10 @@ const FONTS = {
 
 async function printItem(item, _type = 'carte') {
   const type = _type.toLowerCase()
-  if (!sizes?.[type]?.width) throw new Error('Type de print inconnu')
-  if (item.relations.length === 0) throw new Error('Aucune relation trouvée')
+  if (!SIZES?.[type]?.width) throw new Error('Type de print inconnu')
+  if (item?.relations?.length === 0) throw new Error('Aucune relation trouvée')
 
-  const size = sizes[type]
+  const size = SIZES[type]
   const DPI = 100 // Résolution en DPI
   const widthPixels = Math.round((size.width / 25.4) * DPI)
   const heightPixels = Math.round((size.height / 25.4) * DPI)
@@ -166,7 +140,7 @@ async function printItem(item, _type = 'carte') {
     })
 
     // ===== FOOTER
-    QRCode.toFile(
+    await QRCode.toFile(
       path.join(__dirname, '../uploads/qr/', `${item.id}.png`),
       `${FRONT_URL}/fiches/${item.id}`,
       {

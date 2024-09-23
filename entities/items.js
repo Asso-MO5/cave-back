@@ -122,7 +122,7 @@ module.exports = {
         .distinct('it_origin.id')
 
       // Validation du champ "sort" (par défaut sur "name")
-      const validSortFields = ['name', 'type', 'status', 'place', 'origin']
+      const validSortFields = ['name', 'rType', 'status', 'place', 'origin']
       const sortField = validSortFields.includes(sort) ? sort : 'name'
 
       // Validation de l'ordre (par défaut "asc")

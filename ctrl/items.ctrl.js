@@ -22,11 +22,10 @@ const { ROLES } = require('../utils/constants')
 const { getMediaFromUrl } = require('../utils/get-media-from-url')
 const { getMediaUrl } = require('../utils/media-url')
 const { printItem } = require('../utils/print-item')
-const AdmZip = require('adm-zip')
-const path = require('path')
-const fs = require('fs')
+
 const { createItemHistory } = require('../entities/item-history')
 const { v4: uuidv4 } = require('uuid')
+const { printItems } = require('../utils/print-items')
 
 module.exports = [
   {
@@ -437,7 +436,6 @@ module.exports = [
 
       try {
         const file = await printItem(item, type)
-
         return h.file(file)
       } catch (error) {
         console.log('PRINT ITEM :', error)
@@ -460,11 +458,12 @@ module.exports = [
     },
 
     async handler(req, h) {
-      const { exportType, type, ids, format } = JSON.parse(req.payload || '{}')
-
-      const items = await getItemsForExport({ type, ids })
+      const { exportType, type, ids, format, selectedTotal } = JSON.parse(
+        req.payload || '{}'
+      )
 
       if (exportType === 'csv') {
+        const items = await getItemsForExport({ type, ids })
         const csv = items
           .map((item) => {
             delete item.id
@@ -476,18 +475,7 @@ module.exports = [
       }
 
       if (exportType === 'print') {
-        const zip = new AdmZip()
-
-        for (const item of items) {
-          const filePath = await printItem(item, format) // Chemin du fichier généré
-          const fileName = path.basename(filePath) // Nom du fichier sans le chemin
-          const fileData = fs.readFileSync(filePath) // Lire le fichier généré
-
-          zip.addFile(fileName, fileData) // Ajouter le fichier au ZIP
-        }
-
-        // Générer le fichier ZIP
-        const zipBuffer = zip.toBuffer()
+        const zipBuffer = await printItems({ ids, format, type, selectedTotal })
 
         return h
           .response(zipBuffer)

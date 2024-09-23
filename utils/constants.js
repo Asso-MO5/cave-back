@@ -25,9 +25,37 @@ const ROLES = {
 const METASEUR = 'https://metaseur-kazerlelutins-projects.vercel.app/api'
 const FRONT_URL = 'https://cave.mo5.com/'
 
+const SIZES = {
+  a4: {
+    width: 210,
+    height: 297,
+    fontSize: 13,
+    qrSize: 50,
+  },
+  a5: {
+    width: 148,
+    height: 210,
+    fontSize: 10,
+    qrSize: 50,
+  },
+  carte: {
+    width: 85,
+    height: 55,
+    fontSize: 13,
+    qrSize: 60,
+  },
+  rollup: {
+    width: 850,
+    height: 2000,
+    fontSize: 20,
+    qrSize: 100,
+  },
+}
+
 module.exports = {
   TABLES,
   ROLES,
   METASEUR,
   FRONT_URL,
+  SIZES,
 }
