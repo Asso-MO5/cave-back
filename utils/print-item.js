@@ -38,8 +38,8 @@ const FONTS = {
 
 async function printItem(item, _type = 'carte') {
   const type = _type.toLowerCase()
-  if (!SIZES?.[type]?.width) throw new Error('Type de print inconnu')
-  if (item?.relations?.length === 0) throw new Error('Aucune relation trouvée')
+  if (!SIZES?.[type]?.width || item?.relations?.length === 0)
+    throw new Error('Type de print inconnu')
 
   const size = SIZES[type]
   const DPI = 100 // Résolution en DPI

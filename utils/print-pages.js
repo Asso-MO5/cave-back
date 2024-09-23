@@ -32,18 +32,15 @@ async function printPages(imgs, format) {
   const canvas = createCanvas(pageWidth, pageHeight)
   const ctx = canvas.getContext('2d')
 
-  // Définir une couleur d'arrière-plan pour les espaces entre les images
-  ctx.fillStyle = '#f0f0f0' // Couleur d'arrière-plan (gris clair)
-  ctx.fillRect(0, 0, pageWidth, pageHeight) // Remplir tout le canvas avec cette couleur
-
   let imgIndex = 0
   const pages = []
 
   // Tant qu'il reste des images à traiter
   while (imgIndex < imgs.length) {
     // Réinitialise le canvas pour chaque nouvelle planche
+    ctx.fillStyle = 'white'
+    ctx.fillRect(0, 0, pageWidth, pageHeight) // Remplir le fond en blanc
 
-    ctx.fillRect(0, 0, pageWidth, pageHeight) // Remplir tout le canvas avec cette couleur
     // Remplir la planche avec les images
     for (let row = 0; row < imgsPerCol; row++) {
       for (let col = 0; col < imgsPerRow; col++) {
@@ -56,6 +53,21 @@ async function printPages(imgs, format) {
         const x = offsetX + col * (imgWidth + 1) // Ajout d'1 pixel entre les colonnes
         const y = offsetY + row * (imgHeight + 1) // Ajout d'1 pixel entre les lignes
 
+        ctx.fillStyle = '#dddddd' // Bordures en noir
+
+        // Dessiner les coins de coupe (5x5 pixels aux coins)
+        const cutSize = 6
+        ctx.fillRect(x - 1, y - 1, cutSize, cutSize) // Haut gauche
+        ctx.fillRect(x + imgWidth - cutSize, y - 1, cutSize, cutSize) // Haut droite
+        ctx.fillRect(x - 1, y + imgHeight - cutSize, cutSize, cutSize) // Bas gauche
+        ctx.fillRect(
+          x + imgWidth - cutSize,
+          y + imgHeight - cutSize,
+          cutSize,
+          cutSize
+        ) // Bas droite
+
+        // Dessiner l'image
         ctx.drawImage(img, x, y, imgWidth, imgHeight)
 
         imgIndex++

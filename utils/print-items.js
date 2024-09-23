@@ -1,4 +1,4 @@
-const { getItemById } = require('../entities/items')
+const { getItemById, getItemsForExport } = require('../entities/items')
 const { printItem } = require('./print-item')
 const { printPages } = require('./print-pages')
 const fs = require('fs')
