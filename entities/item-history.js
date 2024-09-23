@@ -14,7 +14,7 @@ const ITEM_HISTORY = {
 
 module.exports = {
   ITEM_HISTORY,
-  async createItemHistory(id) {
+  async createItemHistory(id, author_id) {
     const item = await getItemById(id)
     const relations = {}
     for (const relation of item.relations) {
@@ -31,7 +31,7 @@ module.exports = {
         relations,
       },
       [ITEM_HISTORY.modified_at]: new Date(),
-      [ITEM_HISTORY.author_id]: null,
+      [ITEM_HISTORY.author_id]: author_id,
     }
 
     try {

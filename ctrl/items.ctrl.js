@@ -225,7 +225,8 @@ module.exports = [
             .response({ error: 'Un item avec ce nom existe déjà' })
             .code(400)
       }
-      await createItemHistory(id)
+
+      await createItemHistory(id, req.app.user.id)
 
       const keys = Object.keys(payload).join(' ')
 
@@ -237,7 +238,7 @@ module.exports = [
               id,
               key,
               payload[key],
-              req.app.user
+              req.app.user?.id
             )
 
           // ----- TEXT -----
@@ -289,7 +290,7 @@ module.exports = [
       if (!status)
         return h.response({ error: 'Un status est requis' }).code(400)
 
-      await createItemHistory(id)
+      await createItemHistory(id, req.app.user.id)
       await updateItem(id, { status })
 
       const item = await getItemById(id)
@@ -318,7 +319,7 @@ module.exports = [
       const type = data.create ? `${data.media}-${uuidv4()}` : data.media
 
       try {
-        await createItemHistory(oldItem.id)
+        await createItemHistory(oldItem.id, req.app.user.id)
       } catch (error) {
         console.log('ITEM HISTORY :', error)
         return h
