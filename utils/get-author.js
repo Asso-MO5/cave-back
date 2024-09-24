@@ -15,6 +15,7 @@ async function getAuthor(req, h, roles) {
     }
     return payload
   } catch (error) {
+    console.error('JWT ==> ', error)
     return h.response({ msg: 'auth fail' }).type('json').code(401)
   }
 }
