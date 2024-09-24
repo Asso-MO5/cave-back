@@ -282,36 +282,38 @@ async function printItem(item, _type = 'carte') {
       maxX,
     })
 
-    coord.x = coord.x + 50 * scaleFactor
-    ctx.drawImage(usFlag, coord.x, yflag, flagWidth, flagHeight)
-    coord.x = coord.x + flagWidth + 20 * scaleFactor
-    coord = printCanvasText({
-      ctx,
-      x: coord.x,
-      y: yText,
-      text: item.var_release_us || '',
-      fontSize: 60 * scaleFactor,
-      fontFamily: FONTS.Oswald,
-      style: '',
-      lineHeight: 150 * scaleFactor,
-      maxX,
-    })
-
-    coord.x = coord.x + 50 * scaleFactor
-    ctx.drawImage(jpFlag, coord.x, yflag, flagWidth, flagHeight)
-    coord.x = coord.x + flagWidth + 20 * scaleFactor
-    coord = printCanvasText({
-      ctx,
-      x: coord.x,
-      y: yText,
-      text: item.var_release_jap || '',
-      fontSize: 60 * scaleFactor,
-      fontFamily: FONTS.Oswald,
-      style: '',
-      lineHeight: 150 * scaleFactor,
-      maxX,
-    })
-
+    if (item.var_release_us) {
+      coord.x = coord.x + 50 * scaleFactor
+      ctx.drawImage(usFlag, coord.x, yflag, flagWidth, flagHeight)
+      coord.x = coord.x + flagWidth + 20 * scaleFactor
+      coord = printCanvasText({
+        ctx,
+        x: coord.x,
+        y: yText,
+        text: item.var_release_us,
+        fontSize: 60 * scaleFactor,
+        fontFamily: FONTS.Oswald,
+        style: '',
+        lineHeight: 150 * scaleFactor,
+        maxX,
+      })
+    }
+    if (item.var_release_jap) {
+      coord.x = coord.x + 50 * scaleFactor
+      ctx.drawImage(jpFlag, coord.x, yflag, flagWidth, flagHeight)
+      coord.x = coord.x + flagWidth + 20 * scaleFactor
+      coord = printCanvasText({
+        ctx,
+        x: coord.x,
+        y: yText,
+        text: item.var_release_jap,
+        fontSize: 60 * scaleFactor,
+        fontFamily: FONTS.Oswald,
+        style: '',
+        lineHeight: 150 * scaleFactor,
+        maxX,
+      })
+    }
     const yDesc = coord.y + 150 * scaleFactor
 
     coord.x = margin + 50 * scaleFactor
