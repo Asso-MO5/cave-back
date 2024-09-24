@@ -65,7 +65,7 @@ const init = async () => {
 
     const { roles } = user
     req.app.user = user
-    console.log('roles', user?.name, user.id, roles)
+    console.log('roles', user.id, roles)
 
     const checkRoles = authorizedRoles.some((role) => roles.includes(role))
     return checkRoles
