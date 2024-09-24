@@ -1,8 +1,6 @@
 const { knex } = require('../utils/db')
-const { v4: uuidv4 } = require('uuid')
 const { TABLES } = require('../utils/constants')
 const { ITEMS } = require('./items')
-const { getMediaUrl } = require('../utils/media-url')
 
 module.exports = {
   async getCompanyById(id) {

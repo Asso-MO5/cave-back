@@ -1,5 +1,6 @@
 const { getCompanyById } = require('../entities/company')
 const { createItemHistory } = require('../entities/item-history')
+const { updateOrCreateMediaForItem } = require('../entities/item-medias')
 const {
   getCompanies,
   getItemById,
@@ -7,8 +8,10 @@ const {
   createOrUpdateItemLongTextAttrs,
   updateItem,
 } = require('../entities/items')
+const { createMedia } = require('../entities/media')
 const { headers } = require('../models/header.model')
 const { ROLES } = require('../utils/constants')
+const { getMediaFromUrl } = require('../utils/get-media-from-url')
 const { getMediaUrl } = require('../utils/media-url')
 
 module.exports = [
@@ -213,7 +216,7 @@ module.exports = [
             .code(500)
         }
       }
-      const newCompany = await getCompanyById(oldItem.id)
+      const newCompany = await getCompanyById(req.params.id)
 
       return h
         .response({
@@ -253,7 +256,7 @@ module.exports = [
         await updateItem(id, { status })
       }
 
-      const newCompany = await getCompanyById(oldItem.id)
+      const newCompany = await getCompanyById(id)
 
       return h
         .response({
