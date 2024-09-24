@@ -42,28 +42,30 @@ async function printItem(item, _type = 'carte') {
     throw new Error('Type de print inconnu')
 
   const size = SIZES[type]
-  const DPI = 100 // Résolution en DPI
+  const DPI = 300 // Changement de résolution à 300 DPI
+  const scaleFactor = DPI / 100 // Facteur d'échelle pour ajuster les tailles
   const widthPixels = Math.round((size.width / 25.4) * DPI)
   const heightPixels = Math.round((size.height / 25.4) * DPI)
   const canvas = createCanvas(widthPixels, heightPixels)
   const ctx = canvas.getContext('2d')
 
   const itemSource = await getItemById(item.relations[0].id)
+
   // LE FOND
   ctx.fillStyle = 'white'
   ctx.fillRect(0, 0, widthPixels, heightPixels)
 
   // Texte général
-  ctx.font = `${size.fontSize}px Arial`
+  ctx.font = `${size.fontSize * scaleFactor}px Arial` // Ajuster la taille de police
   ctx.fillStyle = 'black'
   let coord = {
     x: 0,
-    y: 24,
+    y: 24 * scaleFactor, // Ajuster la position Y
   }
 
   // ------ [[ CARTE ]] -----------------------------------------------------------------------
   if (type === 'carte') {
-    const margin = 15
+    const margin = 15 * scaleFactor
     coord.x = margin
     const maxX = widthPixels - margin
 
@@ -72,10 +74,10 @@ async function printItem(item, _type = 'carte') {
       ctx,
       ...coord,
       text: item.name,
-      fontSize: 22,
+      fontSize: 22 * scaleFactor, // Ajuster la taille de la police
       fontFamily: FONTS.Oswald,
       style: 'bold',
-      lineHeight: 24,
+      lineHeight: 24 * scaleFactor, // Ajuster la hauteur de ligne
       maxX,
     })
 
@@ -88,13 +90,13 @@ async function printItem(item, _type = 'carte') {
 
     coord = printCanvasText({
       ctx,
-      y: coord.y + size.fontSize + 10,
+      y: coord.y + size.fontSize * scaleFactor + 10 * scaleFactor, // Ajuster la position Y
       x: margin,
       text: brand.toUpperCase(),
-      fontSize: 15,
+      fontSize: 15 * scaleFactor, // Ajuster la taille de la police
       fontFamily: FONTS.OpenSans,
       style: 'normal',
-      lineHeight: 15 * 1.5,
+      lineHeight: 15 * 1.5 * scaleFactor, // Ajuster la hauteur de ligne
       maxX,
     })
 
@@ -102,10 +104,10 @@ async function printItem(item, _type = 'carte') {
       ctx,
       ...coord,
       text: ' - ',
-      fontSize: 15,
+      fontSize: 15 * scaleFactor, // Ajuster la taille de la police
       fontFamily: FONTS.OpenSans,
       style: 'normal',
-      lineHeight: 15 * 1.5,
+      lineHeight: 15 * 1.5 * scaleFactor, // Ajuster la hauteur de ligne
       maxX,
     })
 
@@ -113,16 +115,16 @@ async function printItem(item, _type = 'carte') {
       ctx,
       ...coord,
       text: item.var_release_fr,
-      fontSize: 15,
+      fontSize: 15 * scaleFactor, // Ajuster la taille de la police
       fontFamily: FONTS.OpenSans,
       style: 'normal',
-      lineHeight: 15 * 1.5,
+      lineHeight: 15 * 1.5 * scaleFactor, // Ajuster la hauteur de ligne
       maxX,
     })
 
     // ==== END SOUS-TITRE -
 
-    coord.y = coord.y + 10
+    coord.y = coord.y + 10 * scaleFactor // Ajuster la position Y
     ctx.beginPath() // Commence un nouveau chemin
     ctx.moveTo(margin, coord.y) // Position de départ
     ctx.lineTo(maxX, coord.y) // Position de fin
@@ -132,10 +134,10 @@ async function printItem(item, _type = 'carte') {
     coord = getTextFromBlock({
       blocks: item.long_short_description,
       ctx,
-      y: coord.y + size.fontSize * 1.5 + 10,
+      y: coord.y + size.fontSize * 1.5 * scaleFactor + 10 * scaleFactor, // Ajuster la position Y
       x: margin,
       maxX,
-      fontSize: size.fontSize,
+      fontSize: size.fontSize * scaleFactor, // Ajuster la taille de la police
       fontFamily: FONTS.OpenSans,
     })
 
@@ -155,9 +157,15 @@ async function printItem(item, _type = 'carte') {
     )
     const qr = await loadImage(`uploads/qr/${item.id}.png`)
 
-    ctx.drawImage(qr, 0, heightPixels - size.qrSize, size.qrSize, size.qrSize)
+    ctx.drawImage(
+      qr,
+      0,
+      heightPixels - size.qrSize * scaleFactor,
+      size.qrSize * scaleFactor,
+      size.qrSize * scaleFactor
+    )
 
-    ctx.font = `13px ${FONTS.OpenSansItalic}`
+    ctx.font = `${13 * scaleFactor}px ${FONTS.OpenSansItalic}`
 
     const originField = item.var_origin || 'Collection association MO5'
     const xOriginField =

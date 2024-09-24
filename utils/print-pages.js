@@ -7,7 +7,7 @@ async function printPages(imgs, format) {
   if (!SIZES?.[format]?.width) throw new Error('Type de print inconnu')
 
   const size = SIZES[format]
-  const DPI = 100
+  const DPI = 300
   const pageWidth = Math.round((size.width / 25.4) * DPI)
   const pageHeight = Math.round((size.height / 25.4) * DPI)
 
