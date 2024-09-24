@@ -38,6 +38,12 @@ const SIZES = {
     fontSize: 10,
     qrSize: 50,
   },
+  'cartel machine': {
+    width: 800,
+    height: 600,
+    fontSize: 22,
+    qrSize: 120,
+  },
   carte: {
     width: 85,
     height: 55,

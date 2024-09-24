@@ -7,6 +7,7 @@ const QRCode = require('qrcode')
 const { printCanvasText } = require('./print-canvas-text')
 const { FRONT_URL, SIZES } = require('./constants')
 const { getItemById } = require('../entities/items')
+const { getCompanyById } = require('../entities/company')
 // en mm
 
 GlobalFonts.registerFromPath(
@@ -172,6 +173,169 @@ async function printItem(item, _type = 'carte') {
       widthPixels - ctx.measureText(originField).width - margin
 
     ctx.fillText(originField, xOriginField, heightPixels - margin)
+  }
+
+  if (type === 'cartel machine') {
+    const margin = 25 * scaleFactor
+    coord.x = margin
+    coord.y = margin + 100 * scaleFactor
+    const maxX = widthPixels
+
+    const _manufacturer = itemSource.relations.find((r) =>
+      r.relation_type.match(/manufacturer|publisher/)
+    )
+
+    const logo = item.medias.find((m) => m.relation_type === 'cover')
+
+    if (logo) {
+      const img = await loadImage(logo.url.slice(1))
+      // Taille de l'image
+      const imgHeight = 300 * scaleFactor
+      const imgWidth = img.width * (imgHeight / img.height)
+      const imgX = widthPixels / 2 - imgWidth / 2
+      ctx.drawImage(img, imgX, coord.y, imgWidth, imgHeight)
+    }
+
+    coord.y = coord.y + 300 * scaleFactor + 10 * scaleFactor
+
+    if (_manufacturer) {
+      const manufacturer = await getCompanyById(_manufacturer.id)
+      const manufacturerLogo = manufacturer.medias.find(
+        (m) => m.relation_type === 'cover'
+      )
+
+      if (manufacturerLogo) {
+        const img = await loadImage(manufacturerLogo.url.slice(1))
+
+        // à droite
+        const imgHeight = 80 * scaleFactor
+        const imgWidth = img.width * (imgHeight / img.height)
+        const imgX = widthPixels - imgWidth - margin
+        ctx.drawImage(img, imgX, coord.y, imgWidth, imgHeight)
+      }
+
+      coord.x = margin
+      coord.y = coord.y + 80 * scaleFactor + 30 * scaleFactor
+      // line
+      ctx.fillStyle = 'black'
+      ctx.beginPath()
+      ctx.lineWidth = 10 * scaleFactor
+      ctx.moveTo(margin, coord.y)
+      ctx.lineTo(widthPixels - margin, coord.y)
+      ctx.stroke()
+    }
+
+    // Nom machine - nom constructeur - année
+
+    coord.x = margin
+    coord.y = coord.y + 125 * scaleFactor
+
+    coord = printCanvasText({
+      ctx,
+      ...coord,
+      text: item.name,
+      fontSize: 120 * scaleFactor,
+      fontFamily: FONTS.Oswald,
+      style: 'bold',
+      lineHeight: 150 * scaleFactor,
+      maxX,
+    })
+
+    coord.x = coord.x + 10 * scaleFactor
+
+    coord.y = coord.y - 10 * scaleFactor
+
+    coord = printCanvasText({
+      ctx,
+      ...coord,
+      text: _manufacturer?.name || '',
+      fontSize: 60 * scaleFactor,
+      fontFamily: FONTS.Oswald,
+      style: '',
+      lineHeight: 150 * scaleFactor,
+      maxX,
+    })
+
+    const euFlag = await loadImage('data/flags/eu.png')
+    const usFlag = await loadImage('data/flags/us.png')
+    const jpFlag = await loadImage('data/flags/jp.png')
+    const ratio = euFlag.width / euFlag.height
+    const flagWidth = 80 * scaleFactor
+    const flagHeight = flagWidth / ratio
+    coord.x = coord.x + 100 * scaleFactor
+    coord.y = coord.y + 10 * scaleFactor
+
+    const yflag = coord.y - 60 * scaleFactor
+    const yText = coord.y - 10 * scaleFactor
+
+    ctx.drawImage(euFlag, coord.x, yflag, flagWidth, flagHeight)
+    coord.x = coord.x + flagWidth + 20 * scaleFactor
+    coord = printCanvasText({
+      ctx,
+      x: coord.x,
+      y: yText,
+      text: item.var_release_eu || '',
+      fontSize: 60 * scaleFactor,
+      fontFamily: FONTS.Oswald,
+      style: '',
+      lineHeight: 150 * scaleFactor,
+      maxX,
+    })
+
+    coord.x = coord.x + 50 * scaleFactor
+    ctx.drawImage(usFlag, coord.x, yflag, flagWidth, flagHeight)
+    coord.x = coord.x + flagWidth + 20 * scaleFactor
+    coord = printCanvasText({
+      ctx,
+      x: coord.x,
+      y: yText,
+      text: item.var_release_us || '',
+      fontSize: 60 * scaleFactor,
+      fontFamily: FONTS.Oswald,
+      style: '',
+      lineHeight: 150 * scaleFactor,
+      maxX,
+    })
+
+    coord.x = coord.x + 50 * scaleFactor
+    ctx.drawImage(jpFlag, coord.x, yflag, flagWidth, flagHeight)
+    coord.x = coord.x + flagWidth + 20 * scaleFactor
+    coord = printCanvasText({
+      ctx,
+      x: coord.x,
+      y: yText,
+      text: item.var_release_jap || '',
+      fontSize: 60 * scaleFactor,
+      fontFamily: FONTS.Oswald,
+      style: '',
+      lineHeight: 150 * scaleFactor,
+      maxX,
+    })
+
+    const yDesc = coord.y + 150 * scaleFactor
+
+    coord.x = margin + 50 * scaleFactor
+    coord = getTextFromBlock({
+      ctx,
+      x: coord.x,
+      y: yDesc,
+      blocks: item.long_description_fr,
+      fontSize: 50 * scaleFactor,
+      fontFamily: FONTS.OpenSans,
+      lineHeight: 45 * scaleFactor,
+      maxX: maxX / 2 - 50 * scaleFactor,
+    })
+
+    coord = getTextFromBlock({
+      ctx,
+      x: maxX / 2 + 50 * scaleFactor,
+      y: yDesc,
+      blocks: item.long_description_en,
+      fontSize: 50 * scaleFactor,
+      fontFamily: FONTS.OpenSans,
+      lineHeight: 45 * scaleFactor,
+      maxX: maxX - 50 * scaleFactor,
+    })
   }
 
   const bufferPage = Buffer.from(
