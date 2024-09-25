@@ -26,7 +26,7 @@ module.exports = [
           .setIssuedAt()
           .setIssuer('cave_back')
           .setAudience('cave_front')
-          .setExpirationTime(`${24 * 7}h`)
+          .setExpirationTime('720h') // 30 jours = 720 heures
           .encrypt(secret)
 
         return h
