@@ -268,20 +268,21 @@ async function printItem(item, _type = 'carte') {
     const yflag = coord.y - 60 * scaleFactor
     const yText = coord.y - 10 * scaleFactor
 
-    ctx.drawImage(euFlag, coord.x, yflag, flagWidth, flagHeight)
-    coord.x = coord.x + flagWidth + 20 * scaleFactor
-    coord = printCanvasText({
-      ctx,
-      x: coord.x,
-      y: yText,
-      text: item.var_release_eu || '',
-      fontSize: 60 * scaleFactor,
-      fontFamily: FONTS.Oswald,
-      style: '',
-      lineHeight: 150 * scaleFactor,
-      maxX,
-    })
-
+    if (item.var_release_eu) {
+      ctx.drawImage(euFlag, coord.x, yflag, flagWidth, flagHeight)
+      coord.x = coord.x + flagWidth + 20 * scaleFactor
+      coord = printCanvasText({
+        ctx,
+        x: coord.x,
+        y: yText,
+        text: item.var_release_eu || '',
+        fontSize: 60 * scaleFactor,
+        fontFamily: FONTS.Oswald,
+        style: '',
+        lineHeight: 150 * scaleFactor,
+        maxX,
+      })
+    }
     if (item.var_release_us) {
       coord.x = coord.x + 50 * scaleFactor
       ctx.drawImage(usFlag, coord.x, yflag, flagWidth, flagHeight)
