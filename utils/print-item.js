@@ -16,24 +16,18 @@ GlobalFonts.registerFromPath(
 )
 
 GlobalFonts.registerFromPath(
-  path.join(
-    __dirname,
-    '../data/fonts/Open_Sans/OpenSans-VariableFont_wdth,wght.ttf'
-  ),
-  'OpenSans'
+  path.join(__dirname, '../data/fonts/Lato/Lato-Regular.ttf'),
+  'Lato'
 )
 
 GlobalFonts.registerFromPath(
-  path.join(
-    __dirname,
-    '../data/fonts/Open_Sans/OpenSans-Italic-VariableFont_wdth,wght.ttf'
-  ),
-  'OpenSansItalic'
+  path.join(__dirname, '../data/fonts/Lato/Lato-Italic.ttf'),
+  'LatoItalic'
 )
 
 const FONTS = {
-  OpenSans: 'OpenSans',
-  OpenSansItalic: 'OpenSansItalic',
+  Lato: 'Lato',
+  LatoItalic: 'LatoItalic',
   Oswald: 'Oswald',
 }
 
@@ -95,7 +89,7 @@ async function printItem(item, _type = 'carte') {
       x: margin,
       text: brand.toUpperCase(),
       fontSize: 15 * scaleFactor, // Ajuster la taille de la police
-      fontFamily: FONTS.OpenSans,
+      fontFamily: FONTS.Lato,
       style: 'normal',
       lineHeight: 15 * 1.5 * scaleFactor, // Ajuster la hauteur de ligne
       maxX,
@@ -106,7 +100,7 @@ async function printItem(item, _type = 'carte') {
       ...coord,
       text: ' - ',
       fontSize: 15 * scaleFactor, // Ajuster la taille de la police
-      fontFamily: FONTS.OpenSans,
+      fontFamily: FONTS.Lato,
       style: 'normal',
       lineHeight: 15 * 1.5 * scaleFactor, // Ajuster la hauteur de ligne
       maxX,
@@ -117,7 +111,7 @@ async function printItem(item, _type = 'carte') {
       ...coord,
       text: item.var_release_fr,
       fontSize: 15 * scaleFactor, // Ajuster la taille de la police
-      fontFamily: FONTS.OpenSans,
+      fontFamily: FONTS.Lato,
       style: 'normal',
       lineHeight: 15 * 1.5 * scaleFactor, // Ajuster la hauteur de ligne
       maxX,
@@ -139,7 +133,7 @@ async function printItem(item, _type = 'carte') {
       x: margin,
       maxX,
       fontSize: size.fontSize * scaleFactor, // Ajuster la taille de la police
-      fontFamily: FONTS.OpenSans,
+      fontFamily: FONTS.Lato,
     })
 
     // ===== FOOTER
@@ -166,7 +160,7 @@ async function printItem(item, _type = 'carte') {
       size.qrSize * scaleFactor
     )
 
-    ctx.font = `${13 * scaleFactor}px ${FONTS.OpenSansItalic}`
+    ctx.font = `${13 * scaleFactor}px ${FONTS.LatoItalic}`
 
     const originField = item.var_origin || 'Collection association MO5'
     const xOriginField =
@@ -176,7 +170,7 @@ async function printItem(item, _type = 'carte') {
   }
 
   if (type === 'cartel machine') {
-    const margin = 25 * scaleFactor
+    const margin = 100 * scaleFactor
     coord.x = margin
     coord.y = margin + 100 * scaleFactor
     const maxX = widthPixels
@@ -186,13 +180,26 @@ async function printItem(item, _type = 'carte') {
     )
 
     const logo = item.medias.find((m) => m.relation_type === 'cover')
-
     if (logo) {
       const img = await loadImage(logo.url.slice(1))
-      // Taille de l'image
-      const imgHeight = 300 * scaleFactor
-      const imgWidth = img.width * (imgHeight / img.height)
-      const imgX = widthPixels / 2 - imgWidth / 2
+
+      // Taille maximale de l'image en largeur (80% de la largeur totale)
+      const maxImgWidth = widthPixels * 0.8
+
+      // Taille de l'image avec une hauteur fixe
+      let imgHeight = 300 * scaleFactor
+      let imgWidth = img.width * (imgHeight / img.height)
+
+      // Vérifier si l'image dépasse la largeur maximale, et si oui, ajuster les dimensions
+      if (imgWidth > maxImgWidth) {
+        imgWidth = maxImgWidth
+        imgHeight = img.height * (imgWidth / img.width) // Ajuster la hauteur proportionnellement
+      }
+
+      // Centrer l'image
+      const imgX = (widthPixels - imgWidth) / 2
+
+      // Dessiner l'image sur le canvas
       ctx.drawImage(img, imgX, coord.y, imgWidth, imgHeight)
     }
 
@@ -242,8 +249,63 @@ async function printItem(item, _type = 'carte') {
     })
 
     coord.x = coord.x + 10 * scaleFactor
+    coord.y = coord.y - 10 * scaleFactor
+
+    const jpFlag = await loadImage('data/flags/jp.png')
+    const usFlag = await loadImage('data/flags/us.png')
+    const euFlag = await loadImage('data/flags/eu.png')
+    const ratio = euFlag.width / euFlag.height
+
+    const flagWidth = 80 * scaleFactor
+    const flagHeight = flagWidth / ratio
+
+    coord.x = coord.x + 100 * scaleFactor
 
     coord.y = coord.y - 10 * scaleFactor
+
+    let text = ''
+    let currentX = widthPixels - margin
+    ctx.font = `${60 * scaleFactor}px ${FONTS.Oswald}`
+
+    const flagDecalage = 20 * scaleFactor + flagWidth
+    const yflag = coord.y - 50 * scaleFactor
+    const textDecalage = 80 * scaleFactor
+
+    text = (item.var_release_jap || '').trim()
+
+    // JAP
+    if (text) {
+      currentX -= ctx.measureText(text).width
+      ctx.fillText(text, currentX, coord.y)
+      currentX -= flagDecalage
+      ctx.drawImage(jpFlag, currentX, yflag, flagWidth, flagHeight)
+      currentX -= textDecalage
+    }
+
+    //US
+    text = (item.var_release_us || '').trim()
+    if (text) {
+      currentX -= ctx.measureText(text).width
+      ctx.fillText(text, currentX, coord.y)
+      currentX -= flagDecalage
+      ctx.drawImage(usFlag, currentX, yflag, flagWidth, flagHeight)
+      currentX -= textDecalage
+    }
+
+    //EU
+    text = (item.var_release_eu || '').trim()
+    if (text) {
+      currentX -= ctx.measureText(text).width
+      ctx.fillText(text, currentX, coord.y)
+      currentX -= flagDecalage
+      ctx.drawImage(euFlag, currentX, yflag, flagWidth, flagHeight)
+      currentX -= textDecalage
+    }
+
+    // ----- MANUFACTURER NAME -----
+
+    coord.x = margin
+    coord.y = coord.y + 100 * scaleFactor
 
     coord = printCanvasText({
       ctx,
@@ -256,66 +318,7 @@ async function printItem(item, _type = 'carte') {
       maxX,
     })
 
-    const euFlag = await loadImage('data/flags/eu.png')
-    const usFlag = await loadImage('data/flags/us.png')
-    const jpFlag = await loadImage('data/flags/jp.png')
-    const ratio = euFlag.width / euFlag.height
-    const flagWidth = 80 * scaleFactor
-    const flagHeight = flagWidth / ratio
-    coord.x = coord.x + 100 * scaleFactor
-    coord.y = coord.y + 10 * scaleFactor
-
-    const yflag = coord.y - 60 * scaleFactor
-    const yText = coord.y - 10 * scaleFactor
-
-    if (item.var_release_eu) {
-      ctx.drawImage(euFlag, coord.x, yflag, flagWidth, flagHeight)
-      coord.x = coord.x + flagWidth + 20 * scaleFactor
-      coord = printCanvasText({
-        ctx,
-        x: coord.x,
-        y: yText,
-        text: item.var_release_eu || '',
-        fontSize: 60 * scaleFactor,
-        fontFamily: FONTS.Oswald,
-        style: '',
-        lineHeight: 150 * scaleFactor,
-        maxX,
-      })
-    }
-    if (item.var_release_us) {
-      coord.x = coord.x + 50 * scaleFactor
-      ctx.drawImage(usFlag, coord.x, yflag, flagWidth, flagHeight)
-      coord.x = coord.x + flagWidth + 20 * scaleFactor
-      coord = printCanvasText({
-        ctx,
-        x: coord.x,
-        y: yText,
-        text: item.var_release_us,
-        fontSize: 60 * scaleFactor,
-        fontFamily: FONTS.Oswald,
-        style: '',
-        lineHeight: 150 * scaleFactor,
-        maxX,
-      })
-    }
-    if (item.var_release_jap) {
-      coord.x = coord.x + 50 * scaleFactor
-      ctx.drawImage(jpFlag, coord.x, yflag, flagWidth, flagHeight)
-      coord.x = coord.x + flagWidth + 20 * scaleFactor
-      coord = printCanvasText({
-        ctx,
-        x: coord.x,
-        y: yText,
-        text: item.var_release_jap,
-        fontSize: 60 * scaleFactor,
-        fontFamily: FONTS.Oswald,
-        style: '',
-        lineHeight: 150 * scaleFactor,
-        maxX,
-      })
-    }
-    const yDesc = coord.y + 150 * scaleFactor
+    const yDesc = coord.y + 180 * scaleFactor
 
     coord.x = margin + 50 * scaleFactor
     coord = getTextFromBlock({
@@ -324,7 +327,7 @@ async function printItem(item, _type = 'carte') {
       y: yDesc,
       blocks: item.long_description_fr,
       fontSize: 50 * scaleFactor,
-      fontFamily: FONTS.OpenSans,
+      fontFamily: FONTS.Lato,
       lineHeight: 45 * scaleFactor,
       maxX: maxX / 2 - 50 * scaleFactor,
     })
@@ -335,9 +338,9 @@ async function printItem(item, _type = 'carte') {
       y: yDesc,
       blocks: item.long_description_en,
       fontSize: 50 * scaleFactor,
-      fontFamily: FONTS.OpenSans,
+      fontFamily: FONTS.LatoItalic,
       lineHeight: 45 * scaleFactor,
-      maxX: maxX - 50 * scaleFactor,
+      maxX: maxX - margin,
     })
   }
 
