@@ -525,7 +525,19 @@ module.exports = [
       }
 
       if (exportType === 'print') {
-        const zipBuffer = await printItems({ ids, format, type, selectedTotal })
+        try {
+          const zipBuffer = await printItems({
+            ids,
+            format,
+            type,
+            selectedTotal,
+          })
+        } catch (error) {
+          console.log('PRINT ITEMS :', error)
+          return h
+            .response({ error: 'Internal server error', details: error })
+            .code(500)
+        }
 
         return h
           .response(zipBuffer)
