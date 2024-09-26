@@ -13,6 +13,7 @@ const MEDIA = {
   description: 'description',
   type: 'type',
   size: 'size',
+  cover_url: 'cover_url',
   created_at: 'created_at',
   updated_at: 'updated_at',
 }
@@ -20,6 +21,8 @@ const MEDIA = {
 module.exports = {
   MEDIA,
   async createMedia(medias) {
+    if (medias.length === 0) return []
+
     const dir = path.join(__dirname, '../uploads')
 
     if (!fs.existsSync(dir)) fs.mkdirSync(dir)
@@ -33,7 +36,12 @@ module.exports = {
     if (!fs.existsSync(dateFolder)) fs.mkdirSync(dateFolder)
 
     const filesToSave = []
-    for (const file of medias.filter((media) => !!media?._data)) {
+    for (const file of medias) {
+      if (file.type === 'youtube-video') {
+        filesToSave.push(file)
+        continue
+      }
+      if (!file?._data) continue
       const extension = path.extname(file.hapi.filename)
       const id = uuidv4()
       const uuidName = id + extension
@@ -56,7 +64,6 @@ module.exports = {
         })
       })
     }
-
     try {
       await knex(TABLES.medias).insert(filesToSave)
       return filesToSave

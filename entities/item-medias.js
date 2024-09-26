@@ -41,4 +41,14 @@ module.exports = {
     await knex(TABLES.item_medias).insert(newItemMedia)
     return newItemMedia
   },
+  async deleteMediaForItem({ itemId, mediaId }) {
+    try {
+      await knex(TABLES.item_medias)
+        .where(ITEM_MEDIAS.item_id, itemId)
+        .andWhere(ITEM_MEDIAS.media_id, mediaId)
+        .delete()
+    } catch (error) {
+      console.error(error)
+    }
+  },
 }

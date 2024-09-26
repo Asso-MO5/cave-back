@@ -1,4 +1,7 @@
-const { updateOrCreateMediaForItem } = require('../entities/item-medias')
+const {
+  updateOrCreateMediaForItem,
+  deleteMediaForItem,
+} = require('../entities/item-medias')
 const {
   createItemRelation,
   deleteItemRelationByLeftIdAndSameType,
@@ -15,7 +18,6 @@ const {
   changeItemType,
   getItemsForExport,
   getSimilarItems,
-  getCompanies,
 } = require('../entities/items')
 const { createMedia } = require('../entities/media')
 const { headers } = require('../models/header.model')
@@ -190,15 +192,10 @@ module.exports = [
       if (!id) return h.response({ error: 'Un id est requis' }).code(400)
       const item = await getItemById(id)
       if (!item) return h.response({ error: 'Non trouvé' }).code(404)
+
       return h
         .response({
-          item: {
-            ...item,
-            medias: item.medias.map((media) => ({
-              ...media,
-              url: getMediaUrl(media.url, req),
-            })),
-          },
+          item: await getItemById(id, req),
         })
         .code(200)
     },
@@ -271,8 +268,7 @@ module.exports = [
         await updateItem(id, payload)
       }
 
-      const item = await getItemById(id)
-      return h.response({ item }).code(204)
+      return h.response({ item: await getItemById(id, req) }).code(204)
     },
   },
   {
@@ -382,19 +378,41 @@ module.exports = [
             .code(500)
         }
       }
-      const newItem = await getItemById(oldItem.id)
 
-      return h
-        .response({
-          item: {
-            ...newItem,
-            medias: newItem.medias.map((media) => ({
-              ...media,
-              url: getMediaUrl(media.url, req),
-            })),
-          },
-        })
-        .code(201)
+      return h.response(await getItemById(oldItem.id, req)).code(201)
+    },
+  },
+  {
+    method: 'DELETE',
+    path: '/item/{itemId}/media/{mediaId}',
+    options: {
+      notes: [ROLES.reviewer, ROLES.publisher],
+      description: 'Permet de supprimer un media d un item',
+      tags: ['api', 'items'],
+    },
+    async handler(req, h) {
+      const { itemId, mediaId } = req.params
+      const oldItem = await getItemById(itemId)
+      if (!oldItem) return h.response({ error: 'Non trouvé' }).code(404)
+
+      try {
+        await createItemHistory(oldItem.id, req.app.user.id)
+      } catch (error) {
+        console.log('ITEM HISTORY :', error)
+        return h
+          .response({ error: 'Internal server error', details: error })
+          .code(500)
+      }
+
+      try {
+        await deleteMediaForItem({ itemId, mediaId })
+      } catch (error) {
+        return h
+          .response({ error: 'Internal server error', details: error })
+          .code(500)
+      }
+
+      return h.response(await getItemById(oldItem.id, req)).code(201)
     },
   },
   {

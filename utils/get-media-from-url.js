@@ -3,6 +3,9 @@ const { Readable } = require('stream')
 
 async function getMediaFromUrl(url) {
   const isImage = url.match(/.(jpg|jpeg|png|gif|svg|webp)$/i)
+  const isYoutube = url.match(
+    /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com|youtu\.be)\/(?:watch\?v=)?(.+)/
+  )
 
   if (isImage) {
     try {
@@ -38,6 +41,26 @@ async function getMediaFromUrl(url) {
     } catch (error) {
       console.log('error :', error)
       throw new Error(error)
+    }
+  }
+
+  if (isYoutube) {
+    const res = await fetch(
+      `https://www.youtube.com/oembed?url=${url}&format=json`
+    )
+    const meta = await res.json()
+    const getParams = new URLSearchParams(url.split('?')[1])
+    const videoId = getParams.get('v')
+
+    return {
+      id: videoId,
+      name: meta.title,
+      size: 0,
+      type: 'youtube-video',
+      url,
+      cover_url: meta.thumbnail_url,
+      alt: meta.title,
+      description: meta.author_name,
     }
   }
 }

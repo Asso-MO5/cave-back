@@ -1,6 +1,7 @@
 const { knex } = require('../utils/db')
 const { v4: uuidv4 } = require('uuid')
 const { TABLES } = require('../utils/constants')
+const { getMediaUrl } = require('../utils/media-url')
 
 const ITEMS = {
   id: 'id',
@@ -295,7 +296,7 @@ module.exports = {
       return null
     }
   },
-  async getItemById(id) {
+  async getItemById(id, req) {
     try {
       const item_ = await knex(TABLES.items).where(ITEMS.id, id).first()
 
@@ -344,7 +345,17 @@ module.exports = {
         else item[attr.attr] = attr.value
       })
 
-      return item
+      if (req) {
+        return {
+          ...item,
+          medias: item.medias.map((media) => ({
+            ...media,
+            url: getMediaUrl(media.url, req),
+          })),
+        }
+      } else {
+        return item
+      }
     } catch (e) {
       console.error(e)
       return null
