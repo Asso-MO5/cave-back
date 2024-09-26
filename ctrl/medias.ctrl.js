@@ -21,7 +21,6 @@ module.exports = [
     async handler(req, h) {
       try {
         const query = await getMedias(req?.query?.search)
-        console.log('query :', query)
 
         const medias = query.map((m) => ({
           id: m.id,

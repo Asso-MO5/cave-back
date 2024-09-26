@@ -180,27 +180,35 @@ async function printItem(item, _type = 'carte') {
     )
 
     const logo = item.medias.find((m) => m.relation_type === 'cover')
+
     if (logo) {
-      const img = await loadImage(logo.url.slice(1))
-
-      // Taille maximale de l'image en largeur (80% de la largeur totale)
-      const maxImgWidth = widthPixels * 0.8
-
-      // Taille de l'image avec une hauteur fixe
-      let imgHeight = 300 * scaleFactor
-      let imgWidth = img.width * (imgHeight / img.height)
-
-      // Vérifier si l'image dépasse la largeur maximale, et si oui, ajuster les dimensions
-      if (imgWidth > maxImgWidth) {
-        imgWidth = maxImgWidth
-        imgHeight = img.height * (imgWidth / img.width) // Ajuster la hauteur proportionnellement
+      let img
+      try {
+        img = await loadImage(logo.url.slice(1))
+      } catch (e) {
+        console.error("Erreur lors du chargement de l'image", e)
       }
 
-      // Centrer l'image
-      const imgX = (widthPixels - imgWidth) / 2
+      if (img) {
+        // Taille maximale de l'image en largeur (80% de la largeur totale)
+        const maxImgWidth = widthPixels * 0.8
 
-      // Dessiner l'image sur le canvas
-      ctx.drawImage(img, imgX, coord.y, imgWidth, imgHeight)
+        // Taille de l'image avec une hauteur fixe
+        let imgHeight = 300 * scaleFactor
+        let imgWidth = img.width * (imgHeight / img.height)
+
+        // Vérifier si l'image dépasse la largeur maximale, et si oui, ajuster les dimensions
+        if (imgWidth > maxImgWidth) {
+          imgWidth = maxImgWidth
+          imgHeight = img.height * (imgWidth / img.width) // Ajuster la hauteur proportionnellement
+        }
+
+        // Centrer l'image
+        const imgX = (widthPixels - imgWidth) / 2
+
+        // Dessiner l'image sur le canvas
+        ctx.drawImage(img, imgX, coord.y, imgWidth, imgHeight)
+      }
     }
 
     coord.y = coord.y + 300 * scaleFactor + 10 * scaleFactor
