@@ -157,6 +157,7 @@ module.exports = {
           `${TABLES.medias}.url`,
           `${TABLES.medias}.name`,
           `${TABLES.medias}.type`,
+          `${TABLES.medias}.cover_url`,
           knex.raw('COUNT(DISTINCT im.id) as total_usage_count') // Total usage
         )
 

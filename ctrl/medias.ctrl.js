@@ -1,5 +1,5 @@
 const { getMedias, createMedia, deleteMedia } = require('../entities/media')
-const { MEDIAS_MODEL, MEDIA_MODEL } = require('../models/media.model')
+const { MEDIA_MODEL } = require('../models/media.model')
 const { ROLES } = require('../utils/constants')
 const { headers } = require('../models/header.model')
 const { getMediaUrl } = require('../utils/media-url')
@@ -21,6 +21,7 @@ module.exports = [
     async handler(req, h) {
       try {
         const query = await getMedias(req?.query?.search)
+        console.log('query :', query)
 
         const medias = query.map((m) => ({
           id: m.id,
@@ -28,12 +29,8 @@ module.exports = [
           type: m.type,
           total_usage_count: m.total_usage_count,
           url: getMediaUrl(m.url, req),
+          cover_url: m.cover_url,
         }))
-
-        const { error } = MEDIAS_MODEL.validate(medias)
-
-        if (error)
-          return h.response({ error: 'Bad request', details: error }).code(400)
 
         return h.response(medias).type('json')
       } catch (error) {
