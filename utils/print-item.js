@@ -8,6 +8,7 @@ const { printCanvasText } = require('./print-canvas-text')
 const { FRONT_URL, SIZES } = require('./constants')
 const { getItemById } = require('../entities/items')
 const { getCompanyById } = require('../entities/company')
+const sharp = require('sharp')
 // en mm
 
 GlobalFonts.registerFromPath(
@@ -184,7 +185,18 @@ async function printItem(item, _type = 'carte') {
     if (logo) {
       let img
       try {
-        img = await loadImage(logo.url.slice(1))
+        // Vérifier si le fichier est un SVG
+        if (logo.url.endsWith('.svg')) {
+          // Charger et convertir le SVG en PNG avec sharp
+          const svgBuffer = fs.readFileSync(logo.url.slice(1))
+          const pngBuffer = await sharp(svgBuffer).png().toBuffer()
+
+          // Charger l'image convertie en PNG dans le canvas
+          img = await loadImage(pngBuffer)
+        } else {
+          // Charger directement l'image si ce n'est pas un SVG
+          img = await loadImage(logo.url.slice(1))
+        }
       } catch (e) {
         console.error("Erreur lors du chargement de l'image", e)
       }
