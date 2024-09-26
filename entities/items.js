@@ -71,12 +71,14 @@ module.exports = {
     offset,
     order = 'asc',
     sort = 'name',
+    status,
   }) {
     const query = knex(TABLES.items + ' as it_origin')
     try {
       // Appliquer les filtres sur le type et la recherche
 
       if (type) query.where('it_origin.type', type)
+      if (status) query.where('it_origin.status', status)
 
       if (search) query.where('it_origin.name', 'like', `%${search}%`)
 

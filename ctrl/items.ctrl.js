@@ -121,6 +121,35 @@ module.exports = [
     },
   },
   {
+    method: 'GET',
+    path: '/items/public',
+
+    options: {
+      description: 'Récupère la liste des items par type et recherche',
+      tags: ['api', 'jeux'],
+      validate: {
+        headers,
+      },
+    },
+    async handler(req, h) {
+      const { search, searchBy, page, limit = 50, order, sort } = req.query
+
+      const offset = page ? (page - 1) * limit : 0
+
+      const items = await getItems({
+        type: 'cartel',
+        search,
+        searchBy,
+        limit,
+        offset,
+        order,
+        sort,
+        status: 'published',
+      })
+      return h.response(items).code(200)
+    },
+  },
+  {
     method: 'POST',
     path: '/items/exist',
     options: {
