@@ -6,11 +6,13 @@ function getTextFromBlock({
   fontSize = 12,
   maxX = 600,
   fontFamily = 'Arial',
+  lineHeight: _lineHeight,
 }) {
   // Position de base
   let currentY = y
   let currentX = x
 
+  const lineHeight = _lineHeight || fontSize * 1.5
   if (!blocks || !Array.isArray(blocks)) return
 
   blocks.forEach((block) => {
@@ -33,7 +35,7 @@ function getTextFromBlock({
 
         // Si le mot dépasse la largeur max, on revient à la ligne
         if (currentX + wordWidth > maxX) {
-          currentY += fontSize * 1.5 // Passer à la ligne suivante
+          currentY += lineHeight
           currentX = x // Revenir au début de la ligne
         }
 

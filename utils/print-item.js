@@ -182,7 +182,7 @@ async function printItem(item, _type = 'carte') {
 
     const logo = item.medias.find((m) => m.relation_type === 'cover')
 
-    let imgHeight = 450 * scaleFactor
+    let imgHeight = 420 * scaleFactor
     if (logo) {
       let img
       try {
@@ -327,6 +327,8 @@ async function printItem(item, _type = 'carte') {
     coord.x = margin
     coord.y = coord.y + 100 * scaleFactor
 
+    const lineHeight = 60 * 1.5 * scaleFactor
+
     coord = printCanvasText({
       ctx,
       ...coord,
@@ -334,13 +336,14 @@ async function printItem(item, _type = 'carte') {
       fontSize: 60 * scaleFactor,
       fontFamily: FONTS.Oswald,
       style: '',
-      lineHeight: 60 * 3 * scaleFactor,
+      lineHeight,
       maxX,
     })
 
     const yDesc = coord.y + 180 * scaleFactor
 
     coord.x = margin + 50 * scaleFactor
+
     coord = getTextFromBlock({
       ctx,
       x: coord.x + 50 * scaleFactor,
@@ -348,7 +351,7 @@ async function printItem(item, _type = 'carte') {
       blocks: item.long_description_fr,
       fontSize: 50 * scaleFactor,
       fontFamily: FONTS.Lato,
-      lineHeight: 60 * 3 * scaleFactor,
+      lineHeight,
       maxX: maxX / 2 - 100 * scaleFactor,
     })
 
@@ -359,7 +362,7 @@ async function printItem(item, _type = 'carte') {
       blocks: item.long_description_en,
       fontSize: 50 * scaleFactor,
       fontFamily: FONTS.LatoItalic,
-      lineHeight: 75 * scaleFactor,
+      lineHeight,
       maxX: maxX - margin - 100 * scaleFactor,
     })
   }
