@@ -348,7 +348,7 @@ async function printItem(item, _type = 'carte') {
       blocks: item.long_description_fr,
       fontSize: 50 * scaleFactor,
       fontFamily: FONTS.Lato,
-      lineHeight: 45 * scaleFactor,
+      lineHeight: 55 * scaleFactor,
       maxX: maxX / 2 - 50 * scaleFactor,
     })
 
@@ -359,7 +359,7 @@ async function printItem(item, _type = 'carte') {
       blocks: item.long_description_en,
       fontSize: 50 * scaleFactor,
       fontFamily: FONTS.LatoItalic,
-      lineHeight: 45 * scaleFactor,
+      lineHeight: 55 * scaleFactor,
       maxX: maxX - margin,
     })
   }
