@@ -182,6 +182,7 @@ async function printItem(item, _type = 'carte') {
 
     const logo = item.medias.find((m) => m.relation_type === 'cover')
 
+    let imgHeight = 450 * scaleFactor
     if (logo) {
       let img
       try {
@@ -206,7 +207,6 @@ async function printItem(item, _type = 'carte') {
         const maxImgWidth = widthPixels * 0.8
 
         // Taille de l'image avec une hauteur fixe
-        let imgHeight = 300 * scaleFactor
         let imgWidth = img.width * (imgHeight / img.height)
 
         // Vérifier si l'image dépasse la largeur maximale, et si oui, ajuster les dimensions
@@ -223,7 +223,7 @@ async function printItem(item, _type = 'carte') {
       }
     }
 
-    coord.y = coord.y + 300 * scaleFactor + 10 * scaleFactor
+    coord.y = coord.y + imgHeight + 10 * scaleFactor
 
     if (_manufacturer) {
       const manufacturer = await getCompanyById(_manufacturer.id)
@@ -343,24 +343,24 @@ async function printItem(item, _type = 'carte') {
     coord.x = margin + 50 * scaleFactor
     coord = getTextFromBlock({
       ctx,
-      x: coord.x,
+      x: coord.x + 50 * scaleFactor,
       y: yDesc,
       blocks: item.long_description_fr,
       fontSize: 50 * scaleFactor,
       fontFamily: FONTS.Lato,
-      lineHeight: 55 * scaleFactor,
-      maxX: maxX / 2 - 50 * scaleFactor,
+      lineHeight: 75 * scaleFactor,
+      maxX: maxX / 2 - 100 * scaleFactor,
     })
 
     coord = getTextFromBlock({
       ctx,
-      x: maxX / 2 + 50 * scaleFactor,
+      x: maxX / 2 + 100 * scaleFactor,
       y: yDesc,
       blocks: item.long_description_en,
       fontSize: 50 * scaleFactor,
       fontFamily: FONTS.LatoItalic,
-      lineHeight: 55 * scaleFactor,
-      maxX: maxX - margin,
+      lineHeight: 75 * scaleFactor,
+      maxX: maxX - margin - 100 * scaleFactor,
     })
   }
 
