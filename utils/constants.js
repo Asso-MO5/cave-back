@@ -3,6 +3,7 @@ const TABLES = {
   tags: 'tags',
   medias: 'medias',
   authors: 'authors',
+  messages: 'messages',
 
   // === ITEMS ===
   items: 'items',

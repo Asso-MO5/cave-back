@@ -20,6 +20,7 @@ const routes = [
   ...require('./ctrl/companies.ctrl'),
   ...require('./ctrl/items.ctrl'),
   ...require('./ctrl/medias.ctrl'),
+  ...require('./ctrl/messages.ctrl'),
 ]
 
 module.exports = { routes }

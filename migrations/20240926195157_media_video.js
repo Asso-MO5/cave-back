@@ -1,4 +1,3 @@
-const { ITEM_MEDIAS } = require('../entities/item-medias')
 const { MEDIA } = require('../entities/media')
 const { TABLES } = require('../utils/constants')
 

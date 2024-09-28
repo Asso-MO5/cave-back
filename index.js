@@ -46,10 +46,7 @@ const init = async () => {
   server.route(routes)
 
   // === Subscribe to websocket ===
-  server.subscription('/game/{id}')
-  server.subscription('/machine/{id}')
-  server.subscription('/public')
-  server.subscription('/test')
+  server.subscription('/room/{id}')
 
   server.ext('onPreHandler', async (req, h) => {
     const authorizedRoles =
