@@ -1,11 +1,16 @@
 const Canvas = require('@napi-rs/canvas')
 const { Readable } = require('stream')
+const { v4: uuidv4 } = require('uuid')
 
 async function getMediaFromUrl(url) {
   const isImage = url.match(/.(jpg|jpeg|png|gif|svg|webp)$/i)
-  const isYoutube = url.match(
-    /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([\w\-]+)(?:\?t=(\d+)|\?s=(\w+))?/
-  )
+  const getIsYoutube = (url) => {
+    const regex =
+      /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:watch\?v=|shorts\/)|youtu\.be\/)([^&?]+)/
+    const match = url.match(regex)
+    return match ? match[1] : null
+  }
+  const isYoutube = getIsYoutube(url)
 
   if (isImage) {
     try {
@@ -50,7 +55,8 @@ async function getMediaFromUrl(url) {
     )
     const meta = await res.json()
     const getParams = new URLSearchParams(url.split('?')[1])
-    const videoId = getParams.get('v') || getParams.get('s') || isYoutube[1]
+    const videoId =
+      getParams.get('v') || getParams.get('s') || isYoutube || uuidv4()
 
     return {
       id: videoId,
