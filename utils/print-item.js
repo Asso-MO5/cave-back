@@ -126,15 +126,23 @@ async function printItem(item, _type = 'carte') {
     ctx.lineTo(maxX, coord.y) // Position de fin
     ctx.stroke() // Dessine la ligne
 
+    const descIsEmpy =
+      !item.long_short_description ||
+      item.long_short_description.filter((b) => b.content.length > 0).length ===
+        0
+
     // DESCRIPTION
     coord = getTextFromBlock({
-      blocks: item.long_short_description,
+      blocks: descIsEmpy
+        ? item.long_description_fr
+        : item.long_short_description,
       ctx,
       y: coord.y + size.fontSize * 1.5 * scaleFactor + 10 * scaleFactor, // Ajuster la position Y
       x: margin,
       maxX,
       fontSize: size.fontSize * scaleFactor, // Ajuster la taille de la police
       fontFamily: FONTS.Lato,
+      maxChars: 200,
     })
 
     // ===== FOOTER
