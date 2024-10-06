@@ -84,6 +84,25 @@ module.exports = [
     },
   },
   {
+    method: 'POST',
+    path: '/items/import',
+    options: {
+      description: 'Permet d importer des items',
+      tags: ['api', 'jeux'],
+      notes: [ROLES.publisher, ROLES.reviewer],
+      validate: {
+        headers,
+      },
+    },
+    async handler(req, h) {
+      const { items } = JSON.parse(req.payload || '[')
+      if (items.length === 0)
+        return h.response({ error: 'Aucun item à importer' }).code(400)
+      console.log('items', items)
+      return h.response({ msg: 'ok' }).code(201)
+    },
+  },
+  {
     method: 'GET',
     path: '/items',
 

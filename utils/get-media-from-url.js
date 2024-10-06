@@ -50,7 +50,7 @@ async function getMediaFromUrl(url) {
     )
     const meta = await res.json()
     const getParams = new URLSearchParams(url.split('?')[1])
-    const videoId = getParams.get('v')
+    const videoId = getParams.get('v') || getParams.get('s') || isYoutube[1]
 
     return {
       id: videoId,
