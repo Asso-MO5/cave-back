@@ -4,7 +4,7 @@ const { Readable } = require('stream')
 async function getMediaFromUrl(url) {
   const isImage = url.match(/.(jpg|jpeg|png|gif|svg|webp)$/i)
   const isYoutube = url.match(
-    /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com|youtu\.be)\/(?:watch\?v=)?(.+)/
+    /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([\w\-]+)(?:\?t=(\d+)|\?s=(\w+))?/
   )
 
   if (isImage) {
