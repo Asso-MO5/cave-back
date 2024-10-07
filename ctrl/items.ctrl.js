@@ -30,7 +30,6 @@ const { createItemHistory } = require('../entities/item-history')
 const { v4: uuidv4 } = require('uuid')
 const { printItems } = require('../utils/print-items')
 const { createItemByType } = require('../utils/create-item')
-const { getCompanyById } = require('../entities/company')
 
 module.exports = [
   {
@@ -50,7 +49,7 @@ module.exports = [
       if (!name) return h.response({ error: 'Un nom est requis' }).code(400)
       if (!type) return h.response({ error: 'Un type est requis' }).code(400)
 
-      const id = createItemByType({
+      const id = await createItemByType({
         name,
         type,
         author_id: req.app.user.id,
@@ -86,7 +85,7 @@ module.exports = [
           ids.push(isExist.id)
           continue
         }
-        const id = createItemByType({
+        const id = await createItemByType({
           name: item.name,
           type,
           author_id: req.app.user.id,
