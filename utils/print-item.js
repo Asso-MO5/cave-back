@@ -71,7 +71,7 @@ async function printItem(item, _type = 'carte') {
       ctx,
       ...coord,
       text: item.name,
-      fontSize: 21 * scaleFactor, // Ajuster la taille de la police
+      fontSize: 23 * scaleFactor, // Ajuster la taille de la police
       fontFamily: FONTS.Oswald,
       style: 'bold',
       lineHeight: 24 * scaleFactor, // Ajuster la hauteur de ligne
@@ -142,7 +142,7 @@ async function printItem(item, _type = 'carte') {
         ? item.long_description_fr
         : item.long_short_description,
       ctx,
-      y: coord.y + size.fontSize * 1.6 * scaleFactor + 10,
+      y: coord.y + size.fontSize * 1.6 * scaleFactor + 20,
       x: margin,
       maxX,
       fontSize: size.fontSize * scaleFactor,
