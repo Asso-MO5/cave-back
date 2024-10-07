@@ -3,31 +3,25 @@ const fs = require('fs')
 const path = require('path')
 const { SIZES } = require('./constants')
 
-async function printPages(imgs, format) {
+async function printPages(imgs, format = 'cartes') {
   if (!SIZES?.[format]?.width) throw new Error('Type de print inconnu')
 
-  const size = SIZES[format]
   const DPI = 300
-  const pageWidth = Math.round((size.width / 25.4) * DPI)
-  const pageHeight = Math.round((size.height / 25.4) * DPI)
+  const cardWidthMM = 85 // Largeur de la carte de visite en mm
+  const cardHeightMM = 54 // Hauteur de la carte de visite en mm
 
-  if (imgs.length === 0) return [] // S'il n'y a pas d'images, retourne une liste vide
+  const pageWidth = Math.round((210 / 25.4) * DPI) // Largeur A4 210 mm
+  const pageHeight = Math.round((297 / 25.4) * DPI) // Hauteur A4 297 mm
 
-  // Charger la première image pour obtenir sa taille
-  const firstImage = await loadImage(imgs[0])
-  const imgWidth = firstImage.width
-  const imgHeight = firstImage.height
+  const cardWidthPx = Math.round((cardWidthMM / 25.4) * DPI)
+  const cardHeightPx = Math.round((cardHeightMM / 25.4) * DPI)
 
-  // Calculer le nombre d'images par ligne et par colonne
-  const imgsPerRow = Math.floor(pageWidth / (imgWidth + 1)) // Ajout d'1 pixel entre les images
-  const imgsPerCol = Math.floor(pageHeight / (imgHeight + 1))
+  const marginTop = Math.round((15 / 25.4) * DPI) // Marge en haut 15 mm
+  const marginLeft = Math.round((15 / 25.4) * DPI) // Marge à gauche 15 mm
+  const marginMiddle = Math.round((10 / 25.4) * DPI) // Marge au milieu 10 mm
 
-  // Calculer l'espace restant pour centrer les images
-  const totalImgWidth = imgsPerRow * imgWidth + (imgsPerRow - 1) * 1 // Total avec marge entre les colonnes
-  const totalImgHeight = imgsPerCol * imgHeight + (imgsPerCol - 1) * 1 // Total avec marge entre les lignes
-
-  const offsetX = (pageWidth - totalImgWidth) / 2 // Centrage horizontal
-  const offsetY = (pageHeight - totalImgHeight) / 2 // Centrage vertical
+  const imgsPerRow = 2 // 2 colonnes
+  const imgsPerCol = 5 // 5 cartes par colonne
 
   const canvas = createCanvas(pageWidth, pageHeight)
   const ctx = canvas.getContext('2d')
@@ -37,7 +31,7 @@ async function printPages(imgs, format) {
 
   // Tant qu'il reste des images à traiter
   while (imgIndex < imgs.length) {
-    // Réinitialise le canvas pour chaque nouvelle planche
+    // Réinitialiser le canvas pour chaque nouvelle page
     ctx.fillStyle = 'white'
     ctx.fillRect(0, 0, pageWidth, pageHeight) // Remplir le fond en blanc
 
@@ -46,35 +40,21 @@ async function printPages(imgs, format) {
       for (let col = 0; col < imgsPerRow; col++) {
         if (imgIndex >= imgs.length) break
 
+        // Calculer les positions de chaque carte
+        const x = marginLeft + col * (cardWidthPx + marginMiddle) // Colonnes
+        const y = marginTop + row * cardHeightPx // Rangées
+
         // Charger l'image actuelle
         const img = await loadImage(imgs[imgIndex])
 
-        // Calculer les positions avec l'espacement et le centrage
-        const x = offsetX + col * (imgWidth + 1) // Ajout d'1 pixel entre les colonnes
-        const y = offsetY + row * (imgHeight + 1) // Ajout d'1 pixel entre les lignes
-
-        ctx.fillStyle = '#dddddd' // Bordures en noir
-
-        // Dessiner les coins de coupe (5x5 pixels aux coins)
-        const cutSize = 6
-        ctx.fillRect(x - 1, y - 1, cutSize, cutSize) // Haut gauche
-        ctx.fillRect(x + imgWidth - cutSize, y - 1, cutSize, cutSize) // Haut droite
-        ctx.fillRect(x - 1, y + imgHeight - cutSize, cutSize, cutSize) // Bas gauche
-        ctx.fillRect(
-          x + imgWidth - cutSize,
-          y + imgHeight - cutSize,
-          cutSize,
-          cutSize
-        ) // Bas droite
-
-        // Dessiner l'image
-        ctx.drawImage(img, x, y, imgWidth, imgHeight)
+        // Dessiner l'image sur la carte
+        ctx.drawImage(img, x, y, cardWidthPx, cardHeightPx)
 
         imgIndex++
       }
     }
 
-    // Convertir la planche en image
+    // Convertir la page en image
     const bufferPage = Buffer.from(
       canvas.toDataURL().replace('data:image/png;base64,', ''),
       'base64'
@@ -88,7 +68,7 @@ async function printPages(imgs, format) {
     pages.push(pageFilePath)
   }
 
-  return pages // Renvoie les chemins des planches générées
+  return pages
 }
 
 module.exports = { printPages }

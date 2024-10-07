@@ -142,7 +142,7 @@ async function printItem(item, _type = 'carte') {
       maxX,
       fontSize: size.fontSize * scaleFactor, // Ajuster la taille de la police
       fontFamily: FONTS.Lato,
-      maxChars: descIsEmpy ? 200 : Infinity,
+      maxChars: descIsEmpy ? 150 : Infinity,
     })
 
     // ===== FOOTER

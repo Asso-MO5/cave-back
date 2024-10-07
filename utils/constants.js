@@ -47,7 +47,7 @@ const SIZES = {
   },
   carte: {
     width: 85,
-    height: 55,
+    height: 54,
     fontSize: 13,
     qrSize: 60,
   },
