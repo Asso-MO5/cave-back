@@ -146,28 +146,33 @@ async function printItem(item, _type = 'carte') {
     })
 
     // ===== FOOTER
-    await QRCode.toFile(
-      path.join(__dirname, '../uploads/qr/', `${item.id}.png`),
-      `${FRONT_URL}/fiches/${item.id}`,
-      {
-        color: {
-          dark: '#000',
-          light: '#0000',
-        },
-        width: widthPixels - 10,
 
-        type: 'svg',
-      }
-    )
-    const qr = await loadImage(`uploads/qr/${item.id}.png`)
+    // ----- QR CODE -----
+    if (item.medias.filter((m) => m.type === 'youtube-video').length > 0) {
+      await QRCode.toFile(
+        path.join(__dirname, '../uploads/qr/', `${item.id}.png`),
+        `${FRONT_URL}/fiches/${item.id}`,
+        {
+          color: {
+            dark: '#000',
+            light: '#0000',
+          },
+          width: widthPixels - 10,
 
-    ctx.drawImage(
-      qr,
-      0,
-      heightPixels - size.qrSize * scaleFactor,
-      size.qrSize * scaleFactor,
-      size.qrSize * scaleFactor
-    )
+          type: 'svg',
+        }
+      )
+      const qr = await loadImage(`uploads/qr/${item.id}.png`)
+
+      ctx.drawImage(
+        qr,
+        0,
+        heightPixels - size.qrSize * scaleFactor,
+        size.qrSize * scaleFactor,
+        size.qrSize * scaleFactor
+      )
+    }
+    // ----- END QR CODE -----
 
     ctx.font = `${13 * scaleFactor}px ${FONTS.LatoItalic}`
 
