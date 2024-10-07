@@ -55,8 +55,8 @@ async function printItem(item, _type = 'carte') {
   ctx.font = `${size.fontSize * scaleFactor}px Arial` // Ajuster la taille de police
   ctx.fillStyle = 'black'
   let coord = {
-    x: 0,
-    y: 24 * scaleFactor, // Ajuster la position Y
+    x: 10,
+    y: 30 * scaleFactor, // Ajuster la position Y
   }
 
   // ------ [[ CARTE ]] -----------------------------------------------------------------------
@@ -86,7 +86,7 @@ async function printItem(item, _type = 'carte') {
 
     coord = printCanvasText({
       ctx,
-      y: coord.y + size.fontSize * scaleFactor + 10 * scaleFactor, // Ajuster la position Y
+      y: coord.y + size.fontSize * scaleFactor + 5 * scaleFactor, // Ajuster la position Y
       x: margin,
       text: brand.toUpperCase(),
       fontSize: 15 * scaleFactor, // Ajuster la taille de la police
@@ -137,10 +137,11 @@ async function printItem(item, _type = 'carte') {
         ? item.long_description_fr
         : item.long_short_description,
       ctx,
-      y: coord.y + size.fontSize * 1.5 * scaleFactor + 10 * scaleFactor, // Ajuster la position Y
+      y: coord.y + size.fontSize * 1.5 * scaleFactor, // Ajuster la position Y
       x: margin,
       maxX,
       fontSize: size.fontSize * scaleFactor, // Ajuster la taille de la police
+      lineHeight: size.fontSize * 1.3 * scaleFactor, // Ajuster la hauteur de ligne
       fontFamily: FONTS.Lato,
       maxChars: descIsEmpy ? 150 : Infinity,
     })
@@ -151,7 +152,7 @@ async function printItem(item, _type = 'carte') {
     if (item.medias.filter((m) => m.type === 'youtube-video').length > 0) {
       await QRCode.toFile(
         path.join(__dirname, '../uploads/qr/', `${item.id}.png`),
-        `${FRONT_URL}/fiches/${item.id}`,
+        `${FRONT_URL}fiches/${item.id}`,
         {
           color: {
             dark: '#000',
@@ -166,8 +167,8 @@ async function printItem(item, _type = 'carte') {
 
       ctx.drawImage(
         qr,
-        0,
-        heightPixels - size.qrSize * scaleFactor,
+        margin / 3,
+        heightPixels - size.qrSize * scaleFactor - margin / 3,
         size.qrSize * scaleFactor,
         size.qrSize * scaleFactor
       )
