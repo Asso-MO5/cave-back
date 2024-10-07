@@ -33,7 +33,7 @@ module.exports = {
   ITEMS,
   ITEMS_HISTORY,
   ITEM_TYPE,
-  async createItem({ name, type, author_id }) {
+  async createItem({ name, type, author_id, ...rest }) {
     const id = uuidv4()
     const now = new Date().toISOString()
 
@@ -46,6 +46,7 @@ module.exports = {
         [ITEMS.author_id]: author_id,
         [ITEMS.created_at]: now,
         [ITEMS.updated_at]: now,
+        ...rest,
       })
       return id
     } catch (e) {

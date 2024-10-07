@@ -29,6 +29,8 @@ const { printItem } = require('../utils/print-item')
 const { createItemHistory } = require('../entities/item-history')
 const { v4: uuidv4 } = require('uuid')
 const { printItems } = require('../utils/print-items')
+const { createItemByType } = require('../utils/create-item')
+const { getCompanyById } = require('../entities/company')
 
 module.exports = [
   {
@@ -48,35 +50,11 @@ module.exports = [
       if (!name) return h.response({ error: 'Un nom est requis' }).code(400)
       if (!type) return h.response({ error: 'Un type est requis' }).code(400)
 
-      const id = await createItem({
+      const id = createItemByType({
         name,
         type,
         author_id: req.app.user.id,
       })
-
-      // -----|| CARTEL ||------------------------------------------------------------------
-      if (type === 'cartel') {
-        const itemRelation = {
-          item_ref_id: id,
-          item_left_id: id,
-          relation_type: 'cartel',
-          author_id: req.app.user.id,
-        }
-
-        const searchSimilar = await getSimilarCartel(name)
-        if (searchSimilar) {
-          itemRelation.item_ref_id = searchSimilar.id
-        } else {
-          const refId = await createItem({
-            name,
-            type: 'obj',
-            author_id: req.app.user.id,
-          })
-          itemRelation.item_ref_id = refId
-        }
-
-        await createItemRelation(itemRelation)
-      }
 
       // -----|| END CARTEL ||------------------------------------------------------------------
 
@@ -95,10 +73,77 @@ module.exports = [
       },
     },
     async handler(req, h) {
-      const { items } = JSON.parse(req.payload || '[')
+      const { items, type } = JSON.parse(req.payload || '[')
       if (items.length === 0)
         return h.response({ error: 'Aucun item à importer' }).code(400)
-      console.log('items', items)
+
+      const ids = []
+
+      for (const item of items) {
+        const isExist = await getSimilarItems(item.name, type)
+
+        if (isExist) {
+          ids.push(isExist.id)
+          continue
+        }
+        const id = createItemByType({
+          name: item.name,
+          type,
+          author_id: req.app.user.id,
+          refType: item.category,
+        })
+
+        if (item.origin)
+          await createOrUpdateItemTextAttrs(
+            id,
+            'var_origin',
+            origin,
+            req.app.user?.id
+          )
+
+        if (item.place)
+          await createOrUpdateItemTextAttrs(
+            id,
+            'var_place',
+            place,
+            req.app.user?.id
+          )
+
+        if (item.release_date)
+          await createOrUpdateItemTextAttrs(
+            id,
+            'var_release_fr',
+            release_date,
+            req.app.user?.id
+          )
+
+        // ----- TEXT -----
+        if (item.description)
+          await createOrUpdateItemLongTextAttrs(
+            id,
+            'long_description_fr',
+            item.description,
+            req.app.user
+          )
+
+        if (item.manufacturer) {
+          const companyId = await createItemByType({
+            name: item.manufacturer,
+            type: 'company',
+            author_id: req.app.user.id,
+          })
+
+          await deleteItemRelationByLeftIdAndSameType(id, item.refType)
+          await createItemRelation({
+            item_ref_id: companyId,
+            item_left_id: id,
+            relation_type: refType,
+            author_id: req.app.user.id,
+          })
+        }
+        ids.push(id)
+      }
+
       return h.response({ msg: 'ok' }).code(201)
     },
   },
@@ -544,8 +589,9 @@ module.exports = [
       }
 
       if (exportType === 'print') {
+        let zipBuffer
         try {
-          const zipBuffer = await printItems({
+          zipBuffer = await printItems({
             ids,
             format,
             type,
