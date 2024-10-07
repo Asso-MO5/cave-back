@@ -71,7 +71,7 @@ async function printItem(item, _type = 'carte') {
       ctx,
       ...coord,
       text: item.name,
-      fontSize: 20 * scaleFactor, // Ajuster la taille de la police
+      fontSize: 21 * scaleFactor, // Ajuster la taille de la police
       fontFamily: FONTS.Oswald,
       style: 'bold',
       lineHeight: 24 * scaleFactor, // Ajuster la hauteur de ligne
@@ -86,12 +86,13 @@ async function printItem(item, _type = 'carte') {
       .map((r) => r.name)
       .join(' / ')
 
+    const fontSizeSubtitle = 16 * scaleFactor
     coord = printCanvasText({
       ctx,
-      y: coord.y + size.fontSize * scaleFactor + 10 * scaleFactor,
+      y: coord.y + size.fontSize * scaleFactor + 20 * scaleFactor,
       x: margin,
       text: brand.toUpperCase(),
-      fontSize: 11 * scaleFactor,
+      fontSize: fontSizeSubtitle,
       fontFamily: FONTS.Lato,
       style: 'normal',
       lineHeight: 15 * 1.5 * scaleFactor,
@@ -102,7 +103,7 @@ async function printItem(item, _type = 'carte') {
       ctx,
       ...coord,
       text: ' – ',
-      fontSize: 11 * scaleFactor,
+      fontSize: fontSizeSubtitle,
       fontFamily: FONTS.Lato,
       style: 'normal',
       lineHeight: 15 * 1.5 * scaleFactor,
@@ -113,7 +114,7 @@ async function printItem(item, _type = 'carte') {
       ctx,
       ...coord,
       text: item.var_release_fr,
-      fontSize: 11 * scaleFactor,
+      fontSize: fontSizeSubtitle,
       fontFamily: FONTS.Lato,
       style: 'normal',
       lineHeight: 15 * 1.5 * scaleFactor,
@@ -123,7 +124,8 @@ async function printItem(item, _type = 'carte') {
     // ==== END SOUS-TITRE -
 
     // LIGNE
-    coord.y = coord.y + 15 * scaleFactor
+    coord.y = coord.y + 5 * scaleFactor
+
     ctx.beginPath()
     ctx.moveTo(margin, coord.y)
     ctx.lineTo(maxX, coord.y)
@@ -144,7 +146,7 @@ async function printItem(item, _type = 'carte') {
       x: margin,
       maxX,
       fontSize: size.fontSize * scaleFactor,
-      lineHeight: size.fontSize * 1.55 * scaleFactor,
+      lineHeight: size.fontSize * 1.6 * scaleFactor,
       fontFamily: FONTS.Lato,
       maxChars: descIsEmpy ? 150 : Infinity,
     })
@@ -177,7 +179,7 @@ async function printItem(item, _type = 'carte') {
     }
     // ----- END QR CODE -----
 
-    ctx.font = `${12 * scaleFactor}px ${FONTS.LatoItalic}`
+    ctx.font = `${size.fontSize * scaleFactor}px ${FONTS.LatoItalic}`
 
     const originField = item.var_origin || 'Collection association MO5'
     const xOriginField =

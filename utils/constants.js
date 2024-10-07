@@ -48,7 +48,7 @@ const SIZES = {
   carte: {
     width: 85,
     height: 54,
-    fontSize: 14,
+    fontSize: 13,
     qrSize: 55,
   },
   rollup: {
