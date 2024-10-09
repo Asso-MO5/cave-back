@@ -61,7 +61,7 @@ async function printItem(item, _type = 'carte') {
 
   // ------ [[ CARTE ]] -----------------------------------------------------------------------
   if (type === 'carte') {
-    const margin = 15 * scaleFactor
+    const margin = 11 * scaleFactor
     coord.x = margin
     const maxX = widthPixels - margin
 
@@ -89,7 +89,7 @@ async function printItem(item, _type = 'carte') {
     const fontSizeSubtitle = 16 * scaleFactor
     coord = printCanvasText({
       ctx,
-      y: coord.y + size.fontSize * scaleFactor + 20 * scaleFactor,
+      y: coord.y + size.fontSize * scaleFactor + 22 * scaleFactor,
       x: margin,
       text: brand.toUpperCase(),
       fontSize: fontSizeSubtitle,
@@ -124,7 +124,7 @@ async function printItem(item, _type = 'carte') {
     // ==== END SOUS-TITRE -
 
     // LIGNE
-    coord.y = coord.y + 5 * scaleFactor
+    coord.y = coord.y + 10 * scaleFactor
 
     ctx.beginPath()
     ctx.moveTo(margin, coord.y)
@@ -142,11 +142,11 @@ async function printItem(item, _type = 'carte') {
         ? item.long_description_fr
         : item.long_short_description,
       ctx,
-      y: coord.y + size.fontSize * 1.6 * scaleFactor + 20,
+      y: coord.y + size.fontSize * 1.6 * scaleFactor + 10,
       x: margin,
       maxX,
       fontSize: size.fontSize * scaleFactor,
-      lineHeight: size.fontSize * 1.6 * scaleFactor,
+      lineHeight: size.fontSize * 1.35 * scaleFactor,
       fontFamily: FONTS.Lato,
       maxChars: descIsEmpy ? 150 : Infinity,
     })
@@ -185,7 +185,7 @@ async function printItem(item, _type = 'carte') {
     const xOriginField =
       widthPixels - ctx.measureText(originField).width - margin
 
-    ctx.fillText(originField, xOriginField, heightPixels - margin / 2)
+    ctx.fillText(originField, xOriginField, heightPixels - margin)
   }
 
   if (type === 'cartel machine') {
