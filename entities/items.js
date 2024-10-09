@@ -66,26 +66,24 @@ module.exports = {
     }
   },
   async getItems({
-    type,
-    search,
+    itemType,
+    place,
+    type: rType,
+    name,
+    status,
     limit,
     offset,
     order = 'asc',
     sort = 'name',
-    status,
   }) {
     const query = knex(TABLES.items + ' as it_origin')
     try {
       // Appliquer les filtres sur le type et la recherche
 
-      if (type) query.where('it_origin.type', type)
-      if (status) query.where('it_origin.status', status)
+      if (itemType) query.where('it_origin.type', itemType)
+      if (status) query.where('it_origin.status', 'like', `%${status}%`)
 
-      if (search) query.where('it_origin.name', 'like', `%${search}%`)
-
-      // Cloner la requête pour obtenir le count
-      const countQuery = query.clone()
-      const count = await countQuery.count()
+      if (name) query.where('it_origin.name', 'like', `%${name}%`)
 
       // Appliquer la limite et l'offset
       if (limit) query.limit(limit)
@@ -127,19 +125,26 @@ module.exports = {
         )
         .distinct('it_origin.id')
 
-      // Validation du champ "sort" (par défaut sur "name")
+      const countQuery = query.clone()
+
+      if (rType) {
+        query.andWhere('it.type', 'like', `%${rType}%`)
+        countQuery.andWhere('it.type', 'like', `%${rType}%`)
+      }
+      if (place) {
+        query.andWhere('attrs_place.value', 'like', `%${place}%`)
+        countQuery.andWhere('attrs_place.value', 'like', `%${place}%`)
+      }
+
       const validSortFields = ['name', 'rType', 'status', 'place', 'origin']
       const sortField = validSortFields.includes(sort) ? sort : 'name'
-
-      // Validation de l'ordre (par défaut "asc")
       const sortOrder = order === 'desc' ? 'desc' : 'asc'
 
-      // Appliquer l'ordre de tri dynamique
       query.orderBy(sortField, sortOrder)
 
-      // Exécuter la requête pour obtenir les items
       const items = await query
 
+      const count = await countQuery.count()
       return {
         total: count[0]['count(*)'],
         items,

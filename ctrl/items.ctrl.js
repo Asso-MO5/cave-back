@@ -7,14 +7,12 @@ const {
   deleteItemRelationByLeftIdAndSameType,
 } = require('../entities/item-relations')
 const {
-  createItem,
   getItemById,
   updateItem,
   createOrUpdateItemTextAttrs,
   createOrUpdateItemLongTextAttrs,
   getItems,
   deleteItem,
-  getSimilarCartel,
   changeItemType,
   getItemsForExport,
   getSimilarItems,
@@ -162,25 +160,29 @@ module.exports = [
     },
     async handler(req, h) {
       const {
-        type,
-        search,
-        searchBy,
+        itemType,
         page,
         limit = 50,
         order,
         sort,
+        place,
+        status,
+        name,
+        type,
       } = req.query
 
       const offset = page ? (page - 1) * limit : 0
 
       const items = await getItems({
-        type,
-        search,
-        searchBy,
+        itemType,
+        place,
+        status,
         limit,
         offset,
         order,
         sort,
+        type,
+        name,
       })
       return h.response(items).code(200)
     },
