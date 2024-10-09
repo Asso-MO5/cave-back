@@ -30,6 +30,7 @@ const { createItemHistory } = require('../entities/item-history')
 const { v4: uuidv4 } = require('uuid')
 const { printItems } = require('../utils/print-items')
 const { createItemByType } = require('../utils/create-item')
+const { translateType } = require('../utils/translate-type')
 
 module.exports = [
   {
@@ -85,18 +86,19 @@ module.exports = [
           ids.push(isExist.id)
           continue
         }
+        const refType = translateType(item.category)
         const id = await createItemByType({
           name: item.name,
           type,
           author_id: req.app.user.id,
-          refType: item.category,
+          refType,
         })
 
         if (item.origin)
           await createOrUpdateItemTextAttrs(
             id,
             'var_origin',
-            origin,
+            item.origin,
             req.app.user?.id
           )
 
@@ -104,7 +106,7 @@ module.exports = [
           await createOrUpdateItemTextAttrs(
             id,
             'var_place',
-            place,
+            item.place,
             req.app.user?.id
           )
 
@@ -112,7 +114,7 @@ module.exports = [
           await createOrUpdateItemTextAttrs(
             id,
             'var_release_fr',
-            release_date,
+            item.release_date,
             req.app.user?.id
           )
 
@@ -132,11 +134,11 @@ module.exports = [
             author_id: req.app.user.id,
           })
 
-          await deleteItemRelationByLeftIdAndSameType(id, item.refType)
+          await deleteItemRelationByLeftIdAndSameType(id, refType)
           await createItemRelation({
             item_ref_id: companyId,
             item_left_id: id,
-            relation_type: refType,
+            relation_type: item.refType,
             author_id: req.app.user.id,
           })
         }
