@@ -155,9 +155,10 @@ async function printItem(item, _type = 'carte') {
 
     // ----- QR CODE -----
     if (item.medias.filter((m) => m.type === 'youtube-video').length > 0) {
+      const link = item.medias.find((m) => m.type === 'youtube-video').url
       await QRCode.toFile(
         path.join(__dirname, '../uploads/qr/', `${item.id}.png`),
-        `${FRONT_URL}fiches/${item.id}`,
+        link || `${FRONT_URL}fiches/${item.id}`,
         {
           color: {
             dark: '#000',
