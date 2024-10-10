@@ -177,7 +177,7 @@ module.exports = [
         itemType,
         place,
         status,
-        limit,
+        limit: parseInt(limit),
         offset,
         order,
         sort,
