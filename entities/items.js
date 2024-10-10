@@ -337,6 +337,7 @@ module.exports = {
 
       const relations = await knex(TABLES.item_relation)
         .where({ item_left_id: id })
+        .whereNot({ relation_type: '' })
         .join(TABLES.items, 'items.id', '=', 'item_relation.item_ref_id')
         .select('items.*', 'item_relation.relation_type')
 
@@ -349,9 +350,24 @@ module.exports = {
       ]
 
       attrs.forEach((attr) => {
-        if (attr.attr.match(/description/))
-          item[attr.attr] = JSON.parse(attr.value)
-        else item[attr.attr] = attr.value
+        if (attr.attr.match(/description/)) {
+          item[attr.attr] = attr.value.match(/^[.*]$/)
+            ? JSON.parse(attr.value)
+            : [
+                {
+                  id: uuidv4(),
+                  type: 'paragraph',
+                  content: [
+                    {
+                      type: 'text',
+                      text: attr.value,
+                      styles: {},
+                    },
+                  ],
+                  children: [],
+                },
+              ]
+        } else item[attr.attr] = attr.value
       })
 
       if (req) {
