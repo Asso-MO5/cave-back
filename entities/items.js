@@ -126,6 +126,7 @@ module.exports = {
         .distinct('it_origin.id')
 
       const countQuery = query.clone()
+      countQuery.limit(null).offset(null)
 
       if (rType) {
         query.andWhere('it.type', 'like', `%${rType}%`)
