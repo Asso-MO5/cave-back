@@ -162,7 +162,7 @@ module.exports = [
       const {
         itemType,
         page,
-        limit = 50,
+        limit = 100,
         order,
         sort,
         place,
@@ -171,7 +171,7 @@ module.exports = [
         type,
       } = req.query
 
-      const offset = page ? (page - 1) * limit : 0
+      const offset = page ? (page - 1) * parseInt(limit) : 0
 
       const items = await getItems({
         itemType,
