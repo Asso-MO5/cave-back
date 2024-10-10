@@ -351,7 +351,8 @@ module.exports = {
 
       attrs.forEach((attr) => {
         if (attr.attr.match(/description/)) {
-          item[attr.attr] = attr.value.match(/^[.*]$/)
+          const isArrayOnString = attr.value.match(/^\[.*\]$/)
+          item[attr.attr] = isArrayOnString
             ? JSON.parse(attr.value)
             : [
                 {
