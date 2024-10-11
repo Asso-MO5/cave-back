@@ -29,7 +29,7 @@ function getTextFromBlock({
       ctx.font = fontStyle
 
       // Diviser le texte en phrases
-      const sentences = text.split(/(?<=\.)\s+/) // Utiliser une expression régulière pour diviser correctement
+      const sentences = text?.split(/(?<=\.)\s+/) || [] // Utiliser une expression régulière pour diviser correctement
 
       for (const sentence of sentences) {
         // Si la phrase dépasse la limite maxChars, arrêter l'affichage
