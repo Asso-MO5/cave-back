@@ -2,6 +2,7 @@ const { knex } = require('../utils/db')
 const { v4: uuidv4 } = require('uuid')
 const { TABLES } = require('../utils/constants')
 const { getMediaUrl } = require('../utils/media-url')
+const { translateType, translateTypeFr } = require('../utils/translate-type')
 
 const ITEMS = {
   id: 'id',
@@ -80,7 +81,7 @@ module.exports = {
     try {
       // Appliquer les filtres sur le type et la recherche
 
-      if (itemType) query.where('it_origin.type', itemType)
+      if (itemType) query.where('it_origin.type', translateTypeFr(itemType))
       if (status) query.where('it_origin.status', 'like', `%${status}%`)
 
       if (name) query.where('it_origin.name', 'like', `%${name}%`)
@@ -126,11 +127,13 @@ module.exports = {
         .distinct('it_origin.id')
 
       const countQuery = query.clone()
-      countQuery.limit(null).offset(null)
+      // delete for hide value error limit and offset
+      delete countQuery._single.limit
+      delete countQuery._single.offset
 
       if (rType) {
-        query.andWhere('it.type', 'like', `%${rType}%`)
-        countQuery.andWhere('it.type', 'like', `%${rType}%`)
+        query.andWhere('it.type', 'like', `%${translateTypeFr(rType)}%`)
+        countQuery.andWhere('it.type', 'like', `%${translateTypeFr(rType)}%`)
       }
       if (place) {
         query.andWhere('attrs_place.value', 'like', `%${place}%`)

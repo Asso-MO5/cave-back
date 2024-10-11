@@ -189,7 +189,7 @@ async function printItem(item, _type = 'carte') {
     ctx.fillText(originField, xOriginField, heightPixels - margin)
   }
 
-  if (type === 'cartel machine') {
+  if (type === 'cartel') {
     const margin = 100 * scaleFactor
     coord.x = margin
     coord.y = margin + 100 * scaleFactor
@@ -383,6 +383,121 @@ async function printItem(item, _type = 'carte') {
       fontFamily: FONTS.LatoItalic,
       lineHeight,
       maxX: maxX - margin - 100 * scaleFactor,
+    })
+  }
+
+  if (type === 'a3 paysage') {
+    const margin = 80 * scaleFactor
+    coord.x = margin
+    coord.y = margin
+    const maxX = widthPixels
+
+    const machine = itemSource.relations.find((r) =>
+      r.relation_type.match(/machine/)
+    )
+
+    coord.x = margin
+    coord.y = coord.y + margin
+    coord = printCanvasText({
+      ctx,
+      ...coord,
+      text: item.name,
+      fontSize: 80 * scaleFactor,
+      fontFamily: FONTS.Oswald,
+      style: 'bold',
+      lineHeight: 80 * scaleFactor,
+      maxX,
+    })
+
+    coord.x = coord.x + 10 * scaleFactor
+    coord.y = coord.y - 15 * scaleFactor
+
+    const jpFlag = await loadImage('data/flags/jp.png')
+    const usFlag = await loadImage('data/flags/us.png')
+    const euFlag = await loadImage('data/flags/eu.png')
+    const ratio = euFlag.width / euFlag.height
+
+    const flagWidth = 60 * scaleFactor
+    const flagHeight = flagWidth / ratio
+
+    coord.x = coord.x + 100 * scaleFactor
+
+    coord.y = coord.y - 10 * scaleFactor
+
+    let text = ''
+    let currentX = widthPixels - margin
+    const fontSize = 30 * scaleFactor
+    ctx.font = `${fontSize}px ${FONTS.Oswald}`
+
+    const flagDecalage = fontSize + flagWidth
+    const yflag = coord.y - fontSize
+    const textDecalage = 40 * scaleFactor
+
+    text = (item.var_release_jap || '').trim()
+
+    // JAP
+    if (text) {
+      currentX -= ctx.measureText(text).width
+      ctx.fillText(text, currentX, coord.y)
+      currentX -= flagDecalage
+      ctx.drawImage(jpFlag, currentX, yflag, flagWidth, flagHeight)
+      currentX -= textDecalage
+    }
+
+    //US
+    text = (item.var_release_us || '').trim()
+    if (text) {
+      currentX -= ctx.measureText(text).width
+      ctx.fillText(text, currentX, coord.y)
+      currentX -= flagDecalage
+      ctx.drawImage(usFlag, currentX, yflag, flagWidth, flagHeight)
+      currentX -= textDecalage
+    }
+
+    //EU
+    text = (item.var_release_eu || '').trim()
+    if (text) {
+      currentX -= ctx.measureText(text).width
+      ctx.fillText(text, currentX, coord.y)
+      currentX -= flagDecalage
+      ctx.drawImage(euFlag, currentX, yflag, flagWidth, flagHeight)
+      currentX -= textDecalage
+    }
+
+    // ----- MANUFACTURER NAME -----
+
+    coord.x = margin
+    coord.y = coord.y + 5 * scaleFactor
+
+    const descFontSize = 75
+    const lineHeight = descFontSize * 1.5
+
+    const yDesc = coord.y + 100 * scaleFactor
+
+    coord.x = margin + descFontSize
+
+    const goutiere = 50 * scaleFactor
+
+    coord = getTextFromBlock({
+      ctx,
+      x: coord.x + descFontSize,
+      y: yDesc,
+      blocks: item.long_description_fr,
+      fontSize: descFontSize,
+      fontFamily: FONTS.Lato,
+      lineHeight,
+      maxX: maxX / 2 - goutiere,
+    })
+
+    coord = getTextFromBlock({
+      ctx,
+      x: maxX / 2 + goutiere,
+      y: yDesc,
+      blocks: item.long_description_en,
+      fontSize: descFontSize,
+      fontFamily: FONTS.LatoItalic,
+      lineHeight,
+      maxX: maxX - margin - goutiere,
     })
   }
 

@@ -15,9 +15,25 @@ function translateType(type) {
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
   const translated = translatedType.find((t) => t.type === cleanType)
-  return translated ? translated.translation : 'obj'
+
+  return translated ? translated.translation : type
+}
+
+function translateTypeFr(type) {
+  const cleanType = type
+    .toLowerCase()
+    .trim()
+    .replace(/ /g, '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+  const translated = translatedType.find((t) =>
+    t.type.toLowerCase().includes(cleanType)
+  )
+
+  return translated ? translated.translation : type
 }
 
 module.exports = {
   translateType,
+  translateTypeFr,
 }

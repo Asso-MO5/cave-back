@@ -39,20 +39,20 @@ const SIZES = {
     fontSize: 10,
     qrSize: 50,
   },
-  'cartel machine': {
+  cartel: {
     width: 800,
     height: 600,
     fontSize: 22,
     qrSize: 120,
   },
-  carte: {
-    width: 85,
-    height: 54,
+  'a3 paysage': {
+    width: 420,
+    height: 297,
     fontSize: 14,
     qrSize: 55,
   },
   rollup: {
-    width: 850,
+    width: 297,
     height: 2000,
     fontSize: 20,
     qrSize: 100,
