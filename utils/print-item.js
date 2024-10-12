@@ -9,11 +9,17 @@ const { FRONT_URL, SIZES } = require('./constants')
 const { getItemById } = require('../entities/items')
 const { getCompanyById } = require('../entities/company')
 const sharp = require('sharp')
+const { translateTypeFr } = require('./translate-type')
 // en mm
 
 GlobalFonts.registerFromPath(
   path.join(__dirname, '../data/fonts/Oswald/Oswald-VariableFont_wght.ttf'),
   'Oswald'
+)
+
+GlobalFonts.registerFromPath(
+  path.join(__dirname, '../data/fonts/Oswald/static/Oswald-Bold.ttf'),
+  'OswaldBold'
 )
 
 GlobalFonts.registerFromPath(
@@ -30,6 +36,7 @@ const FONTS = {
   Lato: 'Lato',
   LatoItalic: 'LatoItalic',
   Oswald: 'Oswald',
+  OswaldBold: 'OswaldBold',
 }
 
 async function printItem(item, _type = 'carte') {
@@ -290,54 +297,27 @@ async function printItem(item, _type = 'carte') {
     coord.x = coord.x + 10 * scaleFactor
     coord.y = coord.y - 10 * scaleFactor
 
-    const jpFlag = await loadImage('data/flags/jp.png')
-    const usFlag = await loadImage('data/flags/us.png')
-    const euFlag = await loadImage('data/flags/eu.png')
-    const ratio = euFlag.width / euFlag.height
-
-    const flagWidth = 80 * scaleFactor
-    const flagHeight = flagWidth / ratio
-
-    coord.x = coord.x + 100 * scaleFactor
-
-    coord.y = coord.y - 10 * scaleFactor
-
-    let text = ''
-    let currentX = widthPixels - margin
     ctx.font = `${60 * scaleFactor}px ${FONTS.Oswald}`
+    let currentX = widthPixels - margin
 
-    const flagDecalage = 20 * scaleFactor + flagWidth
-    const yflag = coord.y - 50 * scaleFactor
-    const textDecalage = 80 * scaleFactor
+    const dates = ['jap', 'us', 'eu']
 
-    text = (item.var_release_jap || '').trim()
+    for (lang of dates) {
+      const text = item[`var_release_${lang}`].trim()
+      const flag = await loadImage(`data/flags/${lang}.png`)
+      const ratio = flag.width / flag.height
+      const flagWidth = 80 * scaleFactor
+      const flagHeight = flagWidth / ratio
+      const flagDecalage = 20 * scaleFactor + flagWidth
+      const yflag = coord.y - 50 * scaleFactor
+      const textDecalage = 80 * scaleFactor
 
-    // JAP
-    if (text) {
+      if (!text) continue
+
       currentX -= ctx.measureText(text).width
       ctx.fillText(text, currentX, coord.y)
       currentX -= flagDecalage
-      ctx.drawImage(jpFlag, currentX, yflag, flagWidth, flagHeight)
-      currentX -= textDecalage
-    }
-
-    //US
-    text = (item.var_release_us || '').trim()
-    if (text) {
-      currentX -= ctx.measureText(text).width
-      ctx.fillText(text, currentX, coord.y)
-      currentX -= flagDecalage
-      ctx.drawImage(usFlag, currentX, yflag, flagWidth, flagHeight)
-      currentX -= textDecalage
-    }
-
-    //EU
-    text = (item.var_release_eu || '').trim()
-    if (text) {
-      currentX -= ctx.measureText(text).width
-      ctx.fillText(text, currentX, coord.y)
-      currentX -= flagDecalage
-      ctx.drawImage(euFlag, currentX, yflag, flagWidth, flagHeight)
+      ctx.drawImage(flag, currentX, yflag, flagWidth, flagHeight)
       currentX -= textDecalage
     }
 
@@ -386,120 +366,156 @@ async function printItem(item, _type = 'carte') {
     })
   }
 
+  // -------- [[ BEGING A3 PAYSAGE ]] -----------------------------------------------------------------------
   if (type === 'a3 paysage') {
-    const margin = 80 * scaleFactor
+    const margin = 30 * scaleFactor
     coord.x = margin
     coord.y = margin
     const maxX = widthPixels
 
-    const machine = itemSource.relations.find((r) =>
-      r.relation_type.match(/machine/)
-    )
-
     coord.x = margin
-    coord.y = coord.y + margin
+    coord.y = coord.y + 80 * scaleFactor
+
     coord = printCanvasText({
       ctx,
       ...coord,
       text: item.name,
-      fontSize: 80 * scaleFactor,
+      fontSize: 75 * scaleFactor,
       fontFamily: FONTS.Oswald,
       style: 'bold',
       lineHeight: 80 * scaleFactor,
       maxX,
     })
 
-    coord.x = coord.x + 10 * scaleFactor
-    coord.y = coord.y - 15 * scaleFactor
+    coord.y = coord.y - 25 * scaleFactor
 
-    const jpFlag = await loadImage('data/flags/jp.png')
-    const usFlag = await loadImage('data/flags/us.png')
-    const euFlag = await loadImage('data/flags/eu.png')
-    const ratio = euFlag.width / euFlag.height
+    // ----- BLOCKS -----
 
-    const flagWidth = 60 * scaleFactor
-    const flagHeight = flagWidth / ratio
+    coord.x = margin
 
-    coord.x = coord.x + 100 * scaleFactor
+    const descFontSize = 78
+    const lineHeight = descFontSize * 1.5
+    const goutiere = margin
 
-    coord.y = coord.y - 10 * scaleFactor
+    const sectionWidth = (maxX - goutiere * 2) / 2.5
+    const yDesc = coord.y + 90 * scaleFactor
+    coord.y = yDesc - 20 * scaleFactor
+    const xMaxBlockDetailsEnd = widthPixels / 4
+    const txtblockSize =
+      (widthPixels - (xMaxBlockDetailsEnd + goutiere * 2)) / 2
 
-    let text = ''
-    let currentX = widthPixels - margin
+    coord.x = sectionWidth
+
+    // BLOCK INFOS
+
+    // JAQUETTE - en bas à gauche
+
+    const cover = item.medias.find((m) => m.relation_type === 'cover')
+
+    if (cover) {
+      let img
+      try {
+        if (cover.url.endsWith('.svg')) {
+          const svgBuffer = fs.readFileSync(cover.url.slice(1))
+          const pngBuffer = await sharp(svgBuffer).png().toBuffer()
+
+          img = await loadImage(pngBuffer)
+        } else {
+          img = await loadImage(cover.url.slice(1))
+        }
+      } catch (e) {
+        console.error("Erreur lors du chargement de l'image", e)
+      }
+
+      if (img) {
+        const imgWidth = xMaxBlockDetailsEnd - goutiere * 2
+        const imgHeight = img.height * (imgWidth / img.width)
+
+        ctx.drawImage(img, margin, coord.y, imgWidth, imgHeight)
+        coord.y = coord.y + imgHeight + 25 * scaleFactor
+      }
+    }
+
     const fontSize = 30 * scaleFactor
     ctx.font = `${fontSize}px ${FONTS.Oswald}`
 
-    const flagDecalage = fontSize + flagWidth
-    const yflag = coord.y - fontSize
-    const textDecalage = 40 * scaleFactor
+    const dates = ['jap', 'us', 'eu']
 
-    text = (item.var_release_jap || '').trim()
+    const machine = itemSource.relations.find((it) => it.type === 'machine')
+    if (machine) {
+      coord.y += 30 * scaleFactor
+      ctx.font = `${fontSize}px ${FONTS.OswaldBold}`
 
-    // JAP
-    if (text) {
-      currentX -= ctx.measureText(text).width
-      ctx.fillText(text, currentX, coord.y)
-      currentX -= flagDecalage
-      ctx.drawImage(jpFlag, currentX, yflag, flagWidth, flagHeight)
-      currentX -= textDecalage
+      const textSize = ctx.measureText(machine.name).width
+
+      ctx.fillText(machine.name, (xMaxBlockDetailsEnd - textSize) / 2, coord.y)
+      coord.y += fontSize
+      ctx.font = `${fontSize}px ${FONTS.Oswald}`
     }
 
-    //US
-    text = (item.var_release_us || '').trim()
-    if (text) {
-      currentX -= ctx.measureText(text).width
-      ctx.fillText(text, currentX, coord.y)
-      currentX -= flagDecalage
-      ctx.drawImage(usFlag, currentX, yflag, flagWidth, flagHeight)
-      currentX -= textDecalage
+    for (const lang of dates) {
+      const text = (item[`var_release_${lang}`] || '').trim()
+      if (!text) continue
+      const flag = await loadImage(`data/flags/${lang}.png`)
+      const ratio = flag.width / flag.height
+      const flagWidth = 50 * scaleFactor
+      const flagHeight = flagWidth / ratio
+      const textDecalage = margin + flagWidth + 20 * scaleFactor
+      ctx.drawImage(flag, margin, coord.y, flagWidth, flagHeight)
+      ctx.fillText(text, textDecalage, coord.y + flagHeight / 2 + fontSize / 2)
+
+      coord.y += flagHeight + fontSize * 1.1
     }
 
-    //EU
-    text = (item.var_release_eu || '').trim()
-    if (text) {
-      currentX -= ctx.measureText(text).width
-      ctx.fillText(text, currentX, coord.y)
-      currentX -= flagDecalage
-      ctx.drawImage(euFlag, currentX, yflag, flagWidth, flagHeight)
-      currentX -= textDecalage
+    const fields = ['publisher', 'developer']
+
+    coord.y += 5 * scaleFactor
+
+    for (const field of fields) {
+      const company = itemSource.relations.find(
+        (r) => r.relation_type === field
+      )
+      if (!company) continue
+
+      coord.y += 30 * scaleFactor
+      ctx.font = `${fontSize}px ${FONTS.OswaldBold}`
+
+      ctx.fillText(translateTypeFr(field), margin, coord.y)
+      coord.y += fontSize * 1.3
+
+      ctx.font = `${fontSize}px ${FONTS.Oswald}`
+
+      ctx.fillText(company.name, margin, coord.y)
+      coord.y += fontSize
     }
 
-    // ----- MANUFACTURER NAME -----
-
-    coord.x = margin
-    coord.y = coord.y + 5 * scaleFactor
-
-    const descFontSize = 75
-    const lineHeight = descFontSize * 1.5
-
-    const yDesc = coord.y + 100 * scaleFactor
-
-    coord.x = margin + descFontSize
-
-    const goutiere = 50 * scaleFactor
-
+    // ===================== BLOCK FR
     coord = getTextFromBlock({
       ctx,
-      x: coord.x + descFontSize,
+      x: xMaxBlockDetailsEnd,
       y: yDesc,
       blocks: item.long_description_fr,
       fontSize: descFontSize,
       fontFamily: FONTS.Lato,
       lineHeight,
-      maxX: maxX / 2 - goutiere,
+      maxX: xMaxBlockDetailsEnd + txtblockSize,
     })
+
+    // ===================== ENG
 
     coord = getTextFromBlock({
       ctx,
-      x: maxX / 2 + goutiere,
+      x: xMaxBlockDetailsEnd + goutiere + txtblockSize,
       y: yDesc,
       blocks: item.long_description_en,
       fontSize: descFontSize,
       fontFamily: FONTS.LatoItalic,
       lineHeight,
-      maxX: maxX - margin - goutiere,
+      maxX: maxX - margin,
     })
   }
+
+  // -------- [[ END CARTE ]] -----------------------------------------------------------------------
 
   const bufferPage = Buffer.from(
     canvas.toDataURL().replace('data:image/png;base64,', ''),

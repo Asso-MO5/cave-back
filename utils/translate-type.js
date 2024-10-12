@@ -5,6 +5,8 @@ const translatedType = [
   { type: 'Exposition', translation: 'expo' },
   { type: 'Logiciel', translation: 'soft' },
   { type: 'Accessoire', translation: 'accessory' },
+  { type: 'publisher', translation: 'Éditeur' },
+  { type: 'developer', translation: 'Développeur' },
 ]
 
 function translateType(type) {
