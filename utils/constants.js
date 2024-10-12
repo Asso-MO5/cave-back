@@ -45,6 +45,12 @@ const SIZES = {
     fontSize: 22,
     qrSize: 120,
   },
+  carte: {
+    width: 85,
+    height: 54,
+    fontSize: 14,
+    qrSize: 55,
+  },
   'a3 paysage': {
     width: 420,
     height: 297,
