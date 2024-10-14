@@ -57,6 +57,12 @@ const SIZES = {
     fontSize: 14,
     qrSize: 55,
   },
+  'a3 qr': {
+    width: 420,
+    height: 297,
+    fontSize: 14,
+    qrSize: 400,
+  },
   rollup: {
     width: 297,
     height: 2000,

@@ -303,7 +303,8 @@ async function printItem(item, _type = 'carte') {
     const dates = ['jap', 'us', 'eu']
 
     for (lang of dates) {
-      const text = item[`var_release_${lang}`].trim()
+      const text = item[`var_release_${lang}`]?.trim()
+      if (!text) continue
       const flag = await loadImage(`data/flags/${lang}.png`)
       const ratio = flag.width / flag.height
       const flagWidth = 80 * scaleFactor
@@ -311,8 +312,6 @@ async function printItem(item, _type = 'carte') {
       const flagDecalage = 20 * scaleFactor + flagWidth
       const yflag = coord.y - 50 * scaleFactor
       const textDecalage = 80 * scaleFactor
-
-      if (!text) continue
 
       currentX -= ctx.measureText(text).width
       ctx.fillText(text, currentX, coord.y)
@@ -365,6 +364,7 @@ async function printItem(item, _type = 'carte') {
       maxX: maxX - margin - 100 * scaleFactor,
     })
   }
+  // -------- [[ END CARTE ]] -----------------------------------------------------------------------
 
   // -------- [[ BEGING A3 PAYSAGE ]] -----------------------------------------------------------------------
   if (type === 'a3 paysage') {
@@ -374,22 +374,20 @@ async function printItem(item, _type = 'carte') {
     const maxX = widthPixels
 
     coord.x = margin
-    coord.y = coord.y + 80 * scaleFactor
+    coord.y = coord.y + 50 * scaleFactor
 
     coord = printCanvasText({
       ctx,
       ...coord,
       text: item.name,
-      fontSize: 75 * scaleFactor,
+      fontSize: 55 * scaleFactor,
       fontFamily: FONTS.Oswald,
       style: 'bold',
-      lineHeight: 80 * scaleFactor,
+      lineHeight: 50 * scaleFactor,
       maxX,
     })
 
-    coord.y = coord.y - 25 * scaleFactor
-
-    // ----- BLOCKS -----
+    // ----- CONST -----
 
     coord.x = margin
 
@@ -398,22 +396,22 @@ async function printItem(item, _type = 'carte') {
     const goutiere = margin
 
     const sectionWidth = (maxX - goutiere * 2) / 2.5
-    const yDesc = coord.y + 90 * scaleFactor
-    coord.y = yDesc - 20 * scaleFactor
+    const yDesc = coord.y + 60 * scaleFactor
+    coord.y = yDesc - 10 * scaleFactor
     const xMaxBlockDetailsEnd = widthPixels / 4
     const txtblockSize =
       (widthPixels - (xMaxBlockDetailsEnd + goutiere * 2)) / 2
 
     coord.x = sectionWidth
 
-    // BLOCK INFOS
-
-    // JAQUETTE - en bas à gauche
-
+    let img
+    let orientation = 'portrait'
+    const fields = ['publisher', 'developer']
+    const dates = ['jap', 'us', 'eu']
     const cover = item.medias.find((m) => m.relation_type === 'cover')
+    const machine = itemSource.relations.find((it) => it.type === 'machine')
 
     if (cover) {
-      let img
       try {
         if (cover.url.endsWith('.svg')) {
           const svgBuffer = fs.readFileSync(cover.url.slice(1))
@@ -428,48 +426,326 @@ async function printItem(item, _type = 'carte') {
       }
 
       if (img) {
+        const isPortrait = img.height > img.width
+        orientation = isPortrait ? 'portrait' : 'landscape'
+      }
+    }
+
+    if (orientation === 'portrait') {
+      if (img) {
         const imgWidth = xMaxBlockDetailsEnd - goutiere * 2
         const imgHeight = img.height * (imgWidth / img.width)
 
         ctx.drawImage(img, margin, coord.y, imgWidth, imgHeight)
         coord.y = coord.y + imgHeight + 25 * scaleFactor
       }
+
+      const fontSize = 30 * scaleFactor
+      ctx.font = `${fontSize}px ${FONTS.Oswald}`
+
+      if (machine) {
+        coord.y += 10 * scaleFactor
+        ctx.font = `${fontSize}px ${FONTS.OswaldBold}`
+
+        const textSize = ctx.measureText(machine.name).width
+
+        ctx.fillText(
+          machine.name,
+          (xMaxBlockDetailsEnd - textSize) / 2,
+          coord.y
+        )
+        coord.y += fontSize
+        ctx.font = `${fontSize}px ${FONTS.Oswald}`
+      }
+
+      for (const lang of dates) {
+        const text = (item[`var_release_${lang}`] || '').trim()
+        if (!text) continue
+        const flag = await loadImage(`data/flags/${lang}.png`)
+        const ratio = flag.width / flag.height
+        const flagWidth = 50 * scaleFactor
+        const flagHeight = flagWidth / ratio
+        const textDecalage = margin + flagWidth + 20 * scaleFactor
+        ctx.drawImage(flag, margin, coord.y, flagWidth, flagHeight)
+        ctx.fillText(
+          text,
+          textDecalage,
+          coord.y + flagHeight / 2 + fontSize / 2
+        )
+        coord.y += flagHeight + fontSize * 0.85
+      }
+
+      coord.y += 5 * scaleFactor
+
+      for (const field of fields) {
+        const company = itemSource.relations.find(
+          (r) => r.relation_type === field
+        )
+        if (!company) continue
+
+        coord.y += 30 * scaleFactor
+        ctx.font = `${fontSize}px ${FONTS.OswaldBold}`
+
+        ctx.fillText(translateTypeFr(field), margin, coord.y)
+        coord.y += fontSize * 1.3
+
+        ctx.font = `${fontSize}px ${FONTS.Oswald}`
+
+        ctx.fillText(company.name, margin, coord.y)
+        coord.y += fontSize
+      }
+
+      // ===================== BLOCK FR
+      coord = getTextFromBlock({
+        ctx,
+        x: xMaxBlockDetailsEnd,
+        y: yDesc,
+        blocks: item.long_description_fr,
+        fontSize: descFontSize,
+        fontFamily: FONTS.Lato,
+        lineHeight,
+        maxX: xMaxBlockDetailsEnd + txtblockSize,
+      })
+
+      // ===================== ENG
+
+      coord = getTextFromBlock({
+        ctx,
+        x: xMaxBlockDetailsEnd + goutiere + txtblockSize,
+        y: yDesc,
+        blocks: item.long_description_en,
+        fontSize: descFontSize,
+        fontFamily: FONTS.LatoItalic,
+        lineHeight,
+        maxX: maxX - margin,
+      })
     }
 
-    const fontSize = 30 * scaleFactor
+    // ==== LANDSCAPE ====
+    else if (orientation === 'landscape') {
+      const sizeFirstBlock = heightPixels / 2.5
+
+      let firstBlockY = coord.y - 20 * scaleFactor
+      let firstBlockX = margin
+      if (img) {
+        const imgHeight = sizeFirstBlock - goutiere - coord.y
+        const imgWidth = img.width * (imgHeight / img.height)
+        ctx.drawImage(img, margin, firstBlockY, imgWidth, imgHeight)
+        firstBlockY += imgHeight + goutiere
+        firstBlockX += imgWidth
+      }
+
+      const fontSize = 30 * scaleFactor
+      ctx.font = `${fontSize}px ${FONTS.Oswald}`
+      const flagBlockX = firstBlockX + goutiere
+      let fieldBlockX = flagBlockX + goutiere
+
+      if (machine) {
+        coord.y += 10 * scaleFactor
+        ctx.font = `${fontSize}px ${FONTS.OswaldBold}`
+
+        ctx.fillText(machine.name, flagBlockX, coord.y)
+        coord.y += fontSize * 2
+        ctx.font = `${fontSize}px ${FONTS.Oswald}`
+      }
+
+      let flagY = coord.y - 20 * scaleFactor
+
+      for (const lang of dates) {
+        const text = (item[`var_release_${lang}`] || '').trim()
+        if (!text) continue
+        const flag = await loadImage(`data/flags/${lang}.png`)
+
+        const ratio = flag.width / flag.height
+        const flagWidth = 50 * scaleFactor
+        const flagHeight = flagWidth / ratio
+        const textDecalage = flagBlockX + flagWidth + 20 * scaleFactor
+
+        ctx.drawImage(flag, flagBlockX, flagY, flagWidth, flagHeight)
+        ctx.fillText(text, textDecalage, flagY + flagHeight / 2 + fontSize / 2)
+        flagY += flagHeight + fontSize * 0.85
+        fieldBlockX =
+          textDecalage + ctx.measureText(machine.name).width + goutiere * 2
+      }
+
+      for (const field of fields) {
+        const company = itemSource.relations.find(
+          (r) => r.relation_type === field
+        )
+        if (!company) continue
+
+        ctx.font = `${fontSize}px ${FONTS.OswaldBold}`
+
+        ctx.fillText(translateTypeFr(field), fieldBlockX, coord.y)
+        coord.y += fontSize * 1.3
+
+        ctx.font = `${fontSize}px ${FONTS.Oswald}`
+
+        ctx.fillText(company.name, fieldBlockX, coord.y)
+        coord.y += fontSize * 2
+      }
+
+      // ==== END FIRST BLOCK
+
+      // ===================== BLOCK FR
+      coord = getTextFromBlock({
+        ctx,
+        x: margin,
+        y: sizeFirstBlock,
+        blocks: item.long_description_fr,
+        fontSize: descFontSize + 10,
+        fontFamily: FONTS.Lato,
+        lineHeight: descFontSize * 1.3,
+        maxX: maxX / 2 - goutiere,
+      })
+
+      // ===================== ENG
+
+      coord = getTextFromBlock({
+        ctx,
+        x: maxX / 2 + goutiere,
+        y: sizeFirstBlock,
+        blocks: item.long_description_en,
+        fontSize: descFontSize + 10,
+        fontFamily: FONTS.LatoItalic,
+        lineHeight: descFontSize * 1.3,
+        maxX: maxX - margin,
+      })
+    }
+  }
+
+  // -------- [[ BEGING A3 QR ]] -----------------------------------------------------------------------
+  if (type === 'a3 qr') {
+    const margin = 60 * scaleFactor
+    coord.x = margin
+    coord.y = margin
+    const maxX = widthPixels
+
+    coord.x = margin
+    coord.y = coord.y + 50 * scaleFactor
+
+    coord = printCanvasText({
+      ctx,
+      ...coord,
+      text: item.name,
+      fontSize: 70 * scaleFactor,
+      fontFamily: FONTS.Oswald,
+      style: 'bold',
+      lineHeight: 50 * scaleFactor,
+      maxX,
+    })
+
+    // ----- CONST -----
+
+    coord.x = margin
+
+    const goutiere = margin
+
+    const yDesc = coord.y + 60 * scaleFactor
+    coord.y = yDesc - 10 * scaleFactor
+    coord.x = (maxX - goutiere * 2) / 2.5
+
+    let img
+
+    const fields = ['publisher', 'developer']
+    const dates = ['jap', 'us', 'eu']
+    const cover = item.medias.find((m) => m.relation_type === 'cover')
+    const machine = itemSource.relations.find((it) => it.type === 'machine')
+
+    await QRCode.toFile(
+      path.join(__dirname, '../uploads/qr/', `${item.id}.png`),
+      `${FRONT_URL}fiches/${item.id}`,
+      {
+        color: {
+          dark: '#000',
+          light: '#0000',
+        },
+        width: widthPixels,
+        type: 'svg',
+      }
+    )
+    const qr = await loadImage(`uploads/qr/${item.id}.png`)
+
+    ctx.drawImage(
+      qr,
+      maxX - size.qrSize * scaleFactor - margin / 2,
+      heightPixels - size.qrSize * scaleFactor - margin / 2,
+      size.qrSize * scaleFactor,
+      size.qrSize * scaleFactor
+    )
+
+    if (cover) {
+      try {
+        if (cover.url.endsWith('.svg')) {
+          const svgBuffer = fs.readFileSync(cover.url.slice(1))
+          const pngBuffer = await sharp(svgBuffer).png().toBuffer()
+
+          img = await loadImage(pngBuffer)
+        } else {
+          img = await loadImage(cover.url.slice(1))
+        }
+      } catch (e) {
+        console.error("Erreur lors du chargement de l'image", e)
+      }
+    }
+
+    if (img) {
+      let imgWidth = (widthPixels - goutiere - margin) / 2
+      let imgHeight = img.height * (imgWidth / img.width)
+
+      if (imgHeight > heightPixels - coord.y - 150 * scaleFactor - margin) {
+        imgHeight = heightPixels - coord.y - 150 * scaleFactor
+        imgWidth = img.width * (imgHeight / img.height)
+      }
+
+      const imgY = (heightPixels - imgHeight) / 2
+      ctx.drawImage(img, margin, imgY, imgWidth, imgHeight)
+    }
+
+    coord.y += 50 * scaleFactor
+    let fontSize = 50 * scaleFactor
     ctx.font = `${fontSize}px ${FONTS.Oswald}`
 
-    const dates = ['jap', 'us', 'eu']
-
-    const machine = itemSource.relations.find((it) => it.type === 'machine')
     if (machine) {
-      coord.y += 30 * scaleFactor
+      ctx.fillStyle = '#4088cf'
       ctx.font = `${fontSize}px ${FONTS.OswaldBold}`
 
       const textSize = ctx.measureText(machine.name).width
 
-      ctx.fillText(machine.name, (xMaxBlockDetailsEnd - textSize) / 2, coord.y)
+      ctx.fillText(machine.name, widthPixels - textSize - margin, coord.y)
       coord.y += fontSize
       ctx.font = `${fontSize}px ${FONTS.Oswald}`
+      ctx.fillStyle = 'black'
     }
 
-    for (const lang of dates) {
-      const text = (item[`var_release_${lang}`] || '').trim()
+    fontSize = 40 * scaleFactor
+    ctx.font = `${fontSize}px ${FONTS.Oswald}`
+    let currentX = widthPixels - margin
+
+    coord.y += 40 * scaleFactor
+    for (lang of dates) {
+      const text = item[`var_release_${lang}`]?.trim()
       if (!text) continue
       const flag = await loadImage(`data/flags/${lang}.png`)
       const ratio = flag.width / flag.height
-      const flagWidth = 50 * scaleFactor
+      const flagWidth = 80 * scaleFactor
       const flagHeight = flagWidth / ratio
-      const textDecalage = margin + flagWidth + 20 * scaleFactor
-      ctx.drawImage(flag, margin, coord.y, flagWidth, flagHeight)
-      ctx.fillText(text, textDecalage, coord.y + flagHeight / 2 + fontSize / 2)
+      const yflag = coord.y - 45 * scaleFactor
 
-      coord.y += flagHeight + fontSize * 1.1
+      currentX -= ctx.measureText(text).width
+      ctx.drawImage(
+        flag,
+        widthPixels - flagWidth - margin,
+        yflag,
+        flagWidth,
+        flagHeight
+      )
+      ctx.fillText(text, currentX - flagWidth - 20 * scaleFactor, coord.y)
+      currentX = widthPixels - margin
+      coord.y += flagHeight + fontSize * 0.85
     }
 
-    const fields = ['publisher', 'developer']
-
-    coord.y += 5 * scaleFactor
+    coord.y -= 30 * scaleFactor
 
     for (const field of fields) {
       const company = itemSource.relations.find(
@@ -480,42 +756,23 @@ async function printItem(item, _type = 'carte') {
       coord.y += 30 * scaleFactor
       ctx.font = `${fontSize}px ${FONTS.OswaldBold}`
 
-      ctx.fillText(translateTypeFr(field), margin, coord.y)
+      const label = translateTypeFr(field)
+      ctx.fillText(
+        label,
+        widthPixels - ctx.measureText(label).width - margin,
+        coord.y
+      )
       coord.y += fontSize * 1.3
-
       ctx.font = `${fontSize}px ${FONTS.Oswald}`
 
-      ctx.fillText(company.name, margin, coord.y)
+      ctx.fillText(
+        company.name,
+        widthPixels - ctx.measureText(company.name).width - margin,
+        coord.y
+      )
       coord.y += fontSize
     }
-
-    // ===================== BLOCK FR
-    coord = getTextFromBlock({
-      ctx,
-      x: xMaxBlockDetailsEnd,
-      y: yDesc,
-      blocks: item.long_description_fr,
-      fontSize: descFontSize,
-      fontFamily: FONTS.Lato,
-      lineHeight,
-      maxX: xMaxBlockDetailsEnd + txtblockSize,
-    })
-
-    // ===================== ENG
-
-    coord = getTextFromBlock({
-      ctx,
-      x: xMaxBlockDetailsEnd + goutiere + txtblockSize,
-      y: yDesc,
-      blocks: item.long_description_en,
-      fontSize: descFontSize,
-      fontFamily: FONTS.LatoItalic,
-      lineHeight,
-      maxX: maxX - margin,
-    })
   }
-
-  // -------- [[ END CARTE ]] -----------------------------------------------------------------------
 
   const bufferPage = Buffer.from(
     canvas.toDataURL().replace('data:image/png;base64,', ''),
