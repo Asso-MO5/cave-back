@@ -433,10 +433,22 @@ async function printItem(item, _type = 'carte') {
 
     if (orientation === 'portrait') {
       if (img) {
-        const imgWidth = xMaxBlockDetailsEnd - goutiere * 2
-        const imgHeight = img.height * (imgWidth / img.width)
+        let imgWidth = xMaxBlockDetailsEnd - goutiere * 2
+        let imgHeight = img.height * (imgWidth / img.width)
 
-        ctx.drawImage(img, margin, coord.y, imgWidth, imgHeight)
+        console.log(imgHeight)
+        if (imgHeight > 1600) {
+          imgHeight = 1600
+          imgWidth = img.width * (imgHeight / img.height)
+        }
+
+        ctx.drawImage(
+          img,
+          (xMaxBlockDetailsEnd - goutiere * 2 - imgWidth) / 2,
+          coord.y,
+          imgWidth,
+          imgHeight
+        )
         coord.y = coord.y + imgHeight + 25 * scaleFactor
       }
 
