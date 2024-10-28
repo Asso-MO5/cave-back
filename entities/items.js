@@ -81,7 +81,7 @@ module.exports = {
     try {
       // Appliquer les filtres sur le type et la recherche
 
-      if (itemType) query.where('it_origin.type', translateTypeFr(itemType))
+      if (itemType) query.where('it_origin.type', itemType)
       if (status) query.where('it_origin.status', 'like', `%${status}%`)
 
       if (name) query.where('it_origin.name', 'like', `%${name}%`)
@@ -135,6 +135,7 @@ module.exports = {
         query.andWhere('it.type', 'like', `%${translateTypeFr(rType)}%`)
         countQuery.andWhere('it.type', 'like', `%${translateTypeFr(rType)}%`)
       }
+
       if (place) {
         query.andWhere('attrs_place.value', 'like', `%${place}%`)
         countQuery.andWhere('attrs_place.value', 'like', `%${place}%`)
