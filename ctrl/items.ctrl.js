@@ -591,7 +591,7 @@ module.exports = [
         return h.response(csv).code(200).header('Content-Type', 'text/csv')
       }
 
-      if (exportType === 'print') {
+      if (exportType.match(/print|place/)) {
         let zipBuffer
         try {
           zipBuffer = await printItems({

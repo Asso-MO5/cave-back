@@ -9,8 +9,10 @@ async function printItems({ ids: _ids, format, selectedTotal }) {
   const zip = new AdmZip()
   let ids = _ids
 
+  console.log('printItems', { format })
+
   if (selectedTotal) {
-    const items = await getItemsForExport({ ids })
+    const items = await getItemsForExport({})
     ids = items.map((item) => item.id)
   }
 
