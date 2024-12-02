@@ -199,17 +199,26 @@ module.exports = [
       },
     },
     async handler(req, h) {
-      const { search, searchBy, page, limit = 50, order, sort } = req.query
+      const {
+        search,
+        searchBy,
+        page,
+        limit = 50,
+        order,
+        sort,
+        place,
+      } = req.query
 
       const offset = page ? (page - 1) * limit : 0
 
       const items = await getItems({
-        type: 'cartel',
+        // type: 'cartel',
         search,
         searchBy,
         limit,
         offset,
         order,
+        place,
         sort,
         status: 'published',
       })
@@ -248,6 +257,15 @@ module.exports = [
       const { id } = req.params
 
       if (!id) return h.response({ error: 'Un id est requis' }).code(400)
+
+      if (id.includes('place_')) {
+        const items = await getItems({
+          place: id.replace('place_', ''),
+          limit: 200,
+        })
+        return h.response(items).code(200)
+      }
+
       const item = await getItemById(id)
       if (!item) return h.response({ error: 'Non trouvé' }).code(404)
 

@@ -41,6 +41,10 @@ const FONTS = {
 
 async function printItem(item, _type = 'carte') {
   const type = _type.toLowerCase()
+
+  const existQrDir = fs.existsSync(path.join(__dirname, '../uploads/qr'))
+  if (!existQrDir) fs.mkdirSync(path.join(__dirname, '../uploads/qr'))
+
   if (!SIZES?.[type]?.width || item?.relations?.length === 0)
     throw new Error('Type de print inconnu')
 
@@ -194,6 +198,51 @@ async function printItem(item, _type = 'carte') {
       widthPixels - ctx.measureText(originField).width - margin
 
     ctx.fillText(originField, xOriginField, heightPixels - margin)
+  }
+
+  // ------ [[ EMPLACEMENTS ]] -----------------------------------------------------------------------
+  if (type === 'emplacements') {
+    const margin = 11 * scaleFactor
+    coord.x = margin
+
+    // ----- QR CODE -----
+
+    const slug = getSlug(item.var_place.replace('QR_', ''))
+
+    await QRCode.toFile(
+      path.join(__dirname, '../uploads/qr/', `${slug}.png`),
+      `${FRONT_URL}place/${slug}`,
+      {
+        color: {
+          dark: '#000',
+          light: '#0000',
+        },
+        width: widthPixels - 10,
+        type: 'svg',
+      }
+    )
+
+    const heigtText = 18 * scaleFactor
+    ctx.font = `${heigtText}px ${FONTS.OswaldBold}`
+
+    const qr = await loadImage(`uploads/qr/${slug}.png`)
+
+    const qrText = `cave.mo5.com/places/${slug}`
+    const textSize = ctx.measureText(qrText).width
+
+    ctx.fillText(
+      qrText,
+      (widthPixels - textSize) / 2,
+      heightPixels - margin - heigtText / 2
+    )
+
+    ctx.drawImage(
+      qr,
+      (widthPixels - size.qrSize * scaleFactor) / 2,
+      (heightPixels - size.qrSize * scaleFactor) / 2 - heigtText / 2,
+      size.qrSize * scaleFactor,
+      size.qrSize * scaleFactor
+    )
   }
 
   if (type === 'cartel') {

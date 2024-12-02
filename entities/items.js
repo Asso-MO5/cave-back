@@ -245,12 +245,14 @@ module.exports = {
       return null
     }
   },
-  async getItemsForExport({ type, ids }) {
+  async getItemsForExport({ type, ids, place }) {
     const query = knex(TABLES.items + ' as it_origin')
     try {
       // Appliquer les filtres sur le type et la recherche
       if (type) query.where('it_origin.type', type)
       if (ids) query.whereIn('it_origin.id', ids)
+
+      if (place) query.where('attrs_place.value', place)
 
       // Ajouter les jointures pour les attributs "place" et "origin"
       query
@@ -304,6 +306,16 @@ module.exports = {
         .whereNot(ITEMS.id, id)
         .select('id', 'name')
         .first()
+    } catch (e) {
+      console.error(e)
+      return null
+    }
+  },
+  async getItemsIdByPlace() {
+    try {
+      return knex(TABLES.item_text_attrs)
+        .where('key', 'place')
+        .select('item_id', 'value')
     } catch (e) {
       console.error(e)
       return null

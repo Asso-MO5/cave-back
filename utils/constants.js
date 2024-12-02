@@ -69,6 +69,12 @@ const SIZES = {
     fontSize: 20,
     qrSize: 100,
   },
+  emplacements: {
+    width: 85,
+    height: 54,
+    fontSize: 14,
+    qrSize: 180,
+  },
 }
 
 module.exports = {
