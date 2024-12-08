@@ -14,6 +14,9 @@ const TABLES = {
   item_text_attrs: 'item_text_attrs',
   item_number_attrs: 'item_number_attrs',
   item_long_text_attrs: 'item_long_text_attrs',
+
+  // === features ===
+  loot: 'loot',
 }
 
 const ROLES = {
