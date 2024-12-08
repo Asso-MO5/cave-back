@@ -41,4 +41,25 @@ module.exports = [
       }
     },
   },
+  {
+    method: 'POST',
+    path: '/auth/restricted',
+    options: {
+      description: "Permet de vérifier si l'utilisateur est authentifié",
+      tags: ['api', 'auth'],
+    },
+    async handler(req, h) {
+      const lootIdArray = process.env.LOOT_ADMIN_ID?.split(',')
+
+      const { code } = JSON.parse(req.payload || '{}')
+
+      if (!code || code === 'null')
+        return h.response({ msg: 'auth fail' }).type('json').code(401)
+
+      if (lootIdArray.includes(code))
+        return h.response({ msg: 'exist' }).type('json').code(200)
+
+      return h.response({ msg: 'auth fail' }).type('json').code(401)
+    },
+  },
 ]

@@ -58,6 +58,36 @@ const init = async () => {
 
     if (authorizedRoles.length === 0) return h.continue
 
+    // === RESTRICTED ROUTES ===
+    if (authorizedRoles.includes('loot')) {
+      const lootId = process.env.LOOT_ADMIN_ID?.split(',')
+
+      const id = req.headers.authorization.split(' ')[1]
+
+      if (id === 'null' || !id)
+        return h
+          .response({ message: "Vous n'avez pas les droits" })
+          .code(403)
+          .takeover()
+
+      if (!lootId.includes(id)) {
+        const user = await getAuthor(req, h, ['loot'])
+        if (user) {
+          req.app.user = user
+          return h.continue
+        }
+
+        return h
+          .response({ message: "Vous n'avez pas les droits" })
+          .code(403)
+          .takeover()
+      } else {
+        console.log('lootId', lootId, id)
+        req.app.user = { roles: ['loot'], id }
+        return h.continue
+      }
+    }
+
     const user = await getAuthor(req, h, authorizedRoles)
 
     const { roles } = user

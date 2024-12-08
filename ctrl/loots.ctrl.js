@@ -46,6 +46,35 @@ module.exports = [
   },
   {
     method: 'GET',
+    path: '/loots_public',
+
+    options: {
+      description: 'Récupère la liste des loots',
+      tags: ['api', 'loots'],
+      notes: ['loot'],
+      validate: {
+        headers,
+      },
+    },
+    async handler(req, h) {
+      console.log('req.query', req.app.user.id)
+      const { search, searchBy, page, limit = 50, order, sort } = req.query
+
+      const offset = page ? (page - 1) * limit : 0
+
+      const items = await getLoots({
+        search,
+        searchBy,
+        limit,
+        offset,
+        order,
+        sort,
+      })
+      return h.response(items).code(200)
+    },
+  },
+  {
+    method: 'GET',
     path: '/loots',
 
     options: {

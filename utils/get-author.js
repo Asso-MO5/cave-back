@@ -10,7 +10,11 @@ async function getAuthor(req, h, roles) {
     if (payload.iss !== 'cave_back' || payload.aud !== 'cave_front')
       return h.response({ msg: 'auth fail' }).type('json').code(401)
 
-    if (roles && !roles.filter((role) => payload.roles.includes(role)).length) {
+    if (
+      roles &&
+      !roles.filter((role) => payload.roles.includes(role)).length &&
+      roles['0'] !== 'loot'
+    ) {
       return h.response({ msg: 'auth fail' }).type('json').code(401)
     }
     return payload
