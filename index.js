@@ -82,7 +82,6 @@ const init = async () => {
           .code(403)
           .takeover()
       } else {
-        console.log('lootId', lootId, id)
         req.app.user = { roles: ['loot'], id }
         return h.continue
       }

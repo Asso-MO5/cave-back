@@ -57,7 +57,6 @@ module.exports = [
       },
     },
     async handler(req, h) {
-      console.log('req.query', req.app.user.id)
       const { search, searchBy, page, limit = 50, order, sort } = req.query
 
       const offset = page ? (page - 1) * limit : 0
@@ -126,39 +125,11 @@ module.exports = [
   },
   {
     method: 'PUT',
-    path: '/loots/win_public/{id}',
-    options: {
-      description: 'Permet de valider un loot',
-      tags: ['api', 'loots'],
-    },
-    async handler(req, h) {
-      const { id, withdrawalId } = req.params
-
-      const lootAdminsStr = process.env.LOOT_ADMINS || '' // '1,2,3'
-      const lootAdmins = lootAdminsStr.split(',').map(Number)
-      if (!lootAdmins.includes(withdrawalId))
-        return h.response({ error: "Vous n'avez pas les droits" }).code(403)
-
-      const item = await getLoots({ id })
-
-      if (!item) return h.response({ error: 'Loot non trouvé' }).code(404)
-
-      await winnedLoot({
-        id,
-        winned_at: new Date(),
-        withdrawalId: withdrawalId,
-      })
-
-      return h.response().code(204)
-    },
-  },
-  {
-    method: 'PUT',
     path: '/loots/win/{id}',
     options: {
       description: 'Permet de valider un loot',
       tags: ['api', 'loots'],
-      notes: [ROLES.publisher, ROLES.admin],
+      notes: ['loot'],
       validate: {
         headers,
       },
