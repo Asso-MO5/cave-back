@@ -207,7 +207,7 @@ async function printItem(item, _type = 'carte') {
 
     // ----- QR CODE -----
 
-    const slug = getSlug(item.var_place.replace('QR_', ''))
+    const slug = getSlug(item.var_place?.replace('QR_', ''))
 
     await QRCode.toFile(
       path.join(__dirname, '../uploads/qr/', `${slug}.png`),

@@ -80,15 +80,9 @@ module.exports = {
     const query = knex(TABLES.items + ' as it_origin')
     try {
       // Appliquer les filtres sur le type et la recherche
-
       if (itemType) query.where('it_origin.type', itemType)
       if (status) query.where('it_origin.status', 'like', `%${status}%`)
-
       if (name) query.where('it_origin.name', 'like', `%${name}%`)
-
-      // Appliquer la limite et l'offset
-      if (limit) query.limit(limit)
-      if (offset) query.offset(offset)
 
       // Ajouter les jointures pour les attributs "place" et "origin"
       query
@@ -97,59 +91,93 @@ module.exports = {
             'attrs_place.key',
             '=',
             knex.raw('?', 'var_place')
-          ) // Récupérer "place"
+          )
         })
         .leftJoin(`${TABLES.item_text_attrs} as attrs_origin`, function () {
           this.on('attrs_origin.item_id', '=', `it_origin.id`).andOn(
             'attrs_origin.key',
             '=',
             knex.raw('?', 'var_origin')
-          ) // Récupérer "origin"
+          )
         })
-        .leftJoin(
-          `${TABLES.item_relation} as relation`,
-          'it_origin.id',
+
+      // Ajouter une jointure pour vérifier la présence d'une couverture
+      query.leftJoin(`${TABLES.item_medias} as media`, function () {
+        this.on('media.item_id', '=', 'it_origin.id').andOn(
+          'media.relation_type',
           '=',
-          'relation.item_left_id'
+          knex.raw('?', 'cover')
         )
-        .leftJoin(`${TABLES.items} as it`, function () {
-          this.on('relation.item_ref_id', '=', 'it.id')
+      })
+
+      // Ajouter les jointures pour récupérer les types liés
+      query.leftJoin(
+        `${TABLES.item_relation} as relation`,
+        'it_origin.id',
+        '=',
+        'relation.item_left_id'
+      )
+      query.leftJoin(`${TABLES.items} as it`, function () {
+        this.on('relation.item_ref_id', '=', 'it.id')
+      })
+
+      // Ajouter une jointure pour la machine associée si l'item est un jeu
+      query
+        .leftJoin(`${TABLES.item_relation} as relation_machine`, function () {
+          this.on('it.id', '=', 'relation_machine.item_left_id').andOn(
+            'relation_machine.relation_type',
+            '=',
+            knex.raw('?', 'machine')
+          )
         })
+        .leftJoin(`${TABLES.items} as machine`, function () {
+          this.on('relation_machine.item_ref_id', '=', 'machine.id')
+        })
+
+      // Sélectionner les champs nécessaires
+      query
         .select(
-          `it_origin.name`,
-          `it_origin.id`,
-          `it_origin.type`,
-          `it_origin.status`,
-          `it.type as rType`, // type de l'item lié
-          'attrs_place.value as place', // Attribut "place"
-          'attrs_origin.value as origin' // Attribut "origin"
+          'it_origin.id',
+          'it_origin.name',
+          'it_origin.type',
+          knex.raw('GROUP_CONCAT(DISTINCT it_origin.type) as types'),
+          'it_origin.status',
+          'attrs_place.value as place',
+          'attrs_origin.value as origin',
+          knex.raw('IF(COUNT(media.id) > 0, TRUE, FALSE) as has_cover'), // Vérifie si cover existe
+          'machine.name as associated_machine', // Nom de la machine associée
+          'it.type as rType' // Type de l'item lié
         )
-        .distinct('it_origin.id')
+        .groupBy('it_origin.id')
 
-      const countQuery = query.clone()
-      // delete for hide value error limit and offset
-      delete countQuery._single.limit
-      delete countQuery._single.offset
-
+      // Appliquer les filtres supplémentaires
       if (rType) {
         query.andWhere('it.type', 'like', `%${translateTypeFr(rType)}%`)
-        countQuery.andWhere('it.type', 'like', `%${translateTypeFr(rType)}%`)
       }
-
       if (place) {
         query.andWhere('attrs_place.value', 'like', `%${place}%`)
-        countQuery.andWhere('attrs_place.value', 'like', `%${place}%`)
       }
 
+      // Appliquer la limite et l'offset
+      if (limit) query.limit(limit)
+      if (offset) query.offset(offset)
+
+      // Validation du champ "sort"
       const validSortFields = ['name', 'rType', 'status', 'place', 'origin']
       const sortField = validSortFields.includes(sort) ? sort : 'name'
       const sortOrder = order === 'desc' ? 'desc' : 'asc'
 
       query.orderBy(sortField, sortOrder)
 
-      const items = await query
+      // Clone pour le count
+      const countQuery = query.clone()
+      delete countQuery._single.limit
+      delete countQuery._single.offset
 
+      // Exécuter les requêtes
+      const items = await query
       const count = await countQuery.count()
+
       return {
         total: count[0]['count(*)'],
         items,
