@@ -3,22 +3,35 @@ const { knex } = require('../utils/db')
 
 const { v4: uuidv4 } = require('uuid')
 
-const LOOT = {
+const GIFTS_PACK = {
   id: 'id',
-  winnerName: 'winnerName',
-  winneremail: 'winneremail',
-  loot: 'loot',
-  creatorId: 'creatorId',
-  eventId: 'eventId',
-  withdrawalId: 'withdrawalId',
+  email: 'email',
+  retailer: 'retailer',
+  campain: 'campain',
+  gift: 'gift', // Template email
+  numOfGifts: 'numOfGifts',
+  type: 'type',
+  status: 'status',
   created_at: 'created_at',
   updated_at: 'updated_at',
-  winned_at: 'winned_at',
-  withdrawal_at: 'withdrawal_at',
+}
+
+const GIFT = {
+  id: 'id',
+  giftPackId: 'giftPackId',
+  email: 'email',
+  name: 'name',
+  lastname: 'lastname',
+  zipCode: 'zipCode',
+  birthdate: 'birthdate',
+  status: 'status',
+  created_at: 'created_at',
+  updated_at: 'updated_at',
 }
 
 module.exports = {
-  LOOT,
+  GIFTS_PACK,
+  GIFT,
   async createLoot({
     winnerName,
     winned_at,

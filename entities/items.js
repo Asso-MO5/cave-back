@@ -2,7 +2,7 @@ const { knex } = require('../utils/db')
 const { v4: uuidv4 } = require('uuid')
 const { TABLES } = require('../utils/constants')
 const { getMediaUrl } = require('../utils/media-url')
-const { translateType, translateTypeFr } = require('../utils/translate-type')
+const { translateTypeFr } = require('../utils/translate-type')
 
 const ITEMS = {
   id: 'id',
