@@ -82,10 +82,13 @@ const SIZES = {
   },
 }
 
+const FROM = `💾🖱️🎮 ASSOCIATION MO5 | CAVE <${process.env.MAIL_ADDRESS}>`
+
 module.exports = {
   TABLES,
   ROLES,
   METASEUR,
   FRONT_URL,
   SIZES,
+  FROM,
 }

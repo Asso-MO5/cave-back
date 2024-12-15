@@ -1,3 +1,4 @@
+const { not } = require('joi')
 const { TABLES } = require('../utils/constants')
 const { knex } = require('../utils/db')
 
@@ -199,6 +200,26 @@ module.exports = {
 
       await knex(TABLES.gifts_pack).where('id', id).delete()
       return true
+    } catch (e) {
+      console.error(e)
+      return false
+    }
+  },
+  async updateGiftsPacksByGiftPackId(
+    id,
+    { email, retailer, campain, gift, numOfGifts }
+  ) {
+    try {
+      await knex(TABLES.gifts_pack).where('id', id).update({
+        email,
+        retailer,
+        campain,
+        gift,
+        numOfGifts,
+        updated_at: new Date(),
+      })
+
+      return await knex(TABLES.gifts_pack).where('id', id).select('*').first()
     } catch (e) {
       console.error(e)
       return false

@@ -4,6 +4,7 @@ const {
 } = require('../handlers/gifts/getGift_packIdDistribeType')
 const { getGifts_packs } = require('../handlers/gifts/getGifts_packs')
 const { postGifts } = require('../handlers/gifts/postGifts')
+const { putGiftsPacksId } = require('../handlers/gifts/putGiftsPacksId')
 const { headers } = require('../models/header.model')
 const { ROLES } = require('../utils/constants')
 
@@ -34,6 +35,20 @@ module.exports = [
       },
     },
     handler: getGifts_packs,
+  },
+  {
+    method: 'PUT',
+    path: '/gifts_packs/{id}',
+
+    options: {
+      description: 'Modifie un pack de gifts',
+      tags: ['api', 'gifts'],
+      notes: [ROLES.gameStoryManager],
+      validate: {
+        headers,
+      },
+    },
+    handler: putGiftsPacksId,
   },
   {
     method: 'GET',

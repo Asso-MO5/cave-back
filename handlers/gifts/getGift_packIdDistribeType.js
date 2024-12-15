@@ -7,6 +7,9 @@ const QRCode = require('qrcode')
 const { loadImage, createCanvas } = require('@napi-rs/canvas')
 const pdf = require('pdf-node')
 const AdmZip = require('adm-zip')
+const { mail } = require('../../utils/mail')
+const { FROM } = require('../../utils/constants')
+const { createRandomName } = require('../../utils/createRandomName')
 
 async function getGift_packIdDistribeType(req, h) {
   const { id, type } = req.params
@@ -112,12 +115,58 @@ async function getGift_packIdDistribeType(req, h) {
 
       //TODO en fonction du type de distribution, envoyer un email ou télécharger le fichier
     }
+
+    const zipData = zip.toBuffer()
+
     if (type === 'download') {
       return h
-        .response(zip.toBuffer())
+        .response(zipData)
         .header('Content-Type', 'application/zip')
         .header('Content-Disposition', 'attachment; filename=gifts.zip')
         .code(200)
+    }
+
+    if (type === 'email') {
+      //TODO envoyer un email
+
+      const zipSize = zipData.length / 1024 / 1024
+
+      const config = {
+        to: giftPack.email,
+        subject: 'Vos cadeaux',
+        text: 'Vos cadeaux à dsitribuer',
+        // html: 'Vos cadeaux',
+        from: FROM,
+        attachments: [
+          {
+            filename: 'gifts.zip',
+            content: zipData,
+            contentType: 'application/zip',
+          },
+        ],
+      }
+
+      if (zipSize < 10) {
+        const folderName = createRandomName()
+        const uploadFolder = path.join(process.cwd(), 'uploads', folderName)
+        const existUploadFolder = existsSync(uploadFolder)
+        if (!existUploadFolder) mkdirSync(uploadFolder)
+
+        const fileName = createRandomName()
+        const uploadPath = path.join(uploadFolder, `${fileName}.zip`)
+
+        zip.writeZip(uploadPath)
+
+        const dlPath = `${process.env.FRONT_URL}/uploads/${folderName}/${fileName}.zip`
+        config.text =
+          'Vos cadeaux sont trop lourds pour être envoyés par email. Vous pouvez les télécharger ici : ' +
+          dlPath
+        // config.html = 'Vos cadeaux sont trop lourds pour être envoyés par email. Vous pouvez les télécharger ici : '
+        config.attachments = []
+      }
+
+      const email = await mail.sendMail(config)
+      console.log(email)
     }
     return h.response(gifts).code(200)
   } catch (e) {
