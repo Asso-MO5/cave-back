@@ -12,6 +12,7 @@ const GIFTS_PACK = {
   numOfGifts: 'numOfGifts',
   type: 'type',
   status: 'status',
+  author_id: 'author_id',
   created_at: 'created_at',
   updated_at: 'updated_at',
 }
@@ -32,6 +33,51 @@ const GIFT = {
 module.exports = {
   GIFTS_PACK,
   GIFT,
+  async createGiftPack({
+    email,
+    retailer,
+    campain,
+    gift,
+    numOfGifts,
+    type,
+    author_id,
+  }) {
+    try {
+      const id = uuidv4()
+      await knex(TABLES.gifts_pack)
+        .insert({
+          id,
+          email,
+          retailer,
+          campain,
+          gift,
+          numOfGifts,
+          type,
+          author_id,
+          status: 'notDistributed',
+          created_at: new Date(),
+          updated_at: new Date(),
+        })
+        .returning('id')
+
+      return {
+        id,
+        email,
+        retailer,
+        campain,
+        gift,
+        numOfGifts,
+        type,
+        author_id,
+        status: 'draft',
+        created_at: new Date(),
+        updated_at: new Date(),
+      }
+    } catch (e) {
+      console.error(e)
+      return null
+    }
+  },
   async createLoot({
     winnerName,
     winned_at,
@@ -61,24 +107,24 @@ module.exports = {
       return null
     }
   },
-  async getLoots({
+  async getGiftsPacks({
     search,
     limit,
     offset,
     order = 'asc',
     sort = 'name',
-    eventId,
-    winnerName,
-    withdrawal_at,
+    retailer,
+    campain,
+    type,
+    status,
   }) {
-    const query = knex(TABLES.loot)
+    const query = knex(TABLES.gifts_pack)
     try {
       // Appliquer les filtres sur le type et la recherche
-
-      if (search) query.where('winnerName', 'like', `%${search}%`)
-      if (eventId) query.where('eventId', 'like', `%${eventId}%`)
-      if (winnerName) query.where('winnerName', 'like', `%${winnerName}%`)
-      if (withdrawal_at) query.where('withdrawal_at', '<>', null)
+      if (search) query.where('retailer', 'like', `%${retailer}%`)
+      if (campain) query.where('campain', 'like', `%${campain}%`)
+      if (type) query.where('type', 'like', `%${type}%`)
+      if (status) query.where('status', 'like', `%${status}%`)
 
       // Cloner la requête pour obtenir le count
       const countQuery = query.clone()
@@ -88,16 +134,41 @@ module.exports = {
       if (limit) query.limit(limit)
       if (offset) query.offset(offset)
 
+      query.leftJoin(
+        `${TABLES.gifts} as gifts`,
+        'gifts.giftPackId',
+        'gifts_pack.id'
+      )
+
       // Sélectionner les champs
-      query.select('*')
+      query
+        .select(
+          TABLES.gifts_pack + '.id',
+          TABLES.gifts_pack + '.email',
+          TABLES.gifts_pack + '.retailer',
+          TABLES.gifts_pack + '.campain',
+          TABLES.gifts_pack + '.gift',
+          TABLES.gifts_pack + '.numOfGifts',
+          knex.raw('COUNT(DISTINCT gifts.id) as givenNumOfGifts'),
+          TABLES.gifts_pack + '.type',
+          TABLES.gifts_pack + '.status',
+          TABLES.gifts_pack + '.created_at',
+          TABLES.gifts_pack + '.updated_at'
+        )
+        .groupBy(`${TABLES.gifts_pack}.id`)
 
       // Validation du champ "sort" (par défaut sur "name")
       const validSortFields = [
-        'winnerName',
-        'winneremail',
-        'winned_at',
-        'withdrawal_at',
-        'eventId',
+        'retailer',
+        'id',
+        'email',
+        'campain',
+        'gift',
+        'numOfGifts',
+        'type',
+        'status',
+        'created_at',
+        'updated_at',
       ]
       const sortField = validSortFields.includes(sort)
         ? sort
@@ -118,9 +189,15 @@ module.exports = {
       return null
     }
   },
-  async deleteLoot(id) {
+  async deleteGiftsPack(id) {
     try {
-      await knex(TABLES.loot).where('id', id).delete()
+      const existGift = await knex(TABLES.gifts)
+        .where('id', id)
+        .where('giftPackId', id)
+        .first()
+      if (existGift) throw new Error('Gifts pack already distributed')
+
+      await knex(TABLES.gifts_pack).where('id', id).delete()
       return true
     } catch (e) {
       console.error(e)
@@ -128,31 +205,57 @@ module.exports = {
     }
   },
 
-  async winnedLoot({ id, withdrawalId }) {
-    const isalreadyWinned = await knex(TABLES.loot)
-      .where('id', id)
-      .andWhere('withdrawalId', null)
-      .first()
-    if (!isalreadyWinned) {
-      try {
-        await knex(TABLES.loot)
-          .where('id', id)
-          .update({ withdrawalId, withdrawal_at: null })
-        return true
-      } catch (e) {
-        console.error(e)
-        return false
+  async getGiftsPacksByGiftPackId(giftPackId) {
+    try {
+      const giftPack = await knex(TABLES.gifts_pack)
+        .where('id', giftPackId)
+        .select('*')
+        .first()
+
+      if (!giftPack) throw new Error('Gift pack not found')
+
+      const { numOfGifts } = giftPack
+
+      await knex(TABLES.gifts_pack)
+        .update({
+          status: 'distributed',
+        })
+        .where('id', giftPackId)
+
+      const gifts = await knex(TABLES.gifts)
+        .where('giftPackId', giftPackId)
+        .count()
+
+      const count = gifts[0]['count(*)']
+
+      const diff = numOfGifts - count
+
+      if (diff > 0) {
+        await knex(TABLES.gifts).insert(
+          Array.from({ length: diff }, () => ({
+            id: uuidv4(),
+            giftPackId,
+            email: '',
+            name: '',
+            lastname: '',
+            zipCode: '',
+            birthdate: '',
+            status: 'notDistributed',
+            created_at: new Date(),
+            updated_at: new Date(),
+          }))
+        )
       }
-    } else {
-      try {
-        await knex(TABLES.loot)
-          .where('id', id)
-          .update({ withdrawalId, withdrawal_at: new Date() })
-        return true
-      } catch (e) {
-        console.error(e)
-        return false
+
+      return {
+        gifts: await knex(TABLES.gifts)
+          .where('giftPackId', giftPackId)
+          .select('*'),
+        giftPack,
       }
+    } catch (e) {
+      console.error(e)
+      return null
     }
   },
 }

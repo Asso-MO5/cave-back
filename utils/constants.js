@@ -25,6 +25,7 @@ const ROLES = {
   admin: 'Master Control Program',
   reviewer: 'reviewer',
   publisher: 'publisher',
+  gameStoryManager: 'GSM',
 }
 
 const METASEUR = 'https://metaseur-kazerlelutins-projects.vercel.app/api'

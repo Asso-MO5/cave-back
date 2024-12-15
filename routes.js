@@ -21,7 +21,7 @@ const routes = [
   ...require('./ctrl/items.ctrl'),
   ...require('./ctrl/medias.ctrl'),
   ...require('./ctrl/messages.ctrl'),
-  ...require('./ctrl/loots.ctrl'),
+  ...require('./ctrl/gifts.ctrl'),
 ]
 
 module.exports = { routes }
