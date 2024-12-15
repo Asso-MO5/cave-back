@@ -279,4 +279,30 @@ module.exports = {
       return null
     }
   },
+  async getGiftById(id) {
+    try {
+      return await knex(TABLES.gifts).where('id', id).select('*').first()
+    } catch (e) {
+      console.error(e)
+      return null
+    }
+  },
+  async updateGift(id, { email, name, lastname, zipCode, birthdate, status }) {
+    try {
+      await knex(TABLES.gifts).where('id', id).update({
+        email,
+        name,
+        lastname,
+        zipCode,
+        birthdate,
+        status,
+        updated_at: new Date(),
+      })
+
+      return await knex(TABLES.gifts).where('id', id).select('*').first()
+    } catch (e) {
+      console.error(e)
+      return null
+    }
+  },
 }

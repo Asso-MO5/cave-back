@@ -8,7 +8,7 @@ async function putGiftsPacksId(req, h) {
       id,
       JSON.parse(req.payload)
     )
-    console.log(newPack)
+
     return h.response(newPack).code(204)
   } catch (e) {
     console.error(e)

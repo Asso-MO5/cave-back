@@ -127,14 +127,11 @@ async function getGift_packIdDistribeType(req, h) {
     }
 
     if (type === 'email') {
-      //TODO envoyer un email
-
       const zipSize = zipData.length / 1024 / 1024
-
       const config = {
         to: giftPack.email,
         subject: 'Vos cadeaux',
-        text: 'Vos cadeaux à dsitribuer',
+        text: 'Vos cadeaux à distribuer',
         // html: 'Vos cadeaux',
         from: FROM,
         attachments: [
@@ -146,7 +143,7 @@ async function getGift_packIdDistribeType(req, h) {
         ],
       }
 
-      if (zipSize < 10) {
+      if (zipSize > 10) {
         const folderName = createRandomName()
         const uploadFolder = path.join(process.cwd(), 'uploads', folderName)
         const existUploadFolder = existsSync(uploadFolder)
@@ -165,8 +162,7 @@ async function getGift_packIdDistribeType(req, h) {
         config.attachments = []
       }
 
-      const email = await mail.sendMail(config)
-      console.log(email)
+      await mail.sendMail(config)
     }
     return h.response(gifts).code(200)
   } catch (e) {
