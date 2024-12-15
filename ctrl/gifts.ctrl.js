@@ -4,6 +4,7 @@ const {
 } = require('../handlers/gifts/getGift_packIdDistribeType')
 const { getGifts_packs } = require('../handlers/gifts/getGifts_packs')
 const { getGiftToken } = require('../handlers/gifts/getGiftsToken')
+const { postGiftCheck } = require('../handlers/gifts/postGiftCheck')
 const { postGifts } = require('../handlers/gifts/postGifts')
 const { putGiftsPacksId } = require('../handlers/gifts/putGiftsPacksId')
 const { putGiftToken } = require('../handlers/gifts/putGiftsToken')
@@ -84,6 +85,15 @@ module.exports = [
       tags: ['api', 'gifts'],
     },
     handler: putGiftToken,
+  },
+  {
+    method: 'POST',
+    path: '/gift/check',
+    options: {
+      description: 'Récupère la liste des packs de gifts',
+      tags: ['api', 'gifts'],
+    },
+    handler: postGiftCheck,
   },
   {
     method: 'DELETE',

@@ -305,4 +305,18 @@ module.exports = {
       return null
     }
   },
+  async getGiftByInfo({ email, name, lastname, zipCode, birthdate }) {
+    const query = knex(TABLES.gifts).where('email', email).where('name', name)
+
+    if (lastname) query.where('lastname', lastname)
+    if (zipCode) query.where('zipCode', zipCode)
+    if (birthdate) query.where('birthdate', birthdate)
+
+    try {
+      return await query.select('*').first()
+    } catch (e) {
+      console.error(e)
+      return null
+    }
+  },
 }
