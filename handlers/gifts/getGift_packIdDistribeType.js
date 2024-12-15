@@ -74,6 +74,7 @@ async function getGift_packIdDistribeType(req, h) {
       const options = {
         format: 'A4',
         orientation: 'portrait',
+
         border: '0mm',
         header: {
           height: '0mm',
