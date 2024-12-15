@@ -36,6 +36,15 @@ async function getGift_packIdDistribeType(req, h) {
     const ctx = canvas.getContext('2d')
 
     const secret = Buffer.from(process.env.API_KEY, 'hex')
+
+    const poster = await loadImage(`data/img/gsv_poster_450.png`)
+    const canvasForPoster = createCanvas(450, 675)
+    const ctxPoster = canvasForPoster.getContext('2d')
+
+    ctxPoster.drawImage(poster, 0, 0)
+
+    const posterToBase64 = canvasForPoster.toDataURL()
+
     for (const gift of gifts) {
       const token = await new jose.EncryptJWT({
         id: gift.id,
@@ -72,13 +81,17 @@ async function getGift_packIdDistribeType(req, h) {
       const page = ejs.render(template, {
         url,
         img: qrToBase64,
+        poster: posterToBase64,
+        title:
+          giftPack.retailer.toLowerCase() === 'mo5'
+            ? `L'association MO5 a le plaisir de vous offrir cette entrée pour le musée du jeu vidéo "Game Story" à Versailles`
+            : `L'association MO5 et ${giftPack.retailer} ont le plaisir de vous offrir cette entrée pour le musée du jeu vidéo "Game Story" à Versailles`,
       })
 
       const options = {
         format: 'A4',
         orientation: 'portrait',
-
-        border: '0mm',
+        border: '100mm',
         header: {
           height: '0mm',
           contents: '',

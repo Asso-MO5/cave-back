@@ -7,7 +7,11 @@ const { TABLES } = require('../utils/constants')
  */
 exports.up = async (knex) => {
   await knex.schema.alterTable(TABLES.gifts_pack, (table) => {
-    table.uuid(GIFTS_PACK.author_id).references('id').inTable(TABLES.authors)
+    table
+      .string(GIFTS_PACK.author_id)
+      .references('id')
+      .inTable(TABLES.gifts_pack)
+      .alter()
   })
 }
 

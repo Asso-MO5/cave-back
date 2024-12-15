@@ -10,31 +10,31 @@ async function postGiftCheck(req, h) {
       return h
         .response({
           status: 'refused',
-          message: 'Les informations ne correspondent pas à un cadeau',
+          message: 'Les informations ne correspondent pas à un pass MO5',
         })
         .code(200)
     }
 
-    const diffWithNow = new Date() - new Date(gift.updated_at)
-    const diffWithNowInDays = diffWithNow / (1000 * 60 * 60 * 24)
-    console.log(diffWithNowInDays)
-
-    if (gift.status === 'distributed' && diffWithNowInDays > 0.005) {
+    if (gift.status === 'distributed') {
       return h.response({
-        status: 'refused',
-        message: 'Le cadeau a déjà été distribué',
+        message: 'Le pass a déjà été distribué',
+        ...gift,
+        status: 'already_distributed',
       })
     }
 
-    await updateGift(gift.id, {
-      updated_at: new Date(),
+    const changes = {
       status: 'distributed',
-    })
+      updated_at: new Date(),
+    }
+
+    await updateGift(gift.id, changes)
 
     return h
       .response({
         message: 'Entrée autorisée',
         ...gift,
+        ...changes,
       })
       .code(200)
   } catch (e) {

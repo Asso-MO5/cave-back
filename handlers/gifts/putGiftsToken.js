@@ -37,22 +37,18 @@ async function putGiftToken(req, h) {
   }
 
   if (newEmail) {
-    //TODO ici on envoi le pdf par mail
-    //et les infos recap
     await mail.sendMail({
       to: newEmail,
-      subject: 'Votre cadeaux',
+      subject: 'Votre pass pour "Game Story" Versailles',
       text: `
       Information à donner à l'accueil: 
-        - Votre nom: ${newGift.name}
-        - Votre email: ${newGift.email}
-        - votre date de naissance: ${new Date(
-          newGift.birthdate
-        ).toLocaleDateString()}
+        - Nom: ${newGift.name}
+        - Email: ${newGift.email}
+        - Année de naissance: ${newGift.birthdate}
 
-        Lien pour modifier vos information: ${
-          process.env.FRONT_URL
-        }/gifts/${token}
+        Lien pour modifier vos information: ${process.env.FRONT_URL}/gifts/${token}
+
+        Ces informations serviront uniquement à l'accueil pour récupérer votre pass.
       `,
       // html: 'Vos cadeaux',
       from: FROM,
