@@ -34,15 +34,70 @@ async function getGift_packIdDistribeType(req, h) {
 
     const canvas = createCanvas(200, 200)
     const ctx = canvas.getContext('2d')
+    const tipeeeCanvas = createCanvas(800, 302)
+    const tipeeeCtx = tipeeeCanvas.getContext('2d')
+    const tipeee = await loadImage(`data/logos/tipeee.png`)
+    tipeeeCtx.drawImage(tipeee, 0, 0)
+    const tipeeeToBase64 = tipeeeCanvas.toDataURL()
+
+    const canvasForMo5Logo = createCanvas(1500, 378)
+    const ctxForMo5Logo = canvasForMo5Logo.getContext('2d')
+    const mo5Logo = await loadImage(`data/logos/mo5_long.png`)
+    ctxForMo5Logo.drawImage(mo5Logo, 0, 0)
+    const mo5LogoToBase64 = canvasForMo5Logo.toDataURL()
 
     const secret = Buffer.from(process.env.API_KEY, 'hex')
 
-    const poster = await loadImage(`data/img/gsv_poster_450.png`)
-    const canvasForPoster = createCanvas(450, 675)
+    const poster = await loadImage(`data/img/gsv_poster.png`)
+
+    const logos = [
+      {
+        name: 'discord',
+        url: 'https://discord.com/invite/phG9zNk',
+      },
+      {
+        name: 'facebook',
+        url: 'https://www.facebook.com/AssoMO5/',
+      },
+      {
+        name: 'x',
+        url: 'https://x.com/assomo5',
+      },
+      {
+        name: 'youtube',
+        url: 'https://www.youtube.com/@AssoMO5',
+      },
+      {
+        name: 'twitch',
+        url: 'https://www.twitch.tv/mo5_com',
+      },
+      {
+        name: 'insta',
+        url: 'https://www.instagram.com/assomo5',
+      },
+      {
+        name: 'tiktok',
+        url: 'https://www.tiktok.com/@mo5asso',
+      },
+    ]
+
+    const logosBase64 = []
+
+    for (const logo of logos) {
+      const logoImg = await loadImage(`data/logos/${logo.name}.png`)
+      const canvasLogo = createCanvas(120, 120)
+      const ctxLogo = canvasLogo.getContext('2d')
+      ctxLogo.drawImage(logoImg, 0, 0)
+      logosBase64.push({
+        ...logo,
+        img: canvasLogo.toDataURL(),
+      })
+    }
+
+    const canvasForPoster = createCanvas(958, 1437)
     const ctxPoster = canvasForPoster.getContext('2d')
 
     ctxPoster.drawImage(poster, 0, 0)
-
     const posterToBase64 = canvasForPoster.toDataURL()
 
     for (const gift of gifts) {
@@ -67,6 +122,7 @@ async function getGift_packIdDistribeType(req, h) {
           dark: '#000',
           light: '#0000',
         },
+        margin: 0,
         width: 200,
         type: 'svg',
       })
@@ -82,6 +138,10 @@ async function getGift_packIdDistribeType(req, h) {
         url,
         img: qrToBase64,
         poster: posterToBase64,
+        logos: logosBase64,
+        tipeee: tipeeeToBase64,
+        mo5Logo: mo5LogoToBase64,
+        noMo5: giftPack.retailer.toLowerCase() !== 'mo5' ? 'noMo5' : '',
         title:
           giftPack.retailer.toLowerCase() === 'mo5'
             ? `L'association MO5 a le plaisir de vous offrir cette entrée pour le musée du jeu vidéo "Game Story" à Versailles`
