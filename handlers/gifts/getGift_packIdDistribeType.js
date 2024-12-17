@@ -1,26 +1,21 @@
 const path = require('path')
 const { getGiftsPacksByGiftPackId } = require('../../entities/gifts')
 const { readFileSync, existsSync, mkdirSync } = require('fs')
-const ejs = require('ejs')
 const jose = require('jose')
 const QRCode = require('qrcode')
 const { loadImage, createCanvas } = require('@napi-rs/canvas')
-const pdf = require('pdf-node')
 const AdmZip = require('adm-zip')
 const { mail } = require('../../utils/mail')
 const { FROM } = require('../../utils/constants')
 const { createRandomName } = require('../../utils/createRandomName')
+const pdf = require('html-pdf')
+const Handlebars = require('handlebars')
 
 async function getGift_packIdDistribeType(req, h) {
   const { id, type } = req.params
   const zip = new AdmZip()
   try {
     const { gifts, giftPack } = await getGiftsPacksByGiftPackId(id)
-
-    const template = readFileSync(
-      path.join(process.cwd(), 'templates', 'gsTicketWin.ejs'),
-      'utf8'
-    )
 
     const giftFolderPath = path.join(process.cwd(), 'gen_files', 'gifts')
     const qrFolder = path.join(process.cwd(), 'gen_files', 'qr')
@@ -100,6 +95,7 @@ async function getGift_packIdDistribeType(req, h) {
     ctxPoster.drawImage(poster, 0, 0)
     const posterToBase64 = canvasForPoster.toDataURL()
 
+    let firstPdf = undefined
     for (const gift of gifts) {
       const token = await new jose.EncryptJWT({
         id: gift.id,
@@ -123,7 +119,7 @@ async function getGift_packIdDistribeType(req, h) {
           light: '#0000',
         },
         margin: 0,
-        width: 200,
+        width: 400,
         type: 'svg',
       })
 
@@ -134,59 +130,58 @@ async function getGift_packIdDistribeType(req, h) {
 
       ctx.clearRect(0, 0, 200, 200)
 
-      const page = ejs.render(template, {
-        url,
-        img: qrToBase64,
-        poster: posterToBase64,
-        logos: logosBase64,
-        tipeee: tipeeeToBase64,
-        mo5Logo: mo5LogoToBase64,
-        noMo5: giftPack.retailer.toLowerCase() !== 'mo5' ? 'noMo5' : '',
-        title:
-          giftPack.retailer.toLowerCase() === 'mo5'
-            ? `L'association MO5 a le plaisir de vous offrir cette entrée pour le musée du jeu vidéo "Game Story" à Versailles`
-            : `L'association MO5 et ${giftPack.retailer} ont le plaisir de vous offrir cette entrée pour le musée du jeu vidéo "Game Story" à Versailles`,
-      })
-
-      const options = {
-        format: 'A4',
-        orientation: 'portrait',
-        border: '100mm',
-        header: {
-          height: '0mm',
-          contents: '',
-        },
-        footer: {
-          height: '0mm',
-          contents: {
-            first: 'Cover page',
-            2: 'Second page', // Any page number is working. 1-based index
-            default: '', // fallback value
-            last: 'Last Page',
-          },
-        },
-      }
       const docPath = path.join(giftFolderPath, `${gift.id}.pdf`)
 
+      const htmlContent = readFileSync(
+        path.join(process.cwd(), 'templates', 'gsTicketWin.hbs'),
+        'utf8'
+      )
       const document = {
-        html: page,
-        data: {},
+        html: htmlContent,
+
         path: path.join(giftFolderPath, `${gift.id}.pdf`),
         type: 'pdf',
       }
 
       try {
-        await pdf(document, options)
+        const html = Handlebars.compile(htmlContent)({
+          url,
+          qrCode: qrToBase64,
+          img: qrToBase64,
+          poster: posterToBase64,
+          logos: logosBase64,
+          tipeee: tipeeeToBase64,
+          mo5Logo: mo5LogoToBase64,
+          noMo5: giftPack.retailer.toLowerCase() !== 'mo5' ? 'noMo5' : '',
+          title:
+            giftPack.retailer.toLowerCase() === 'mo5'
+              ? `L'association MO5 a le plaisir de vous offrir cette entrée pour le musée du jeu vidéo "Game Story" à Versailles`
+              : `L'association MO5 et ${giftPack.retailer} ont le plaisir de vous offrir cette entrée pour le musée du jeu vidéo "Game Story" à Versailles`,
+        })
+
+        await new Promise((resolve) => {
+          pdf
+            .create(html, {
+              format: 'A3',
+              // width: '21cm',
+              //height: '297mm',
+              scale: 0.5,
+              preferCSSPageSize: true,
+            })
+            .toFile(path.join(giftFolderPath, `${gift.id}.pdf`), (err, res) => {
+              if (err) handleError('error in creating file', err)
+              resolve(res)
+            })
+        })
       } catch (error) {
         console.error(error)
       }
 
       const fileData = readFileSync(docPath)
+      firstPdf = fileData
       if (!fileData) continue
 
       zip.addFile(path.basename(docPath), fileData)
-
-      //TODO en fonction du type de distribution, envoyer un email ou télécharger le fichier
     }
 
     const zipData = zip.toBuffer()
@@ -237,6 +232,12 @@ async function getGift_packIdDistribeType(req, h) {
 
       await mail.sendMail(config)
     }
+
+    // retourne le PDF en static, le premier fichier du zip
+    return h
+      .response(firstPdf)
+      .header('Content-Type', 'application/pdf')
+      .code(200)
     return h.response(gifts).code(200)
   } catch (e) {
     console.error(e)
