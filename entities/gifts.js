@@ -1,4 +1,3 @@
-const { not } = require('joi')
 const { TABLES } = require('../utils/constants')
 const { knex } = require('../utils/db')
 
