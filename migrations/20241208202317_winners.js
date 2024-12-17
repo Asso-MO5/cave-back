@@ -26,7 +26,7 @@ exports.up = async (knex) => {
     table.string(GIFT.name).notNullable()
     table.string(GIFT.lastname).notNullable()
     table.string(GIFT.zipCode).notNullable()
-    table.date(GIFT.birthdate).notNullable()
+    table.string(GIFT.birthdate).notNullable()
     table.string(GIFT.status).notNullable()
 
     table.timestamps(true, true)

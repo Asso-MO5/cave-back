@@ -25,6 +25,7 @@ const ROLES = {
   admin: 'Master Control Program',
   reviewer: 'reviewer',
   publisher: 'publisher',
+  gameStoryManager: 'GSM',
 }
 
 const METASEUR = 'https://metaseur-kazerlelutins-projects.vercel.app/api'
@@ -81,10 +82,13 @@ const SIZES = {
   },
 }
 
+const FROM = `💾🖱️🎮 ASSOCIATION MO5 | CAVE <${process.env.MAIL_ADDRESS}>`
+
 module.exports = {
   TABLES,
   ROLES,
   METASEUR,
   FRONT_URL,
   SIZES,
+  FROM,
 }
