@@ -148,8 +148,6 @@ async function getGift_packIdDistribeType(req, h) {
             : `L'association MO5 et ${giftPack.retailer} ont le plaisir de vous offrir cette entrée pour le musée du jeu vidéo "Game Story" à Versailles`,
       })
 
-      console.log(page)
-
       const options = {
         format: 'A4',
         orientation: 'portrait',
