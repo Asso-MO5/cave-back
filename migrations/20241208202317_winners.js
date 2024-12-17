@@ -15,13 +15,22 @@ exports.up = async (knex) => {
     table.integer(GIFTS_PACK.numOfGifts).notNullable()
     table.string(GIFTS_PACK.type).notNullable()
     table.string(GIFTS_PACK.status).notNullable()
+    table
+      .uuid(GIFTS_PACK.author_id)
+      .notNullable()
+      .references('id')
+      .inTable(TABLES.authors)
 
     table.timestamps(true, true)
   })
 
   await knex.schema.createTable(TABLES.gifts, (table) => {
     table.uuid(GIFT.id).primary()
-    table.uuid(GIFT.giftPackId).notNullable()
+    table
+      .uuid(GIFT.giftPackId)
+      .notNullable()
+      .references('id')
+      .inTable(TABLES.gifts_pack)
     table.string(GIFT.email).notNullable()
     table.string(GIFT.name).notNullable()
     table.string(GIFT.lastname).notNullable()
