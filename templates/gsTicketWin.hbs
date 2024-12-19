@@ -1,5 +1,66 @@
 
-<style>
+
+<head>
+  <meta charset="UTF-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0"
+  />
+  <title>{{ title }}</title>
+</head>
+<body
+  style="
+    background-color: #fff;
+    color: #000;
+    font-family: Arial, sans-serif;
+    margin: 1cm;
+    padding: 0;
+    width: 21cm;
+    height: 2
+  "
+>
+  <div class="title {{ noMo5 }}">{{ title }}</div>
+  <img src="{{ mo5Logo }}" alt="affiche game story" class="mo5" />
+
+  <img src="{{ poster }}" alt="affiche game story" class="poster" />
+
+  <img src="{{ qrCode }}" alt="QR CODE de votre place" class="qr" />
+
+
+  <a href="{{ url }}" alt="lien pour acceder à votre place" class="qrLink">
+    ou cliquez ici
+  </a>
+
+  <a
+    href="https://fr.tipeee.com/association-mo5-com"
+    target="_blank"
+    alt="lien pour acceder à votre place"
+    class="tipeee"
+  >
+    <table>
+      <tr>
+        <td>
+          <p>
+            Soutenez la création d'un musée vivant des cultures numériques,
+            cliquez ici
+          </p>
+        </td>
+        <td>
+          <img src="{{ tipeee }}" alt="tipeee" />
+        </td>
+      </tr>
+    </table>
+  </a>
+
+  <div class="logos">
+     {{#each logos }}
+    <a class="logo" href="{{ url }}" alt="logo.name" target="_blank">
+      <img src="{{ img }}" alt="logo.name" />
+    </a>
+   {{/each}}
+  </div>
+
+  <style>
 
   
   * {
@@ -111,64 +172,6 @@
     color: #3490dc !important;
   }
 </style>
-
-<head>
-  <meta charset="UTF-8" />
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0"
-  />
-  <title>{{ title }}</title>
-</head>
-<body
-  style="
-    background-color: #fff;
-    color: #000;
-    font-family: Arial, sans-serif;
-    margin: 1cm;
-    padding: 0;
-    width: 21cm;
-    height: 2
-  "
->
-  <div class="title {{ noMo5 }}">{{ title }}</div>
-  <img src="{{ mo5Logo }}" alt="affiche game story" class="mo5" />
-
-  <img src="{{ poster }}" alt="affiche game story" class="poster" />
-
-  <img src="{{ qrCode }}" alt="QR CODE de votre place" class="qr" />
-
-
-  <a href="{{ url }}" alt="lien pour acceder à votre place" class="qrLink">
-    ou cliquez ici
-  </a>
-
-  <a
-    href="https://fr.tipeee.com/association-mo5-com"
-    target="_blank"
-    alt="lien pour acceder à votre place"
-    class="tipeee"
-  >
-    <table>
-      <tr>
-        <td>
-          <p>
-            Soutenez la création d'un musée vivant des cultures numériques,
-            cliquez ici
-          </p>
-        </td>
-        <td>
-          <img src="{{ tipeee }}" alt="tipeee" />
-        </td>
-      </tr>
-    </table>
-  </a>
-
-  <div class="logos">
-     {{#each logos }}
-    <a class="logo" href="{{ url }}" alt="logo.name" target="_blank">
-      <img src="{{ img }}" alt="logo.name" />
-    </a>
-   {{/each}}
-  </div>
 </body>
+
+
