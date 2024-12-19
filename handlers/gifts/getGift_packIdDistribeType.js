@@ -101,6 +101,7 @@ async function getGift_packIdDistribeType(req, h) {
     ctxPoster.drawImage(poster, 0, 0)
     const posterToBase64 = canvasForPoster.toDataURL()
 
+    let firstPdf = undefined
     for (const gift of gifts) {
       const token = await new jose.EncryptJWT({
         id: gift.id,
@@ -175,7 +176,7 @@ async function getGift_packIdDistribeType(req, h) {
       const docPath = path.join(giftFolderPath, `${gift.id}.pdf`)
 
       const document = {
-        html: file,
+        html: file.content,
         data: {},
         path: path.join(giftFolderPath, `${gift.id}.pdf`),
         type: 'pdf',
@@ -188,11 +189,10 @@ async function getGift_packIdDistribeType(req, h) {
       }
 
       const fileData = readFileSync(docPath)
+      firstPdf = fileData
       if (!fileData) continue
 
       zip.addFile(path.basename(docPath), fileData)
-
-      //TODO en fonction du type de distribution, envoyer un email ou télécharger le fichier
     }
 
     const zipData = zip.toBuffer()
@@ -243,6 +243,12 @@ async function getGift_packIdDistribeType(req, h) {
 
       await mail.sendMail(config)
     }
+
+    // retourne le PDF en static, le premier fichier du zip
+    return h
+      .response(firstPdf)
+      .header('Content-Type', 'application/pdf')
+      .code(200)
     return h.response(gifts).code(200)
   } catch (e) {
     console.error(e)

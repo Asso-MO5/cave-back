@@ -1,3 +1,7 @@
+const {
+  getGift_packIdDistribeType,
+} = require('./handlers/gifts/getGift_packIdDistribeType')
+
 const routes = [
   {
     method: 'GET',
@@ -15,6 +19,11 @@ const routes = [
         index: false,
       },
     },
+  },
+  {
+    method: 'GET',
+    path: '/test/{id}/{type}',
+    handler: getGift_packIdDistribeType,
   },
   ...require('./ctrl/auth.ctrl'),
   ...require('./ctrl/companies.ctrl'),
