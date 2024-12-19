@@ -124,7 +124,7 @@ async function getGift_packIdDistribeType(req, h) {
           light: '#0000',
         },
         margin: 0,
-        width: 200,
+        width: 400,
         type: 'svg',
       })
 
@@ -134,20 +134,6 @@ async function getGift_packIdDistribeType(req, h) {
       const qrToBase64 = canvas.toDataURL()
 
       ctx.clearRect(0, 0, 200, 200)
-
-      const htmlContent = ejs.render(template, {
-        url,
-        qrCode: qrToBase64,
-        poster: posterToBase64,
-        logos: logosBase64,
-        tipeee: tipeeeToBase64,
-        mo5Logo: mo5LogoToBase64,
-        noMo5: giftPack.retailer.toLowerCase() !== 'mo5' ? 'noMo5' : '',
-        title:
-          giftPack.retailer.toLowerCase() === 'mo5'
-            ? `L'association MO5 a le plaisir de vous offrir cette entrée pour le musée du jeu vidéo "Game Story" à Versailles`
-            : `L'association MO5 et ${giftPack.retailer} ont le plaisir de vous offrir cette entrée pour le musée du jeu vidéo "Game Story" à Versailles`,
-      })
 
       const options = {
         format: 'A4',
@@ -169,10 +155,15 @@ async function getGift_packIdDistribeType(req, h) {
       }
       const docPath = path.join(giftFolderPath, `${gift.id}.pdf`)
 
+      const htmlContent = readFileSync(
+        path.join(process.cwd(), 'templates', 'gsTicketWin.hbs'),
+        'utf8'
+      )
       const document = {
         html: htmlContent,
         data: {
           url,
+          qrCode: qrToBase64,
           img: qrToBase64,
           poster: posterToBase64,
           logos: logosBase64,
