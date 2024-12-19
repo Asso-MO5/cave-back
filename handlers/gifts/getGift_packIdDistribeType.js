@@ -130,7 +130,7 @@ async function getGift_packIdDistribeType(req, h) {
       ctx.clearRect(0, 0, 200, 200)
 
       const options = {
-        format: 'A4',
+        format: 'A3',
         orientation: 'portrait',
         border: '100mm',
         header: {
