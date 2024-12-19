@@ -10,7 +10,6 @@ const AdmZip = require('adm-zip')
 const { mail } = require('../../utils/mail')
 const { FROM } = require('../../utils/constants')
 const { createRandomName } = require('../../utils/createRandomName')
-const { JSDOM } = require('jsdom')
 
 async function getGift_packIdDistribeType(req, h) {
   const { id, type } = req.params
@@ -19,7 +18,7 @@ async function getGift_packIdDistribeType(req, h) {
     const { gifts, giftPack } = await getGiftsPacksByGiftPackId(id)
 
     const template = readFileSync(
-      path.join(process.cwd(), 'templates', 'gsTicketWin.ejs'),
+      path.join(process.cwd(), 'templates', 'gsTicketWin.hbs'),
       'utf8'
     )
 
@@ -138,7 +137,7 @@ async function getGift_packIdDistribeType(req, h) {
 
       const htmlContent = ejs.render(template, {
         url,
-        img: qrToBase64,
+        qrCode: qrToBase64,
         poster: posterToBase64,
         logos: logosBase64,
         tipeee: tipeeeToBase64,
@@ -149,11 +148,6 @@ async function getGift_packIdDistribeType(req, h) {
             ? `L'association MO5 a le plaisir de vous offrir cette entrée pour le musée du jeu vidéo "Game Story" à Versailles`
             : `L'association MO5 et ${giftPack.retailer} ont le plaisir de vous offrir cette entrée pour le musée du jeu vidéo "Game Story" à Versailles`,
       })
-
-      const dom = new JSDOM(htmlContent)
-
-      const finalHtml = dom.serialize()
-      const file = { content: finalHtml }
 
       const options = {
         format: 'A4',
@@ -176,8 +170,20 @@ async function getGift_packIdDistribeType(req, h) {
       const docPath = path.join(giftFolderPath, `${gift.id}.pdf`)
 
       const document = {
-        html: file.content,
-        data: {},
+        html: htmlContent,
+        data: {
+          url,
+          img: qrToBase64,
+          poster: posterToBase64,
+          logos: logosBase64,
+          tipeee: tipeeeToBase64,
+          mo5Logo: mo5LogoToBase64,
+          noMo5: giftPack.retailer.toLowerCase() !== 'mo5' ? 'noMo5' : '',
+          title:
+            giftPack.retailer.toLowerCase() === 'mo5'
+              ? `L'association MO5 a le plaisir de vous offrir cette entrée pour le musée du jeu vidéo "Game Story" à Versailles`
+              : `L'association MO5 et ${giftPack.retailer} ont le plaisir de vous offrir cette entrée pour le musée du jeu vidéo "Game Story" à Versailles`,
+        },
         path: path.join(giftFolderPath, `${gift.id}.pdf`),
         type: 'pdf',
       }

@@ -118,14 +118,15 @@
     padding: 0;
   "
 >
-  <div class="title <%= noMo5 %>"><%= title %></div>
-  <img src="<%= mo5Logo %>" alt="affiche game story" class="mo5" />
+  <div class="title {{ noMo5 }}"><%= title %></div>
+  <img src="{{ mo5Logo }}" alt="affiche game story" class="mo5" />
 
-  <img src="<%= poster %>" alt="affiche game story" class="poster" />
+  <img src="{{ poster }}" alt="affiche game story" class="poster" />
 
-  <img src="<%= img %>" alt="QR CODE de votre place" class="qr" />
+  <img src="{{ qrCode }}" alt="QR CODE de votre place" class="qr" />
 
-  <a href="<%= url %>" alt="lien pour acceder à votre place" class="qrLink">
+
+  <a href="{{ url }}" alt="lien pour acceder à votre place" class="qrLink">
     ou cliquez ici
   </a>
 
@@ -144,17 +145,17 @@
           </p>
         </td>
         <td>
-          <img src="<%= tipeee %>" alt="tipeee" />
+          <img src="{{ tipeee }}" alt="tipeee" />
         </td>
       </tr>
     </table>
   </a>
 
   <div class="logos">
-    <% logos.forEach(function(logo) { %>
-    <a class="logo" href="<%= logo.url %>" alt="logo.name" target="_blank">
-      <img src="<%= logo.img %>" alt="logo.name" />
+     {{#each logos }}
+    <a class="logo" href="{{ url }}" alt="logo.name" target="_blank">
+      <img src="{{ img }}" alt="logo.name" />
     </a>
-    <% }); %>
+   {{/each}}
   </div>
 </body>
