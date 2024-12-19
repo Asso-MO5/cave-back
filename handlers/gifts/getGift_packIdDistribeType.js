@@ -4,11 +4,13 @@ const { readFileSync, existsSync, mkdirSync } = require('fs')
 const jose = require('jose')
 const QRCode = require('qrcode')
 const { loadImage, createCanvas } = require('@napi-rs/canvas')
-const pdf = require('pdf-node')
 const AdmZip = require('adm-zip')
 const { mail } = require('../../utils/mail')
 const { FROM } = require('../../utils/constants')
 const { createRandomName } = require('../../utils/createRandomName')
+
+const pdf = require('html-pdf')
+const Handlebars = require('handlebars')
 
 async function getGift_packIdDistribeType(req, h) {
   const { id, type } = req.params
@@ -137,7 +139,13 @@ async function getGift_packIdDistribeType(req, h) {
       )
       const document = {
         html: htmlContent,
-        data: {
+
+        path: path.join(giftFolderPath, `${gift.id}.pdf`),
+        type: 'pdf',
+      }
+
+      try {
+        const html = Handlebars.compile(htmlContent)({
           url,
           qrCode: qrToBase64,
           img: qrToBase64,
@@ -150,32 +158,16 @@ async function getGift_packIdDistribeType(req, h) {
             giftPack.retailer.toLowerCase() === 'mo5'
               ? `L'association MO5 a le plaisir de vous offrir cette entrée pour le musée du jeu vidéo "Game Story" à Versailles`
               : `L'association MO5 et ${giftPack.retailer} ont le plaisir de vous offrir cette entrée pour le musée du jeu vidéo "Game Story" à Versailles`,
-        },
-        path: path.join(giftFolderPath, `${gift.id}.pdf`),
-        type: 'pdf',
-      }
+        })
 
-      try {
-        await pdf(document, {
-          format: 'A3',
-          scale: 1,
-          zoomFactor: 1,
-
-          orientation: 'portrait',
-          border: '100mm',
-          header: {
-            height: '0mm',
-            contents: '',
-          },
-          footer: {
-            height: '0mm',
-            contents: {
-              first: 'Cover page',
-              2: 'Second page', // Any page number is working. 1-based index
-              default: '', // fallback value
-              last: 'Last Page',
-            },
-          },
+        await new Promise((resolve) => {
+          pdf
+            .create(html, { format: 'A4', scale: 1 })
+            .toFile(path.join(giftFolderPath, `${gift.id}.pdf`), (err, res) => {
+              if (err) handleError('error in creating file', err)
+              console.log('file generated ==>', res.filename)
+              resolve(res)
+            })
         })
       } catch (error) {
         console.error(error)
