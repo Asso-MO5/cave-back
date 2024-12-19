@@ -12,6 +12,7 @@
     position: fixed;
     top: 0.8cm;
     left: 1cm;
+    right: 15cm;
     width: 13cm;
     height: 5cm;
     vertical-align: middle;
@@ -40,13 +41,12 @@
     position: fixed;
     top: 0.8cm;
     right: 0.75cm;
-    width: 200px;
-    height: 200px;
+    left: 15cm;
   }
 
   .qr img {
-    width: 200px;
-    height: 200px;
+    width: 100%;
+    height: auto;
   }
 
   .logos {
@@ -96,7 +96,7 @@
   .tipeee p {
     color: white !important;
     font-weight: bold;
-    font-size: 1.3rem;
+    font-size: 14px;
     margin-right: 3cm;
   }
 
@@ -116,28 +116,13 @@
   }
 </style>
 
-<body
-  style="
-    background-color: #fff;
-    color: #000;
-    font-family: Arial, sans-serif;
-    margin: 1cm;
-    padding: 0;
-    font-size: 20px;
-  "
->
+<body>
   <div class="title <%= noMo5 %>"><%= title %></div>
   <img src="<%= mo5Logo %>" alt="affiche game story" class="mo5" />
 
   <img src="<%= poster %>" alt="affiche game story" class="poster" />
 
-  <img
-    src="<%= img %>"
-    alt="QR CODE de votre place"
-    class="qr"
-    width="200"
-    height="200"
-  />
+  <img src="<%= img %>" alt="QR CODE de votre place" class="qr" />
 
   <a href="<%= url %>" alt="lien pour acceder à votre place" class="qrLink">
     ou cliquez ici
