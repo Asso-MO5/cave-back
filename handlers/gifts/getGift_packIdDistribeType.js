@@ -129,27 +129,6 @@ async function getGift_packIdDistribeType(req, h) {
 
       ctx.clearRect(0, 0, 200, 200)
 
-      const options = {
-        format: 'A4',
-        scale: 1,
-        zoomFactor: 1,
-
-        orientation: 'portrait',
-        border: '100mm',
-        header: {
-          height: '0mm',
-          contents: '',
-        },
-        footer: {
-          height: '0mm',
-          contents: {
-            first: 'Cover page',
-            2: 'Second page', // Any page number is working. 1-based index
-            default: '', // fallback value
-            last: 'Last Page',
-          },
-        },
-      }
       const docPath = path.join(giftFolderPath, `${gift.id}.pdf`)
 
       const htmlContent = readFileSync(
@@ -177,7 +156,27 @@ async function getGift_packIdDistribeType(req, h) {
       }
 
       try {
-        await pdf(document, options)
+        await pdf(document, {
+          format: 'A3',
+          scale: 1,
+          zoomFactor: 1,
+
+          orientation: 'portrait',
+          border: '100mm',
+          header: {
+            height: '0mm',
+            contents: '',
+          },
+          footer: {
+            height: '0mm',
+            contents: {
+              first: 'Cover page',
+              2: 'Second page', // Any page number is working. 1-based index
+              default: '', // fallback value
+              last: 'Last Page',
+            },
+          },
+        })
       } catch (error) {
         console.error(error)
       }
