@@ -159,9 +159,7 @@ async function getGift_packIdDistribeType(req, h) {
 
       try {
         await pdf(document, {
-          zoomFactor: '1',
-          quality: '100',
-          format: 'A4',
+          format: 'a4',
           orientation: 'portrait',
           border: '100mm',
 
