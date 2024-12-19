@@ -167,7 +167,7 @@ async function getGift_packIdDistribeType(req, h) {
               // width: '21cm',
               //height: '297mm',
               scale: 0.5,
-              phantomArgs: ['--no-sandbox', '--ignore-ssl-errors=yes'],
+              phantomArgs: ['--disable-setuid-sandbox'],
               preferCSSPageSize: true,
             })
             .toFile(path.join(giftFolderPath, `${gift.id}.pdf`), (err, res) => {
