@@ -153,8 +153,6 @@ async function getGift_packIdDistribeType(req, h) {
         path.join(process.cwd(), 'templates', 'gsTicketWin.hbs'),
         'utf8'
       )
-
-      const pdfPath = path.join(giftFolderPath, `${gift.id}.pdf`)
       const document = {
         html: htmlContent,
         data: {
@@ -171,27 +169,11 @@ async function getGift_packIdDistribeType(req, h) {
               ? `L'association MO5 a le plaisir de vous offrir cette entrée pour le musée du jeu vidéo "Game Story" à Versailles`
               : `L'association MO5 et ${giftPack.retailer} ont le plaisir de vous offrir cette entrée pour le musée du jeu vidéo "Game Story" à Versailles`,
         },
-        path: pdfPath,
+        path: path.join(giftFolderPath, `${gift.id}.pdf`),
         type: 'pdf',
       }
 
-      const express = require('express')
-      const app = express()
-      const port = 4000
-
       try {
-        fs.writeFile(path.pdfPath, content, () => {
-          app.use(express.static('gen_files'))
-
-          const server = app.listen(port, async () => {
-            const url = `http://localhost:${port}`
-            const options = { format: 'A4', path: 'output.pdf' }
-            const file = { url }
-            await pdf(file, options)
-
-            server.close()
-          })
-        })
         await pdf(document, options)
       } catch (error) {
         console.error(error)
