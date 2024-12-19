@@ -141,7 +141,10 @@ async function getGift_packIdDistribeType(req, h) {
         logos: logosBase64,
         tipeee: tipeeeToBase64,
         mo5Logo: mo5LogoToBase64,
-        noMo5: giftPack.retailer.toLowerCase() !== 'mo5' ? 'noMo5' : '',
+        noMo5:
+          giftPack.retailer.toLowerCase() !== 'mo5'
+            ? 'font-size: 24px;'
+            : 'font-size: 27px;',
         title:
           giftPack.retailer.toLowerCase() === 'mo5'
             ? `L'association MO5 a le plaisir de vous offrir cette entrée pour le musée du jeu vidéo "Game Story" à Versailles`

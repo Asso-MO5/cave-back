@@ -1,19 +1,18 @@
 <style>
   * {
     box-sizing: border-box;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   }
 
   .title {
     background-color: #4088cf;
     color: #fff;
     padding: 15px;
-    font-size: 15px;
+    font-size: 27px;
     position: fixed;
     top: 0.8cm;
     left: 1cm;
-    width: 552px;
-    height: 200px;
+    width: 13cm;
+    height: 5cm;
     vertical-align: middle;
     font-weight: bold;
   }
@@ -26,7 +25,7 @@
   }
 
   .noMo5 {
-    font-size: 18px;
+    font-size: 24px;
   }
 
   .poster {
@@ -40,11 +39,8 @@
     position: fixed;
     top: 0.8cm;
     right: 0.75cm;
-  }
-
-  .qr img {
-    width: 200px;
-    height: 200px;
+    width: 5cm;
+    height: 5cm;
   }
 
   .logos {
@@ -82,7 +78,6 @@
     right: 1cm;
     height: 2cm;
     position: fixed;
-    font-size: 15px;
     padding: 0.3cm;
     background: #d84759;
     color: white;
@@ -94,7 +89,7 @@
   .tipeee p {
     color: white !important;
     font-weight: bold;
-    font-size: 14px;
+    font-size: 1.3rem;
     margin-right: 3cm;
   }
 
@@ -114,15 +109,37 @@
   }
 </style>
 
-<body>
-  <div class="title <%= noMo5 %>"><%= title %></div>
+<body
+  style="
+    background-color: #fff;
+    color: #000;
+    font-family: Arial, sans-serif;
+    margin: 1cm;
+    padding: 0;
+  "
+>
+  <div
+    style="background-color:#4088cf;color:#fff;padding:15px;position:fixed;top:0.8cm;left:1cm;width:13cm;height:5cm;vertical-align:middle;font-weight:bold;<%= noMo5 %>"
+  >
+    <%= title %>
+  </div>
   <img src="<%= mo5Logo %>" alt="affiche game story" class="mo5" />
 
-  <img src="<%= poster %>" alt="affiche game story" class="poster" />
+  <img
+    src="<%= poster %>"
+    alt="affiche game story"
+    class="poster"
+    style="position: fixed; top: 6.6cm; left: 1cm; width: 13cm"
+  />
 
   <img src="<%= img %>" alt="QR CODE de votre place" class="qr" />
 
-  <a href="<%= url %>" alt="lien pour acceder à votre place" class="qrLink">
+  <a
+    href="<%= url %>"
+    alt="lien pour acceder à votre place"
+    class="qrLink"
+    style="text-decoration: none; color: #3490dc !important"
+  >
     ou cliquez ici
   </a>
 
@@ -149,14 +166,7 @@
 
   <div class="logos">
     <% logos.forEach(function(logo) { %>
-    <a
-      class="logo"
-      href="<%= logo.url %>"
-      alt="logo.name"
-      target="_blank"
-      width="85"
-      width="85"
-    >
+    <a class="logo" href="<%= logo.url %>" alt="logo.name" target="_blank">
       <img src="<%= logo.img %>" alt="logo.name" />
     </a>
     <% }); %>
