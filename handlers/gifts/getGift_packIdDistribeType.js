@@ -1,7 +1,6 @@
 const path = require('path')
 const { getGiftsPacksByGiftPackId } = require('../../entities/gifts')
 const { readFileSync, existsSync, mkdirSync } = require('fs')
-const ejs = require('ejs')
 const jose = require('jose')
 const QRCode = require('qrcode')
 const { loadImage, createCanvas } = require('@napi-rs/canvas')
