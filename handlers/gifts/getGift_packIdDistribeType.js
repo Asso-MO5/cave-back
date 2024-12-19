@@ -10,6 +10,7 @@ const AdmZip = require('adm-zip')
 const { mail } = require('../../utils/mail')
 const { FROM } = require('../../utils/constants')
 const { createRandomName } = require('../../utils/createRandomName')
+const { JSDOM } = require('jsdom')
 
 async function getGift_packIdDistribeType(req, h) {
   const { id, type } = req.params
@@ -134,52 +135,54 @@ async function getGift_packIdDistribeType(req, h) {
 
       ctx.clearRect(0, 0, 200, 200)
 
-      const page = ejs.render(template, {
+      const htmlContent = ejs.render(template, {
         url,
         img: qrToBase64,
         poster: posterToBase64,
         logos: logosBase64,
         tipeee: tipeeeToBase64,
         mo5Logo: mo5LogoToBase64,
-        noMo5:
-          giftPack.retailer.toLowerCase() !== 'mo5'
-            ? 'font-size: 24px;'
-            : 'font-size: 27px;',
+        noMo5: giftPack.retailer.toLowerCase() !== 'mo5' ? 'noMo5' : '',
         title:
           giftPack.retailer.toLowerCase() === 'mo5'
             ? `L'association MO5 a le plaisir de vous offrir cette entrée pour le musée du jeu vidéo "Game Story" à Versailles`
             : `L'association MO5 et ${giftPack.retailer} ont le plaisir de vous offrir cette entrée pour le musée du jeu vidéo "Game Story" à Versailles`,
       })
 
+      const dom = new JSDOM(htmlContent)
+
+      const finalHtml = dom.serialize()
+      const file = { content: finalHtml }
+
+      const options = {
+        format: 'A4',
+        orientation: 'portrait',
+        border: '100mm',
+        header: {
+          height: '0mm',
+          contents: '',
+        },
+        footer: {
+          height: '0mm',
+          contents: {
+            first: 'Cover page',
+            2: 'Second page', // Any page number is working. 1-based index
+            default: '', // fallback value
+            last: 'Last Page',
+          },
+        },
+      }
       const docPath = path.join(giftFolderPath, `${gift.id}.pdf`)
 
       const document = {
-        html: page,
+        html: file,
         data: {},
         path: path.join(giftFolderPath, `${gift.id}.pdf`),
         type: 'pdf',
       }
 
       try {
-        await pdf(document, {
-          format: 'a4',
-          orientation: 'portrait',
-          border: '100mm',
-
-          header: {
-            height: '0mm',
-            contents: '',
-          },
-          footer: {
-            height: '0mm',
-            contents: {
-              first: 'Cover page',
-              2: 'Second page', // Any page number is working. 1-based index
-              default: '', // fallback value
-              last: 'Last Page',
-            },
-          },
-        })
+        await pdf(document, options)
       } catch (error) {
         console.error(error)
       }
