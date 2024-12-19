@@ -40,13 +40,13 @@
     position: fixed;
     top: 0.8cm;
     right: 0.75cm;
-    width: 250px;
-    height: 250px;
+    width: 200px;
+    height: 200px;
   }
 
   .qr img {
-    width: 250px;
-    height: 250px;
+    width: 200px;
+    height: 200px;
   }
 
   .logos {
@@ -135,8 +135,8 @@
     src="<%= img %>"
     alt="QR CODE de votre place"
     class="qr"
-    width="5cm"
-    height="*5cm"
+    width="200"
+    height="200"
   />
 
   <a href="<%= url %>" alt="lien pour acceder à votre place" class="qrLink">
@@ -166,7 +166,14 @@
 
   <div class="logos">
     <% logos.forEach(function(logo) { %>
-    <a class="logo" href="<%= logo.url %>" alt="logo.name" target="_blank">
+    <a
+      class="logo"
+      href="<%= logo.url %>"
+      alt="logo.name"
+      target="_blank"
+      width="85"
+      width="85"
+    >
       <img src="<%= logo.img %>" alt="logo.name" />
     </a>
     <% }); %>
