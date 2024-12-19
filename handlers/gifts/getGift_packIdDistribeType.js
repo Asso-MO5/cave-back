@@ -162,7 +162,7 @@ async function getGift_packIdDistribeType(req, h) {
 
         await new Promise((resolve) => {
           pdf
-            .create(html, { format: 'A4', scale: 0.5 })
+            .create(html, { width: '21cm', height: '297mm', scale: 0.5 })
             .toFile(path.join(giftFolderPath, `${gift.id}.pdf`), (err, res) => {
               if (err) handleError('error in creating file', err)
               console.log('file generated ==>', res.filename)
