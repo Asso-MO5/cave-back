@@ -163,11 +163,10 @@ async function getGift_packIdDistribeType(req, h) {
         await new Promise((resolve) => {
           pdf
             .create(html, {
-              format: 'A4',
+              format: 'A3',
               // width: '21cm',
               //height: '297mm',
               scale: 0.5,
-              phantomArgs: ['--disable-setuid-sandbox'],
               preferCSSPageSize: true,
             })
             .toFile(path.join(giftFolderPath, `${gift.id}.pdf`), (err, res) => {
