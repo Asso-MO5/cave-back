@@ -163,8 +163,9 @@ async function getGift_packIdDistribeType(req, h) {
         await new Promise((resolve) => {
           pdf
             .create(html, {
-              width: '21cm',
-              height: '297mm',
+              format: 'A3',
+              // width: '21cm',
+              //height: '297mm',
               scale: 0.5,
               preferCSSPageSize: true,
             })
