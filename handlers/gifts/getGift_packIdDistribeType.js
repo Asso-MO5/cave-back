@@ -148,24 +148,6 @@ async function getGift_packIdDistribeType(req, h) {
             : `L'association MO5 et ${giftPack.retailer} ont le plaisir de vous offrir cette entrée pour le musée du jeu vidéo "Game Story" à Versailles`,
       })
 
-      const options = {
-        format: 'A4',
-        orientation: 'portrait',
-        border: '100mm',
-        header: {
-          height: '0mm',
-          contents: '',
-        },
-        footer: {
-          height: '0mm',
-          contents: {
-            first: 'Cover page',
-            2: 'Second page', // Any page number is working. 1-based index
-            default: '', // fallback value
-            last: 'Last Page',
-          },
-        },
-      }
       const docPath = path.join(giftFolderPath, `${gift.id}.pdf`)
 
       const document = {
@@ -176,7 +158,27 @@ async function getGift_packIdDistribeType(req, h) {
       }
 
       try {
-        await pdf(document, options)
+        await pdf(document, {
+          zoomFactor: '1',
+          quality: '100',
+          format: 'A4',
+          orientation: 'portrait',
+          border: '100mm',
+
+          header: {
+            height: '0mm',
+            contents: '',
+          },
+          footer: {
+            height: '0mm',
+            contents: {
+              first: 'Cover page',
+              2: 'Second page', // Any page number is working. 1-based index
+              default: '', // fallback value
+              last: 'Last Page',
+            },
+          },
+        })
       } catch (error) {
         console.error(error)
       }
