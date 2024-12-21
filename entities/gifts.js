@@ -91,7 +91,7 @@ module.exports = {
         .insert({
           id: uuidv4(),
           winnerName,
-          winneremail,
+          email: winneremail,
           loot,
           creatorId,
           eventId,
