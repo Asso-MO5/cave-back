@@ -48,12 +48,12 @@ async function putGiftToken(req, h) {
         - Prénom: ${newGift.lastname}
         - Code postal: ${newGift.zipCode}
 
-        Lien pour modifier vos information: ${process.env.FRONT_URL}/gifts/${token}
-
-        N'oubliez pas de reserver votre date et horaire de visite, en choisissant "Entrée gratuite"
+        N'oubliez pas de réserver votre date et horaire de visite, en choisissant "Entrée gratuite"
         https://www.billetweb.fr/game-story
 
         Ne pas répondre à cet email.
+
+        Modifier vos informations: ${process.env.FRONT_URL}/gifts/${token}
       `,
       // html: 'Vos cadeaux',
       from: `💾🖱️🎮 Association MO5 | Game Story Versailles <${process.env.MAIL_ADDRESS}>`,
