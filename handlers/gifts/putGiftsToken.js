@@ -48,7 +48,9 @@ async function putGiftToken(req, h) {
 
         Lien pour modifier vos information: ${process.env.FRONT_URL}/gifts/${token}
 
-        Ces informations serviront uniquement à l'accueil pour récupérer votre pass.
+        Ces informations serviront uniquement à l'accueil de Game Story pour autoriser l'entrée.
+
+        N'oubliez pas de reserver votre creneau de visite sur https://www.billetweb.fr/game-story, une fois votre créneau réservé, choisissez "Entrée gratuite".
       `,
       // html: 'Vos cadeaux',
       from: `💾🖱️🎮 ASSOCIATION MO5 | GAME STORY VERSAILLES <${process.env.MAIL_ADDRESS}>`,
