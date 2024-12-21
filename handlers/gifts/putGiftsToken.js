@@ -39,7 +39,7 @@ async function putGiftToken(req, h) {
   if (newEmail) {
     await mail.sendMail({
       to: newEmail,
-      subject: 'Votre pass pour "Game Story" Versailles',
+      subject: 'MO5 confirmation pass pour "Game Story" Versailles',
       text: `
       Information à donner à l'accueil: 
         - Nom: ${newGift.name}
@@ -51,7 +51,7 @@ async function putGiftToken(req, h) {
         Ces informations serviront uniquement à l'accueil pour récupérer votre pass.
       `,
       // html: 'Vos cadeaux',
-      from: FROM,
+      from: `💾🖱️🎮 ASSOCIATION MO5 | GAME STORY VERSAILLES <${process.env.MAIL_ADDRESS}>`,
     })
   }
   return h.response().code(204)
