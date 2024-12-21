@@ -96,7 +96,8 @@ async function getGift_packIdDistribeType(req, h) {
     const posterToBase64 = canvasForPoster.toDataURL()
 
     let firstPdf = undefined
-    for (const gift of gifts) {
+    const allPdfs = []
+    for (const [index, gift] of gifts.entries()) {
       const token = await new jose.EncryptJWT({
         id: gift.id,
         iss: 'cave_back',
@@ -136,12 +137,6 @@ async function getGift_packIdDistribeType(req, h) {
         path.join(process.cwd(), 'templates', 'gsTicketWin.hbs'),
         'utf8'
       )
-      const document = {
-        html: htmlContent,
-
-        path: path.join(giftFolderPath, `${gift.id}.pdf`),
-        type: 'pdf',
-      }
 
       try {
         const html = Handlebars.compile(htmlContent)({
@@ -181,7 +176,13 @@ async function getGift_packIdDistribeType(req, h) {
       firstPdf = fileData
       if (!fileData) continue
 
-      zip.addFile(path.basename(docPath), fileData)
+      if (type === 'email')
+        allPdfs.push({
+          content: fileData,
+          name: `pass-${index}.pdf`,
+          contentType: 'application/pdf',
+        })
+      if (type === 'download') zip.addFile(path.basename(docPath), fileData)
     }
 
     const zipData = zip.toBuffer()
@@ -202,13 +203,7 @@ async function getGift_packIdDistribeType(req, h) {
         text: 'Vos cadeaux à distribuer',
         // html: 'Vos cadeaux',
         from: FROM,
-        attachments: [
-          {
-            filename: 'gifts.zip',
-            content: zipData,
-            contentType: 'application/zip',
-          },
-        ],
+        attachments: allPdfs,
       }
 
       if (zipSize > 10) {

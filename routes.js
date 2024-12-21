@@ -20,11 +20,11 @@ const routes = [
       },
     },
   },
-  /* {
+  {
     method: 'GET',
     path: '/test/{id}/{type}',
     handler: getGift_packIdDistribeType,
-  },*/
+  },
   ...require('./ctrl/auth.ctrl'),
   ...require('./ctrl/companies.ctrl'),
   ...require('./ctrl/items.ctrl'),
