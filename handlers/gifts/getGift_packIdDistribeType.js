@@ -147,6 +147,7 @@ async function getGift_packIdDistribeType(req, h) {
           logos: logosBase64,
           tipeee: tipeeeToBase64,
           mo5Logo: mo5LogoToBase64,
+          margin: process.env.ISDEV === 'true' ? '0cm' : '.5cm',
           noMo5: giftPack.retailer.toLowerCase() !== 'mo5' ? 'noMo5' : '',
           title:
             giftPack.retailer.toLowerCase() === 'mo5'
@@ -157,7 +158,7 @@ async function getGift_packIdDistribeType(req, h) {
         await new Promise((resolve) => {
           pdf
             .create(html, {
-              format: 'A3',
+              format: process.env.ISDEV === 'true' ? 'A4' : 'A3',
               // width: '21cm',
               //height: '297mm',
               scale: 0.5,
@@ -233,7 +234,6 @@ async function getGift_packIdDistribeType(req, h) {
       .response(firstPdf)
       .header('Content-Type', 'application/pdf')
       .code(200)
-    return h.response(gifts).code(200)
   } catch (e) {
     console.error(e)
     return h.response({ message: 'error' }).code(500)
