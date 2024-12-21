@@ -54,7 +54,7 @@ async function putGiftToken(req, h) {
         https://www.billetweb.fr/game-story
       `,
       // html: 'Vos cadeaux',
-      from: `💾🖱️🎮 Association MO5 | GAME STORY VERSAILLES <${process.env.MAIL_ADDRESS}>`,
+      from: `💾🖱️🎮 Association MO5 | Game Story Versailles <${process.env.MAIL_ADDRESS}>`,
     })
   }
   return h.response().code(204)

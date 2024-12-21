@@ -203,7 +203,7 @@ async function getGift_packIdDistribeType(req, h) {
         subject: 'Association MO5 pass "Game Story" Versailles',
         text: 'Vos pass à distribuer',
         // html: 'Vos cadeaux',
-        from: `💾🖱️🎮 Association MO5 | PASS GAME STORY VERSAILLES <${process.env.MAIL_ADDRESS}>`,
+        from: `💾🖱️🎮 Association MO5 | PASS Game Story Versailles <${process.env.MAIL_ADDRESS}>`,
         attachments: allPdfs,
       }
 
