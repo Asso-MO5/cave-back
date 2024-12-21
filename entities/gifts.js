@@ -134,11 +134,13 @@ module.exports = {
       if (limit) query.limit(limit)
       if (offset) query.offset(offset)
 
-      query.leftJoin(
-        `${TABLES.gifts} as gifts`,
-        'gifts.giftPackId',
-        'gifts_pack.id'
-      )
+      query.leftJoin(`${TABLES.gifts} as gifts`, function () {
+        this.on('gifts.giftPackId', '=', 'gifts_pack.id').andOn(
+          'gifts.status',
+          '=',
+          knex.raw('?', ['distributed'])
+        )
+      })
 
       // Sélectionner les champs
       query
@@ -305,8 +307,9 @@ module.exports = {
     }
   },
   async getGiftByInfo({ email, name, lastname, zipCode, birthdate }) {
-    const query = knex(TABLES.gifts).where('email', email).where('name', name)
+    const query = knex(TABLES.gifts).where('name', name)
 
+    if (email) query.where('email', email)
     if (lastname) query.where('lastname', lastname)
     if (zipCode) query.where('zipCode', zipCode)
     if (birthdate) query.where('birthdate', birthdate)
