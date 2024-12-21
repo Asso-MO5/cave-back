@@ -4,7 +4,6 @@ async function postGifts(req, h) {
   const payload = JSON.parse(req.payload || '{}')
 
   if (
-    !payload.retailer ||
     !payload.campain ||
     !payload.gift ||
     !payload.numOfGifts ||
