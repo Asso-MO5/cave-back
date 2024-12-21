@@ -35,7 +35,7 @@ module.exports = {
   GIFT,
   async createGiftPack({
     email,
-    retailer,
+    retailer = 'mo5',
     campain,
     gift,
     numOfGifts,
