@@ -161,6 +161,7 @@ module.exports = {
 
       // Validation du champ "sort" (par défaut sur "name")
       const validSortFields = [
+        'created_at',
         'retailer',
         'id',
         'email',
@@ -169,7 +170,6 @@ module.exports = {
         'numOfGifts',
         'type',
         'status',
-        'created_at',
         'updated_at',
       ]
       const sortField = validSortFields.includes(sort)
