@@ -200,10 +200,10 @@ async function getGift_packIdDistribeType(req, h) {
       const zipSize = zipData.length / 1024 / 1024
       const config = {
         to: giftPack.email,
-        subject: 'Vos pass',
+        subject: 'Association MO5 pass "Game Story" Versailles',
         text: 'Vos pass à distribuer',
         // html: 'Vos cadeaux',
-        from: `💾🖱️🎮 ASSOCIATION MO5 | PASS GAME STORY VERSAILLES <${process.env.MAIL_ADDRESS}>`,
+        from: `💾🖱️🎮 Association MO5 | PASS GAME STORY VERSAILLES <${process.env.MAIL_ADDRESS}>`,
         attachments: allPdfs,
       }
 
