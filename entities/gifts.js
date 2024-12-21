@@ -112,7 +112,7 @@ module.exports = {
     limit,
     offset,
     order = 'asc',
-    sort = 'name',
+    sort = 'created_at',
     retailer,
     campain,
     type,
