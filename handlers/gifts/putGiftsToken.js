@@ -41,17 +41,19 @@ async function putGiftToken(req, h) {
       to: newEmail,
       subject: 'MO5 confirmation Pass "Game Story" Versailles',
       text: `
+      Ces informations serviront uniquement à l'accueil de Game Story, pour autoriser l'entrée.
+
       Information à donner à l'accueil: 
         - Nom: ${newGift.name}
-        - Email: ${newGift.email}
-        - Année de naissance: ${newGift.birthdate}
+        - Prénom: ${newGift.lastname}
+        - Code postal: ${newGift.zipCode}
 
         Lien pour modifier vos information: ${process.env.FRONT_URL}/gifts/${token}
 
-        Ces informations serviront uniquement à l'accueil de Game Story pour autoriser l'entrée.
-
         N'oubliez pas de reserver votre date et horaire de visite, en choisissant "Entrée gratuite"
         https://www.billetweb.fr/game-story
+
+        Ne pas répondre à cet email.
       `,
       // html: 'Vos cadeaux',
       from: `💾🖱️🎮 Association MO5 | Game Story Versailles <${process.env.MAIL_ADDRESS}>`,
