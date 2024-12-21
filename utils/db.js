@@ -9,6 +9,16 @@ const knex = require('knex')({
   },
 })
 
+const knexGalette = require('knex')({
+  client: 'mysql2',
+  connection: {
+    host: process.env.GALETTE_HOST,
+    port: 3306,
+    user: process.env.GALETTE_USER,
+    password: process.env.GALETTE_PASS,
+    database: process.env.GALETTE_NAME,
+  },
+})
 /**
  * 
  * @param {Object} options
@@ -66,4 +76,4 @@ async function paginateCursor({
   }
 }
 
-module.exports = { knex, paginateCursor }
+module.exports = { knex, knexGalette, paginateCursor }
