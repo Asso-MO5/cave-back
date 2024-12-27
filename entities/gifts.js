@@ -191,6 +191,59 @@ module.exports = {
       return null
     }
   },
+  async getGiftsByGiftPackId({
+    id,
+    search,
+    limit,
+    offset,
+    order = 'asc',
+    sort = 'created_at',
+  }) {
+    const query = knex(TABLES.gifts).where('giftPackId', id)
+
+    try {
+      // Appliquer les filtres sur le type et la recherche
+      if (search) query.where('name', 'like', `%${search}%`)
+
+      // Cloner la requête pour obtenir le count
+      const countQuery = query.clone()
+      const count = await countQuery.count()
+
+      // Appliquer la limite et l'offset
+      if (limit) query.limit(limit)
+      if (offset) query.offset(offset)
+
+      const validSortFields = [
+        'created_at',
+        'retailer',
+        'id',
+        'email',
+        'name',
+        'lastname',
+        'zipCode',
+        'birthdate',
+        'status',
+        'updated_at',
+      ]
+      const sortField = validSortFields.includes(sort)
+        ? sort
+        : validSortFields[0]
+
+      const sortOrder = order === 'desc' ? 'desc' : 'asc'
+
+      query.orderBy(sortField, sortOrder)
+
+      const items = await query
+
+      return {
+        total: count[0]['count(*)'],
+        items,
+      }
+    } catch (e) {
+      console.error(e)
+      return null
+    }
+  },
   async deleteGiftsPack(id) {
     try {
       const existGift = await knex(TABLES.gifts)

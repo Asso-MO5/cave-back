@@ -2,6 +2,7 @@ const { deleteGiftsId } = require('../handlers/gifts/deleteGiftsId')
 const {
   getGift_packIdDistribeType,
 } = require('../handlers/gifts/getGift_packIdDistribeType')
+const { getGifts_pack } = require('../handlers/gifts/getGifts_pack')
 const { getGifts_packs } = require('../handlers/gifts/getGifts_packs')
 const { getGiftToken } = require('../handlers/gifts/getGiftsToken')
 const { postGiftCheck } = require('../handlers/gifts/postGiftCheck')
@@ -38,6 +39,20 @@ module.exports = [
       },
     },
     handler: getGifts_packs,
+  },
+  {
+    method: 'GET',
+    path: '/gifts_packs/{id}',
+
+    options: {
+      description: 'Récupère la liste des packs de gifts',
+      tags: ['api', 'gifts'],
+      notes: [ROLES.gameStoryManager],
+      validate: {
+        headers,
+      },
+    },
+    handler: getGifts_pack,
   },
   {
     method: 'PUT',
