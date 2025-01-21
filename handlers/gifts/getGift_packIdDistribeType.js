@@ -120,7 +120,7 @@ async function getGift_packIdDistribeType(req, h) {
           light: '#0000',
         },
         margin: 0,
-        width: 350,
+        width: 300,
         type: 'svg',
       })
 
