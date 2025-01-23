@@ -11,6 +11,7 @@ async function getItemsHandler(req, h) {
     status,
     name,
     type,
+    associated_machine,
   } = req.query
 
   const offset = page ? (page - 1) * parseInt(limit) : 0
@@ -25,6 +26,7 @@ async function getItemsHandler(req, h) {
     sort,
     type,
     name,
+    associated_machine,
   })
   return h.response(items).code(200)
 }

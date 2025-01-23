@@ -76,6 +76,7 @@ module.exports = {
     offset,
     order = 'asc',
     sort = 'name',
+    associated_machine,
   }) {
     const query = knex(TABLES.items + ' as it_origin')
     try {
@@ -83,7 +84,8 @@ module.exports = {
       if (itemType) query.where('it_origin.type', itemType)
       if (status) query.where('it_origin.status', 'like', `%${status}%`)
       if (name) query.where('it_origin.name', 'like', `%${name}%`)
-
+      if (associated_machine)
+        query.where('machine.name', 'like', `%${associated_machine}%`)
       // Ajouter les jointures pour les attributs "place" et "origin"
       query
         .leftJoin(`${TABLES.item_text_attrs} as attrs_place`, function () {
@@ -186,7 +188,7 @@ module.exports = {
       const count = await countQuery.count()
 
       return {
-        total: count[0]['count(*)'],
+        total: count?.[0]?.['count(*)'] || 0,
         items,
       }
     } catch (e) {
