@@ -163,7 +163,14 @@ module.exports = {
       if (offset) query.offset(offset)
 
       // Validation du champ "sort"
-      const validSortFields = ['name', 'rType', 'status', 'place', 'origin']
+      const validSortFields = [
+        'name',
+        'rType',
+        'status',
+        'place',
+        'origin',
+        'associated_machine',
+      ]
       const sortField = validSortFields.includes(sort) ? sort : 'name'
       const sortOrder = order === 'desc' ? 'desc' : 'asc'
 
