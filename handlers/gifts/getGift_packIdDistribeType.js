@@ -112,7 +112,7 @@ async function getGift_packIdDistribeType(req, h) {
 
       const url = `${process.env.FRONT_URL}/gifts/${token}`
 
-      const qrFilePath = path.join(qrFolder, `${gift.id}.svg`)
+      const qrFilePath = path.join(qrFolder, `${gift.id}.png`)
 
       await QRCode.toFile(qrFilePath, url, {
         color: {
@@ -121,10 +121,10 @@ async function getGift_packIdDistribeType(req, h) {
         },
         margin: 5,
         width: 400,
-        type: 'svg',
+        type: 'png',
       })
 
-      const qr = await loadImage(`gen_files/qr/${gift.id}.svg`)
+      const qr = await loadImage(`gen_files/qr/${gift.id}.png`)
 
       ctx.drawImage(qr, 0, 0)
       const qrToBase64 = canvas.toDataURL()
