@@ -119,7 +119,7 @@ async function getGift_packIdDistribeType(req, h) {
           dark: '#000',
           light: '#0000',
         },
-        margin: 0,
+        margin: 5,
         width: 400,
         type: 'svg',
       })
@@ -150,7 +150,7 @@ async function getGift_packIdDistribeType(req, h) {
           margin: process.env.ISDEV === 'true' ? '0cm' : '.5cm',
           noMo5: giftPack.retailer.toLowerCase() !== 'mo5' ? 'noMo5' : '',
           title:
-            giftPack.retailer.toLowerCase() === 'mo5'
+            giftPack.retailer.toLowerCase() === 'mo5' || !giftPack.retailer
               ? `L'association MO5 a le plaisir de vous offrir cette entrée pour le musée du jeu vidéo "Game Story" à Versailles`
               : `L'association MO5 et ${giftPack.retailer} ont le plaisir de vous offrir cette entrée pour le musée du jeu vidéo "Game Story" à Versailles`,
         })
