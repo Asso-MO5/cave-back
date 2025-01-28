@@ -25,7 +25,9 @@
 
   <img src='{{poster}}' alt='affiche game story' class='poster' />
 
-  <img src='{{qrCode}}' alt='QR CODE de votre place' class='qr' />
+  <div class='qr'>
+    <img src='{{qrCode}}' alt='QR CODE de votre place' />
+  </div>
 
   <a href='{{url}}' alt='lien pour acceder à votre place' class='qrLink'>
     ou lien ici
@@ -67,11 +69,12 @@
     1cm; width: 13cm; height: 5cm; vertical-align: middle; font-weight: bold; }
     .mo5 { position: absolute; top: 4.4cm; right: 7.3cm; width: 4.5cm; } .noMo5
     { font-size: 24px; } .poster { position: absolute; top: 6.6cm; left: 1cm;
-    width: 13cm; } .qr { position: absolute; top: 0.8cm; right: 0.75cm; width:
-    5cm; height: 5cm; padding: 20px } .logos { position: absolute; top: 6.5cm;
-    right: 2.6cm; } .logo { display: block; margin-top: 1.08cm; width: 1.6cm;
-    height: 1.6cm; } img { width: 100%; height: auto; } .qrLink { position:
-    absolute; top: 6cm; right: 0.75cm; width: 5cm; height: 1cm; display: block;
+    width: 13cm; } .qr { position: absolute; top: 0.8cm; right: 0.75cm;
+    width:5cm; display: flex;align-items: center;justify-items: center;}.qr img
+    { width: 5cm; height: 5cm; } .logos { position: absolute; top: 6.5cm; right:
+    2.6cm; } .logo { display: block; margin-top: 1.08cm; width: 1.6cm; height:
+    1.6cm; } img { width: 100%; height: auto; } .qrLink { position: absolute;
+    top: 6cm; right: 0.75cm; width: 5cm; height: 1cm; display: block;
     text-align: center; color: #3490dc; } .tipeee { bottom: 0.8cm; left: 1cm;
     right: 1cm; height: 2cm; position: absolute; padding: 0.3cm; background:
     #d84759; color: white; vertical-align: middle; border-radius: 0.3cm; }

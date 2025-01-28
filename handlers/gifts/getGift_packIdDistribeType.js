@@ -27,7 +27,7 @@ async function getGift_packIdDistribeType(req, h) {
 
     if (!existQrFolder) mkdirSync(qrFolder)
 
-    const canvas = createCanvas(200, 200)
+    const canvas = createCanvas(400, 400)
     const ctx = canvas.getContext('2d')
     const tipeeeCanvas = createCanvas(800, 302)
     const tipeeeCtx = tipeeeCanvas.getContext('2d')
@@ -117,9 +117,10 @@ async function getGift_packIdDistribeType(req, h) {
       await QRCode.toFile(qrFilePath, url, {
         color: {
           dark: '#000',
+
           light: '#0000',
         },
-        margin: 5,
+        margin: 0,
         width: 400,
         type: 'png',
       })
