@@ -121,12 +121,12 @@ async function getGift_packIdDistribeType(req, h) {
           light: '#0000',
         },
         margin: 0,
-        width: 200,
+        width: 400,
         type: 'png',
       })
 
       const qr = await loadImage(`gen_files/qr/${gift.id}.png`)
-      ctx.clearRect(0, 0, 200, 200)
+      ctx.clearRect(0, 0, 400, 400)
       ctx.drawImage(qr, 0, 0)
       const qrToBase64 = canvas.toDataURL()
 
