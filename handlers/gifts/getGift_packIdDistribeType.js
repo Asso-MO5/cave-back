@@ -76,6 +76,8 @@ async function getGift_packIdDistribeType(req, h) {
       },
     ]
 
+
+
     const logosBase64 = []
 
     for (const logo of logos) {
@@ -88,6 +90,18 @@ async function getGift_packIdDistribeType(req, h) {
         img: canvasLogo.toDataURL(),
       })
     }
+
+    const imgsExpo = []
+    for (const img of ['gs', 'gs2', 'gs3']) {
+      const imgL = await loadImage(`data/img/${img}.jpg`)
+      const canvasImg = createCanvas(600, 338)
+      const ctxImg = canvasImg.getContext('2d')
+      ctxImg.drawImage(imgL, 0, 0)
+      imgsExpo.push({
+        img: canvasImg.toDataURL(),
+      })
+    }
+
 
     const canvasForPoster = createCanvas(958, 1437)
     const ctxPoster = canvasForPoster.getContext('2d')
@@ -145,6 +159,7 @@ async function getGift_packIdDistribeType(req, h) {
           poster: posterToBase64,
           logos: logosBase64,
           tipeee: tipeeeToBase64,
+          imgsExpo,
           mo5Logo: mo5LogoToBase64,
           margin: process.env.ISDEV === 'true' ? '0cm' : '.5cm',
           noMo5: giftPack.retailer.toLowerCase() !== 'mo5' ? 'noMo5' : '',
