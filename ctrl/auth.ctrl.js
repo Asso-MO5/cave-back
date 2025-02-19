@@ -1,5 +1,6 @@
-//const jose = require('jose')
+const jose = require('jose')
 const { findOrCreateAuthor } = require('../entities/author')
+const { log } = require('../utils/log')
 
 module.exports = [
   {
@@ -7,7 +8,6 @@ module.exports = [
     path: '/auth/login',
     async handler(req, h) {
       const secret = Buffer.from(process.env.API_KEY, 'hex')
-      /*
       try {
         const { payload } = await jose.jwtDecrypt(req.payload, secret)
 
@@ -18,6 +18,8 @@ module.exports = [
           provider_id: payload.provider_id,
           name: payload.name,
         })
+
+        log(`login: ${author.name}`)
 
         const jwt = await new jose.EncryptJWT({
           id: author.id,
@@ -30,6 +32,8 @@ module.exports = [
           .setExpirationTime('720h') // 30 jours = 720 heures
           .encrypt(secret)
 
+        log(`login: ${jwt}`)
+
         return h
           .response({
             auth: jwt,
@@ -40,14 +44,6 @@ module.exports = [
         console.error(error)
         return h.response({ msg: 'auth fail' }).type('json').code(401)
       }
-
-      */
-      return h
-        .response({
-          auth: jwt,
-        })
-        .type('json')
-        .code(200)
     },
   },
   {
