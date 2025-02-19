@@ -12,6 +12,13 @@ const routes = [
   },
   {
     method: 'GET',
+    path: '/test',
+    handler(_, h) {
+      return h?.response(process.env.FRONT_URL)
+    },
+  },
+  {
+    method: 'GET',
     path: '/uploads/{param*}',
     handler: {
       directory: {
