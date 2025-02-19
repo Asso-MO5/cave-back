@@ -14,7 +14,9 @@ const routes = [
     method: 'GET',
     path: '/test',
     handler(_, h) {
-      return h?.response(process.env.FRONT_URL)
+      h.response({ msg: 'exist', link: process.env.FRONT_URL })
+        .type('json')
+        .code(200)
     },
   },
   {
