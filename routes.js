@@ -12,9 +12,10 @@ const routes = [
   },
   {
     method: 'GET',
-    path: '/test',
+    path: '/rien',
     handler(_, h) {
-      h.response({ msg: 'exist', link: process.env.FRONT_URL })
+      return h
+        .response({ msg: 'exist', link: process.env.FRONT_URL })
         .type('json')
         .code(200)
     },
