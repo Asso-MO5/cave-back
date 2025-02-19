@@ -26,7 +26,7 @@
     "@hapi/vision": "^7.0.3",
     "@napi-rs/canvas": "^0.1.54",
     "adm-zip": "^0.5.16",
-    "dotenv": "^16.4.5",
+    "dotenv": "^16.4.7",
     "handlebars": "^4.7.8",
     "hapi-swagger": "^17.3.0",
     "html-pdf": "^3.0.1",
