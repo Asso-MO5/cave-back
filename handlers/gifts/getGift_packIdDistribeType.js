@@ -76,8 +76,6 @@ async function getGift_packIdDistribeType(req, h) {
       },
     ]
 
-
-
     const logosBase64 = []
 
     for (const logo of logos) {
@@ -101,7 +99,6 @@ async function getGift_packIdDistribeType(req, h) {
         img: canvasImg.toDataURL(),
       })
     }
-
 
     const canvasForPoster = createCanvas(958, 1437)
     const ctxPoster = canvasForPoster.getContext('2d')
@@ -250,7 +247,7 @@ async function getGift_packIdDistribeType(req, h) {
       .code(200)
   } catch (e) {
     console.error(e)
-    return h.response({ message: 'error' }).code(500)
+    return h.response({ message: 'error', e }).code(500)
   }
 }
 
