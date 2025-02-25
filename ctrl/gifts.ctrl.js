@@ -7,6 +7,7 @@ const { getGifts_packs } = require('../handlers/gifts/getGifts_packs')
 const { getGiftToken } = require('../handlers/gifts/getGiftsToken')
 const { postGiftCheck } = require('../handlers/gifts/postGiftCheck')
 const { postGifts } = require('../handlers/gifts/postGifts')
+const { postGiftsDirect } = require('../handlers/gifts/postGiftsDirect')
 const { putGiftsPacksId } = require('../handlers/gifts/putGiftsPacksId')
 const { putGiftToken } = require('../handlers/gifts/putGiftsToken')
 const { headers } = require('../models/header.model')
@@ -25,6 +26,20 @@ module.exports = [
       },
     },
     handler: postGifts,
+  },
+  {
+    method: 'POST',
+    path: '/gifts_packs_direct',
+    options: {
+      description:
+        'Permet de créer un pack de gifts et d`envoyer directement les gifts aux bénéficiaires',
+      tags: ['api', 'gifts'],
+      notes: [ROLES.gameStoryManager],
+      validate: {
+        headers,
+      },
+    },
+    handler: postGiftsDirect,
   },
   {
     method: 'GET',

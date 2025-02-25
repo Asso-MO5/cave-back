@@ -13,6 +13,7 @@ const GIFTS_PACK = {
   type: 'type',
   status: 'status',
   author_id: 'author_id',
+  isSendOnDirect: 'isSendOnDirect',
   created_at: 'created_at',
   updated_at: 'updated_at',
 }
@@ -41,24 +42,24 @@ module.exports = {
     numOfGifts,
     type,
     author_id,
+    isSendOnDirect = false,
   }) {
     try {
       const id = uuidv4()
-      await knex(TABLES.gifts_pack)
-        .insert({
-          id,
-          email,
-          retailer,
-          campain,
-          gift,
-          numOfGifts,
-          type,
-          author_id,
-          status: 'notDistributed',
-          created_at: new Date(),
-          updated_at: new Date(),
-        })
-        .returning('id')
+      await knex(TABLES.gifts_pack).insert({
+        id,
+        email,
+        retailer,
+        campain,
+        gift,
+        numOfGifts,
+        type,
+        author_id,
+        status: 'notDistributed',
+        isSendOnDirect,
+        created_at: new Date(),
+        updated_at: new Date(),
+      })
 
       return {
         id,
@@ -70,6 +71,7 @@ module.exports = {
         type,
         author_id,
         status: 'draft',
+        isSendOnDirect,
         created_at: new Date(),
         updated_at: new Date(),
       }
@@ -87,19 +89,17 @@ module.exports = {
     eventId,
   }) {
     try {
-      const [id] = await knex(TABLES.loot)
-        .insert({
-          id: uuidv4(),
-          winnerName,
-          email: winneremail,
-          loot,
-          creatorId,
-          eventId,
-          winned_at: winned_at || new Date(),
-          created_at: new Date(),
-          updated_at: new Date(),
-        })
-        .returning('id')
+      const [id] = await knex(TABLES.loot).insert({
+        id: uuidv4(),
+        winnerName,
+        email: winneremail,
+        loot,
+        creatorId,
+        eventId,
+        winned_at: winned_at || new Date(),
+        created_at: new Date(),
+        updated_at: new Date(),
+      })
 
       return id
     } catch (e) {
@@ -154,6 +154,7 @@ module.exports = {
           knex.raw('COUNT(DISTINCT gifts.id) as givenNumOfGifts'),
           TABLES.gifts_pack + '.type',
           TABLES.gifts_pack + '.status',
+          TABLES.gifts_pack + '.isSendOnDirect',
           TABLES.gifts_pack + '.created_at',
           TABLES.gifts_pack + '.updated_at'
         )

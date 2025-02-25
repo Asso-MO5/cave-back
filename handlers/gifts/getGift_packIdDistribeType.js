@@ -6,12 +6,11 @@ const QRCode = require('qrcode')
 const { loadImage, createCanvas } = require('@napi-rs/canvas')
 const AdmZip = require('adm-zip')
 const { mail } = require('../../utils/mail')
-const { FROM } = require('../../utils/constants')
 const { createRandomName } = require('../../utils/createRandomName')
 const pdf = require('html-pdf')
 const Handlebars = require('handlebars')
 
-async function getGift_packIdDistribeType(req, h) {
+async function getGift_packIdDistribeType(req, h, returnResponse = false) {
   const { id, type } = req.params
   const zip = new AdmZip()
   try {
@@ -212,7 +211,13 @@ async function getGift_packIdDistribeType(req, h) {
       const config = {
         to: giftPack.email,
         subject: 'Association MO5 pass "Game Story" Versailles',
-        text: 'Pass à distribuer',
+        text: giftPack.isSendOnDirect
+          ? `
+        Vous trouverez ci-joint votre pass pour le musée du jeu vidéo "Game Story" à Versailles.
+        Bonne visite !
+        Association MO5
+        `
+          : 'Pass à distribuer',
         // html: 'Vos cadeaux',
         from: `💾🖱️🎮 Association MO5 | Pass Game Story Versailles <${process.env.MAIL_ADDRESS}>`,
         attachments: allPdfs,
@@ -240,6 +245,7 @@ async function getGift_packIdDistribeType(req, h) {
       await mail.sendMail(config)
     }
 
+    if (!returnResponse) return 'ok'
     // retourne le PDF en static, le premier fichier du zip
     return h
       .response(firstPdf)
