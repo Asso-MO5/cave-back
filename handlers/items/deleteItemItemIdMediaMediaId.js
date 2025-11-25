@@ -1,6 +1,10 @@
 const { createItemHistory } = require('../../entities/item-history')
-const { deleteMediaForItem } = require('../../entities/item-medias')
+const {
+  deleteMediaForItem,
+  isMediaUsedByOtherItems,
+} = require('../../entities/item-medias')
 const { getItemById } = require('../../entities/items')
+const { deleteMedia } = require('../../entities/media')
 
 async function deleteItemItemIdMediaMediaId(req, h) {
   const { itemId, mediaId } = req.params
@@ -23,6 +27,18 @@ async function deleteItemItemIdMediaMediaId(req, h) {
     return h
       .response({ error: 'Internal server error', details: error })
       .code(500)
+  }
+
+  // Vérifier si le média est utilisé par d'autres items
+  try {
+    const isUsedByOthers = await isMediaUsedByOtherItems({ itemId, mediaId })
+    if (!isUsedByOthers) {
+      // Si le média n'est plus utilisé par aucun autre item, supprimer le fichier physique
+      await deleteMedia(mediaId)
+    }
+  } catch (error) {
+    console.log('DELETE MEDIA FILE :', error)
+    // On continue même si la suppression du fichier échoue
   }
 
   return h.response(await getItemById(oldItem.id, req)).code(201)

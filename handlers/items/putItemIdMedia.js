@@ -7,9 +7,11 @@ const { getMediaFromUrl } = require('../../utils/get-media-from-url')
 async function putItemIdMedia(req, h) {
   const data = req.payload
   const oldItem = await getItemById(req.params.id)
-  if (!oldItem) return h.response({ error: 'Non trouvé' }).code(404)
-  const type = data.create ? `${data.media}-${uuidv4()}` : data.media
 
+  if (!oldItem) return h.response({ error: 'Non trouvé' }).code(404)
+  const type = data?.create ? `${data.media}-${uuidv4()}` : data.media
+
+  console.log('data :============>')
   try {
     await createItemHistory(oldItem.id, req.app.user.id)
   } catch (error) {
@@ -30,6 +32,7 @@ async function putItemIdMedia(req, h) {
         type,
       })
     } catch (error) {
+
       return h
         .response({ error: 'Internal server error', details: error })
         .code(500)

@@ -24,12 +24,10 @@ module.exports = {
     if (medias.length === 0) return []
 
     const dir = path.join(__dirname, '../uploads')
-
     if (!fs.existsSync(dir)) fs.mkdirSync(dir)
     const date = new Date()
-    const dateStr = `${date.getFullYear()}-${
-      date.getMonth() + 1
-    }-${date.getDate()}`
+    const dateStr = `${date.getFullYear()}-${date.getMonth() + 1
+      }-${date.getDate()}`
 
     const dateFolder = path.join(dir, dateStr)
 
@@ -76,9 +74,8 @@ module.exports = {
 
     if (!fs.existsSync(dir)) fs.mkdirSync(dir)
     const date = new Date()
-    const dateStr = `${date.getFullYear()}-${
-      date.getMonth() + 1
-    }-${date.getDate()}`
+    const dateStr = `${date.getFullYear()}-${date.getMonth() + 1
+      }-${date.getDate()}`
 
     const dateFolder = path.join(dir, dateStr)
 

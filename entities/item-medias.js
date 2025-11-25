@@ -51,4 +51,17 @@ module.exports = {
       console.error(error)
     }
   },
+  async isMediaUsedByOtherItems({ itemId, mediaId }) {
+    try {
+      const result = await knex(TABLES.item_medias)
+        .where(ITEM_MEDIAS.media_id, mediaId)
+        .where(ITEM_MEDIAS.item_id, '!=', itemId)
+        .count('* as count')
+        .first()
+      return parseInt(result.count) > 0
+    } catch (error) {
+      console.error(error)
+      return false
+    }
+  },
 }
