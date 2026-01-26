@@ -11,6 +11,7 @@ async function getItemsHandler(req, h) {
     status,
     name,
     type,
+    release_dates,
     associated_machine,
   } = req.query
 
@@ -27,6 +28,7 @@ async function getItemsHandler(req, h) {
     type,
     name,
     associated_machine,
+    release_dates,
   })
   return h.response(items).code(200)
 }

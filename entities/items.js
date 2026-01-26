@@ -77,16 +77,112 @@ module.exports = {
     order = 'asc',
     sort = 'name',
     associated_machine,
+    release_dates,
   }) {
     const query = knex(TABLES.items + ' as it_origin')
     try {
-      // Appliquer les filtres sur le type et la recherche
+      // Toujours ajouter les jointures pour les dates de release pour pouvoir les retourner
+      const releaseKeys = ['var_release_eu', 'var_release_fr', 'var_release_jap', 'var_release_us']
+      releaseKeys.forEach((key, index) => {
+        query.leftJoin(
+          `${TABLES.item_text_attrs} as attrs_release_${index}`,
+          function () {
+            this.on(`attrs_release_${index}.item_id`, '=', 'it_origin.id').andOn(
+              `attrs_release_${index}.key`,
+              '=',
+              knex.raw('?', key)
+            )
+          }
+        )
+      })
+
+      if (release_dates) {
+        const dateStr = String(release_dates).trim()
+
+        let searchYear = null
+        let searchMonth = null
+
+        const yearOnlyMatch = dateStr.match(/^(\d{4})$/)
+        if (yearOnlyMatch) {
+          searchYear = yearOnlyMatch[1]
+        } else {
+
+          const slashMatch = dateStr.match(/^(\d{1,2})\/(\d{4})$|^(\d{4})\/(\d{1,2})$/)
+          if (slashMatch) {
+            if (slashMatch[1] && slashMatch[2]) {
+
+              searchMonth = parseInt(slashMatch[1], 10).toString().padStart(2, '0')
+              searchYear = slashMatch[2]
+            } else if (slashMatch[3] && slashMatch[4]) {
+
+              searchYear = slashMatch[3]
+              searchMonth = parseInt(slashMatch[4], 10).toString().padStart(2, '0')
+            }
+          } else {
+
+            const dashMatch = dateStr.match(/^(\d{4})-(\d{1,2})$|^(\d{1,2})-(\d{4})$/)
+            if (dashMatch) {
+              if (dashMatch[1] && dashMatch[2]) {
+
+                searchYear = dashMatch[1]
+                searchMonth = parseInt(dashMatch[2], 10).toString().padStart(2, '0')
+              } else if (dashMatch[3] && dashMatch[4]) {
+                searchMonth = parseInt(dashMatch[3], 10).toString().padStart(2, '0')
+                searchYear = dashMatch[4]
+              }
+            } else {
+              const yearMatch = dateStr.match(/\b(\d{4})\b/)
+              if (yearMatch) {
+                searchYear = yearMatch[1]
+              }
+            }
+          }
+        }
+
+        if (searchYear) {
+          query.where((builder) => {
+            if (searchMonth) {
+              const monthYearPatterns = [
+                `${searchMonth}/${searchYear}`,
+                `${searchYear}-${searchMonth}`,
+                `${searchMonth}-${searchYear}`,
+                `${searchYear}/${searchMonth}`,
+                `${searchMonth} ${searchYear}`,
+                `${searchYear} ${searchMonth}`,
+              ]
+
+              releaseKeys.forEach((_, index) => {
+                builder.orWhere((subBuilder) => {
+                  monthYearPatterns.forEach((pattern) => {
+                    subBuilder.orWhere(
+                      `attrs_release_${index}.value`,
+                      'like',
+                      `%${pattern}%`
+                    )
+                  })
+                })
+              })
+            } else {
+
+              releaseKeys.forEach((_, index) => {
+                builder.orWhere((subBuilder) => {
+                  subBuilder
+                    .orWhere(`attrs_release_${index}.value`, '=', searchYear)
+                    .orWhere(`attrs_release_${index}.value`, 'like', `${searchYear}%`)
+                    .orWhere(`attrs_release_${index}.value`, 'like', `%/${searchYear}%`)
+                    .orWhere(`attrs_release_${index}.value`, 'like', `%-${searchYear}%`)
+                    .orWhere(`attrs_release_${index}.value`, 'like', `% ${searchYear}%`)
+                })
+              })
+            }
+          })
+        }
+      }
       if (itemType) query.where('it_origin.type', itemType)
       if (status) query.where('it_origin.status', 'like', `%${status}%`)
       if (name) query.where('it_origin.name', 'like', `%${name}%`)
       if (associated_machine)
         query.where('machine.name', 'like', `%${associated_machine}%`)
-      // Ajouter les jointures pour les attributs "place" et "origin"
       query
         .leftJoin(`${TABLES.item_text_attrs} as attrs_place`, function () {
           this.on('attrs_place.item_id', '=', `it_origin.id`).andOn(
@@ -103,7 +199,6 @@ module.exports = {
           )
         })
 
-      // Ajouter une jointure pour vérifier la présence d'une couverture
       query.leftJoin(`${TABLES.item_medias} as media`, function () {
         this.on('media.item_id', '=', 'it_origin.id').andOn(
           'media.relation_type',
@@ -112,7 +207,6 @@ module.exports = {
         )
       })
 
-      // Ajouter les jointures pour récupérer les types liés
       query.leftJoin(
         `${TABLES.item_relation} as relation`,
         'it_origin.id',
@@ -123,7 +217,6 @@ module.exports = {
         this.on('relation.item_ref_id', '=', 'it.id')
       })
 
-      // Ajouter une jointure pour la machine associée si l'item est un jeu
       query
         .leftJoin(`${TABLES.item_relation} as relation_machine`, function () {
           this.on('it.id', '=', 'relation_machine.item_left_id').andOn(
@@ -136,7 +229,6 @@ module.exports = {
           this.on('relation_machine.item_ref_id', '=', 'machine.id')
         })
 
-      // Sélectionner les champs nécessaires
       query
         .select(
           'it_origin.id',
@@ -146,6 +238,14 @@ module.exports = {
           'it_origin.status',
           'attrs_place.value as place',
           'attrs_origin.value as origin',
+          knex.raw(
+            `TRIM(CONCAT_WS(' / ', 
+              NULLIF(attrs_release_0.value, ''), 
+              NULLIF(attrs_release_1.value, ''), 
+              NULLIF(attrs_release_2.value, ''), 
+              NULLIF(attrs_release_3.value, '')
+            )) as release_dates`
+          ),
           knex.raw('IF(COUNT(media.id) > 0, TRUE, FALSE) as has_cover'), // Vérifie si cover existe
           'machine.name as associated_machine', // Nom de la machine associée
           'it.type as rType' // Type de l'item lié
@@ -408,19 +508,19 @@ module.exports = {
           item[attr.attr] = isArrayOnString
             ? JSON.parse(attr.value)
             : [
-                {
-                  id: uuidv4(),
-                  type: 'paragraph',
-                  content: [
-                    {
-                      type: 'text',
-                      text: attr.value,
-                      styles: {},
-                    },
-                  ],
-                  children: [],
-                },
-              ]
+              {
+                id: uuidv4(),
+                type: 'paragraph',
+                content: [
+                  {
+                    type: 'text',
+                    text: attr.value,
+                    styles: {},
+                  },
+                ],
+                children: [],
+              },
+            ]
         } else item[attr.attr] = attr.value
       })
 
