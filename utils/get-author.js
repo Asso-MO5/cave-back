@@ -1,13 +1,15 @@
 const jose = require('jose')
 
 async function getAuthor(req, h, roles) {
-  const secret = Buffer.from(process.env.API_KEY, 'hex')
-  const jwt = req.headers.authorization.split(' ')[1]
-
   try {
+    const secret = Buffer.from(process.env.API_KEY, 'hex')
+    const jwt = req.headers.authorization?.split(' ')[1]
     const { payload } = await jose.jwtDecrypt(jwt, secret)
 
     if (payload.iss !== 'cave_back' || payload.aud !== 'cave_front')
+      return h.response({ msg: 'auth fail' }).type('json').code(401)
+
+    if (!Array.isArray(payload.roles))
       return h.response({ msg: 'auth fail' }).type('json').code(401)
 
     if (

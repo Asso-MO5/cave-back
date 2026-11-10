@@ -1,10 +1,31 @@
-const { getItemsForExport } = require('../../entities/items')
+const { getItemsForExport, getItemById } = require('../../entities/items')
 const { printItems } = require('../../utils/print-items')
+const { itemsToText } = require('../../utils/items-to-text')
 
 async function postItemsExport(req, h) {
   const { exportType, type, ids, format, selectedTotal } = JSON.parse(
     req.payload || '{}'
   )
+
+  if (exportType === 'txt' || exportType === 'text') {
+    try {
+      const rows = await getItemsForExport({ type, ids: selectedTotal ? undefined : (ids || []) })
+      if (!rows) throw new Error('Impossible de récupérer les items à exporter')
+      const items = []
+      for (const id of new Set(rows.map((row) => row.id))) {
+        const item = await getItemById(id)
+        if (!item) throw new Error('Impossible de récupérer un item à exporter')
+        items.push(item)
+      }
+      return h.response(itemsToText(items))
+        .header('Content-Type', 'text/plain; charset=utf-8')
+        .header('Content-Disposition', 'attachment; filename=export.txt')
+        .code(200)
+    } catch (error) {
+      console.error('TEXT EXPORT :', error)
+      return h.response({ error: 'Impossible de générer l’export texte' }).code(500)
+    }
+  }
 
   if (exportType === 'csv') {
     const items = await getItemsForExport({ type, ids })

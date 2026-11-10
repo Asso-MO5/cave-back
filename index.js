@@ -60,9 +60,9 @@ const init = async () => {
 
     // === RESTRICTED ROUTES ===
     if (authorizedRoles.includes('loot')) {
-      const lootId = process.env.LOOT_ADMIN_ID?.split(',')
+      const lootId = process.env.LOOT_ADMIN_ID?.split(',') || []
 
-      const id = req.headers.authorization.split(' ')[1]
+      const id = req.headers.authorization?.split(' ')[1]
 
       if (id === 'null' || !id)
         return h
@@ -72,6 +72,7 @@ const init = async () => {
 
       if (!lootId.includes(id)) {
         const user = await getAuthor(req, h, ['loot'])
+        if (user?.statusCode) return user.takeover()
         if (user) {
           req.app.user = user
           return h.continue
@@ -88,6 +89,7 @@ const init = async () => {
     }
 
     const user = await getAuthor(req, h, authorizedRoles)
+    if (user?.statusCode) return user.takeover()
 
     const { roles } = user
     req.app.user = user
